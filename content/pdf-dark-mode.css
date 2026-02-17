@@ -1,0 +1,314 @@
+/*
+ * D2L Brightspace Dark Mode — PDF Viewer Styles
+ *
+ * Applied ONLY when the user enables "Dark Mode for PDFs" in settings.
+ * Uses targeted filter inversion on PDF iframes while preserving
+ * images inside them via double-inversion.
+ */
+
+/* ============================================================
+   D2L CONTENT VIEWER IFRAMES
+   Apply a smart inversion to PDF/content viewer iframes only.
+   ============================================================ */
+
+iframe.d2l-iframe[src*="/content/"],
+iframe.d2l-iframe[src*="ViewerController"],
+iframe[src*="/d2l/le/content/"],
+iframe[src*="/d2l/common/viewFile.d2lfile"] {
+  filter: invert(0.88) hue-rotate(180deg) !important;
+  border-color: #3a3a3a !important;
+}
+
+/*
+ * Counter-invert images and media INSIDE inverted iframes
+ * so their colors are preserved.
+ * NOTE: This only works for same-origin iframes; cross-origin
+ * iframes are handled by the content.js iframe injection.
+ */
+iframe.d2l-iframe img,
+iframe.d2l-iframe video,
+iframe.d2l-iframe svg,
+iframe.d2l-iframe canvas,
+iframe.d2l-iframe picture {
+  filter: invert(1) hue-rotate(-180deg) !important;
+}
+
+
+/* ============================================================
+   PDF.js VIEWER (if D2L uses it)
+   ============================================================ */
+
+#viewer.pdfViewer,
+.pdfViewer .page {
+  background-color: #2a2a2a !important;
+}
+
+#viewerContainer {
+  background-color: #1a1a1a !important;
+}
+
+/* PDF.js toolbar */
+#outerContainer,
+#toolbarContainer,
+#toolbarViewer,
+#secondaryToolbar,
+#toolbarSidebar {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+  color: #e0e0e0 !important;
+}
+
+#toolbarViewer button,
+#secondaryToolbar button,
+#toolbarSidebar button {
+  color: #e0e0e0 !important;
+  background-color: transparent !important;
+}
+
+#toolbarViewer button:hover,
+#secondaryToolbar button:hover {
+  background-color: #2c2c2c !important;
+}
+
+/* PDF.js sidebar */
+#sidebarContainer,
+#sidebarContent {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+/* PDF.js find bar */
+#findbar {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+  color: #e0e0e0 !important;
+}
+
+#findbar input {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* PDF.js text layer */
+.textLayer {
+  color: #e0e0e0 !important;
+}
+
+/* PDF.js annotation layer — preserve link highlighting */
+.annotationLayer a {
+  color: #5ba3ff !important;
+}
+
+/* PDF.js loading bar */
+#loadingBar {
+  background-color: #2c2c2c !important;
+}
+
+#loadingBar .progress {
+  background-color: #4d9fff !important;
+}
+
+
+/* ============================================================
+   COMPREHENSIVE PDF.js VIEWER SUPPORT
+   Additional selectors for full D2L PDF viewer coverage
+   ============================================================ */
+
+/* PDF.js Main Outer Container */
+#outerContainer {
+  background-color: #1a1a1a !important;
+}
+
+/* PDF.js Main Viewer Container */
+#viewerContainer {
+  background-color: #1a1a1a !important;
+}
+
+/* PDF.js Toolbar */
+#toolbarContainer,
+#toolbarViewer {
+  background-color: #222222 !important;
+  border-bottom-color: #3a3a3a !important;
+}
+
+/* PDF.js Toolbar Buttons */
+#toolbarViewer button,
+#toolbarViewer .toolbarButton,
+.toolbarButton {
+  color: #e0e0e0 !important;
+  background-color: transparent !important;
+}
+
+#toolbarViewer button:hover,
+.toolbarButton:hover {
+  background-color: #2c2c2c !important;
+}
+
+/* PDF.js Input Fields */
+#toolbarViewer input,
+.toolbarField {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* PDF.js Sidebar */
+#sidebarContainer {
+  background-color: #222222 !important;
+  border-right-color: #3a3a3a !important;
+}
+
+#sidebarContent {
+  background-color: #222222 !important;
+}
+
+/* PDF.js Thumbnails */
+#thumbnailView,
+.thumbnail {
+  background-color: #2c2c2c !important;
+}
+
+/* PDF.js Find Bar */
+#findbar,
+.findbar {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+}
+
+#findInput {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* PDF.js Page Canvas - Apply Smart Inversion */
+.page canvas {
+  filter: invert(0.9) hue-rotate(180deg) !important;
+}
+
+/* Counter-Invert Images Inside PDFs */
+.page img {
+  filter: invert(1) hue-rotate(-180deg) !important;
+}
+
+/* PDF.js Text Layer */
+.textLayer {
+  color: #e0e0e0 !important;
+  /* Text layer will be affected by canvas filter */
+}
+
+/* PDF.js Annotation Layer */
+.annotationLayer a {
+  color: #5ba3ff !important;
+}
+
+/* PDF.js Secondary Toolbar */
+#secondaryToolbar {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+}
+
+#secondaryToolbar button {
+  color: #e0e0e0 !important;
+}
+
+#secondaryToolbar button:hover {
+  background-color: #2c2c2c !important;
+}
+
+/* PDF.js Toolbar Sidebar */
+#toolbarSidebar {
+  background-color: #222222 !important;
+}
+
+/* PDF.js Viewer Pages */
+#viewer.pdfViewer .page {
+  background-color: #2a2a2a !important;
+}
+
+/* PDF.js Page Border */
+.pdfViewer .page {
+  border-color: #3a3a3a !important;
+}
+
+/* PDF.js Scrollbar (inside viewer) */
+#viewerContainer::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+#viewerContainer::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+#viewerContainer::-webkit-scrollbar-thumb {
+  background: #555555;
+  border-radius: 5px;
+}
+
+#viewerContainer::-webkit-scrollbar-thumb:hover {
+  background: #777777;
+}
+
+/* PDF.js Dropdown Menus */
+.dropdownToolbarButton,
+#scaleSelect {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* PDF.js Page Number Input */
+#pageNumber {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* PDF.js Split Toolbar Buttons */
+.splitToolbarButton,
+.splitToolbarButtonSeparator {
+  background-color: transparent !important;
+  color: #e0e0e0 !important;
+}
+
+.splitToolbarButton:hover {
+  background-color: #2c2c2c !important;
+}
+
+/* PDF.js Error Messages */
+#errorWrapper {
+  background-color: #222222 !important;
+  color: #ff5555 !important;
+  border-color: #ff5555 !important;
+}
+
+/* PDF.js Overlay */
+#overlayContainer,
+.overlayContainer {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+#passwordOverlay,
+#documentPropertiesOverlay {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* PDF.js Dialog Buttons */
+.buttonRow button {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+.buttonRow button:hover {
+  background-color: #3a3a3a !important;
+}
+
+/* PDF.js Hand Tool Cursor */
+#viewerContainer.pdfPresentationMode {
+  background-color: #000000 !important;
+}

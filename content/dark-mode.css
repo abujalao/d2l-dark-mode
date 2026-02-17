@@ -1,0 +1,927 @@
+/*
+ * D2L Brightspace Intelligent Dark Mode
+ * Overrides D2L's CSS custom properties for semantic dark theming.
+ * Does NOT use filter: invert() — preserves images, icons, and colors.
+ */
+
+/* ============================================================
+   ROOT-LEVEL CSS VARIABLE OVERRIDES
+   ============================================================ */
+
+:root,
+html,
+html[data-app-version] {
+
+  /* === NEUTRAL GRAY SCALE (REVERSED for dark mode) === */
+  --d2l-color-regolith: #1a1a1a !important;   /* Was #f9fbff — lightest bg */
+  --d2l-color-sylvite: #222222 !important;     /* Was #f1f5fb — light bg */
+  --d2l-color-gypsum: #2c2c2c !important;      /* Was #e3e9f1 — light-medium bg */
+  --d2l-color-mica: #3a3a3a !important;        /* Was #cdd5dc — borders / medium gray */
+  --d2l-color-corundum: #555555 !important;    /* Was #b1b9be */
+  --d2l-color-chromite: #777777 !important;    /* Was #90989d */
+  --d2l-color-galena: #999999 !important;      /* Was #6e7477 */
+  --d2l-color-tungsten: #b8b8b8 !important;    /* Was #494c4e — secondary text */
+  --d2l-color-ferrite: #e0e0e0 !important;     /* Was #202122 — primary text */
+
+  /* === BLUES (Celestine) — Primary action / links === */
+  --d2l-color-celestine-plus-2: #1a2a3a !important;
+  --d2l-color-celestine-plus-1: #5ba3ff !important;
+  --d2l-color-celestine: #4d9fff !important;
+  --d2l-color-celestine-minus-1: #2d5f9f !important;
+
+  /* === REDS (Cinnabar) — Error === */
+  --d2l-color-cinnabar-plus-2: #3a1a1a !important;
+  --d2l-color-cinnabar-plus-1: #ff7a7a !important;
+  --d2l-color-cinnabar: #ff5555 !important;
+  --d2l-color-cinnabar-minus-1: #cc3333 !important;
+
+  /* === ORANGES (Carnelian) — Warning === */
+  --d2l-color-carnelian-plus-1: #3a2a1a !important;
+  --d2l-color-carnelian: #ff9d4d !important;
+  --d2l-color-carnelian-minus-1: #cc6622 !important;
+  --d2l-color-carnelian-minus-2: #994411 !important;
+
+  /* === YELLOWS (Citrine) === */
+  --d2l-color-citrine-plus-1: #3a3520 !important;
+  --d2l-color-citrine: #ffd073 !important;
+  --d2l-color-citrine-minus-1: #c47400 !important;
+  --d2l-color-citrine-minus-2: #7a4300 !important;
+
+  /* === GREENS (Olivine) — Success === */
+  --d2l-color-olivine-plus-1: #1a3a1a !important;
+  --d2l-color-olivine: #6bcc7d !important;
+  --d2l-color-olivine-minus-1: #3a8a4a !important;
+  --d2l-color-olivine-minus-2: #2a6a35 !important;
+
+  /* === YELLOW-GREEN (Peridot) === */
+  --d2l-color-peridot-plus-1: #2a3520 !important;
+  --d2l-color-peridot: #a8e85c !important;
+  --d2l-color-peridot-minus-1: #4a8f00 !important;
+  --d2l-color-peridot-minus-2: #2f5e00 !important;
+
+  /* === TEAL (Malachite) === */
+  --d2l-color-malachite-plus-1: #1a3530 !important;
+  --d2l-color-malachite: #4dffdb !important;
+  --d2l-color-malachite-minus-1: #00a490 !important;
+  --d2l-color-malachite-minus-2: #00635e !important;
+
+  /* === CYAN (Zircon) === */
+  --d2l-color-zircon-plus-2: #1a3035 !important;
+  --d2l-color-zircon-plus-1: #33d4ed !important;
+  --d2l-color-zircon: #33bcd4 !important;
+  --d2l-color-zircon-minus-1: #035670 !important;
+
+  /* === PURPLE (Amethyst) === */
+  --d2l-color-amethyst-plus-2: #25203a !important;
+  --d2l-color-amethyst-plus-1: #a594ff !important;
+  --d2l-color-amethyst: #9d7aff !important;
+  --d2l-color-amethyst-minus-1: #6b40db !important;
+
+  /* === BRIGHT PURPLE (Fluorite) === */
+  --d2l-color-fluorite-plus-2: #301a3a !important;
+  --d2l-color-fluorite-plus-1: #d88afa !important;
+  --d2l-color-fluorite: #c588ff !important;
+  --d2l-color-fluorite-minus-1: #8a20d4 !important;
+
+  /* === MAGENTA (Tourmaline) === */
+  --d2l-color-tourmaline-plus-2: #3a1a2a !important;
+  --d2l-color-tourmaline-plus-1: #ff6eaa !important;
+  --d2l-color-tourmaline: #ff5599 !important;
+  --d2l-color-tourmaline-minus-1: #cc0066 !important;
+
+  /* === BRANDING === 
+  --d2l-branding-primary-color: #ffffff !important;
+
+  /* === TYPOGRAPHY COLOR OVERRIDES === */
+  --d2l-body-small-text_-_color: #b8b8b8 !important;
+}
+
+
+/* ============================================================
+   BODY & PAGE BACKGROUND
+   ============================================================ */
+
+body,
+body.d2l-body,
+html.daylight body,
+html body.d2l-body.d2l-typography {
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+}
+
+.d2l-page-main,
+.d2l-page-main-padding {
+  background-color: #1a1a1a !important;
+}
+
+
+/* ============================================================
+   NAVIGATION BAR
+   ============================================================ */
+
+.d2l-navigation-s,
+.d2l-branding-navigation-background-color {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Navigation band border */
+nav.d2l-navigation-s {
+  border-bottom-color: #3a3a3a !important;
+}
+
+
+/* ============================================================
+   WIDGETS / CARDS / TILES
+   ============================================================ */
+
+.d2l-widget,
+.d2l-widget.d2l-tile,
+.d2l-tile,
+.d2l-card,
+.d2l-card-container {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3) !important;
+}
+
+.d2l-widget-content,
+.d2l-widget-content-padding,
+.d2l-widget-header {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+.d2l-card-container.d2l-visible-on-ancestor-target,
+.d2l-card-container.d2l-card-footer-hidden,
+.d2l-visible-on-ancestor-target,
+.d2l-card-footer-hidden {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+}
+
+:root {
+  --d2l-input-background-color: #111 !important;
+  --d2l-input-text-color: #eee !important;
+  --d2l-color-ferrite: #eee !important;
+}
+
+
+.d2l-card-footer,
+.d2l-card-link-container {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Homepage grid */
+.homepage-container,
+.homepage-row {
+  background-color: transparent !important;
+}
+
+
+/* ============================================================
+   BUTTONS — ENSURE VISIBILITY
+   ============================================================ */
+
+.d2l-button,
+button.d2l-label-text {
+  color: #e0e0e0 !important;
+  background-color: #2c2c2c !important;
+  border-color: #555555 !important;
+}
+
+.d2l-button:hover,
+button.d2l-label-text:hover {
+  background-color: #3a3a3a !important;
+  border-color: #777777 !important;
+}
+
+.d2l-button:focus,
+button.d2l-label-text:focus {
+  outline-color: #4d9fff !important;
+}
+
+/* Subtle buttons */
+.d2l-button-subtle,
+.d2l-button-subtle-content {
+  color: #4d9fff !important;
+}
+
+.d2l-button-subtle:hover {
+  background-color: rgba(77, 159, 255, 0.1) !important;
+}
+
+/* Icon buttons in navigation */
+.d2l-labs-navigation-highlight-border {
+  border-color: transparent !important;
+
+}
+
+
+/* ============================================================
+   LINKS
+   ============================================================ */
+
+a,
+.d2l-link,
+a:link,
+a:visited,
+.d2l-homepage-heading-link {
+  color: #5ba3ff !important;
+}
+
+a:hover,
+.d2l-link:hover,
+.d2l-homepage-heading-link:hover {
+  color: #82bbff !important;
+}
+
+a:active {
+  color: #4d9fff !important;
+}
+
+
+/* ============================================================
+   INPUT FIELDS & FORMS
+   ============================================================ */
+
+.d2l-input,
+.d2l-input-text,
+.d2l-input-search,
+input[type="text"],
+input[type="search"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="url"],
+textarea,
+select {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+.form-control,
+.form-control:focus {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+.form-control:focus {
+  border-color: #4d9fff !important;
+  outline-color: #4d9fff !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #777777 !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #4d9fff !important;
+  outline-color: #4d9fff !important;
+}
+
+
+/* ============================================================
+   DROPDOWN MENUS
+   ============================================================ */
+
+.d2l-dropdown-content,
+.d2l-dropdown-menu,
+.d2l-menu {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
+}
+
+.d2l-menu-item,
+.d2l-menu-item-link {
+  color: #e0e0e0 !important;
+}
+
+.d2l-menu-item:hover,
+.d2l-menu-item-link:hover {
+  background-color: #2c2c2c !important;
+}
+
+.d2l-menu-item-separator {
+  border-color: #3a3a3a !important;
+}
+
+
+/* ============================================================
+   TABS
+   ============================================================ */
+
+.d2l-tabs-container,
+.d2l-tabs-layout {
+  background-color: #222222 !important;
+  border-color: #3a3a3a !important;
+}
+
+.d2l-tab-panel {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+
+/* ============================================================
+   DIALOGS / MODALS
+   ============================================================ */
+
+.d2l-dialog-outer {
+  background-color: rgba(0, 0, 0, 0.7) !important;
+}
+
+.d2l-dialog-inner,
+.d2l-dialog-content,
+.d2l-dialog-header,
+.d2l-dialog-footer {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+
+/* ============================================================
+   TOOLTIPS
+   ============================================================ */
+
+.d2l-tooltip-content {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+.d2l-tooltip-pointer,
+.d2l-tooltip-pointer-outline {
+  border-color: #2c2c2c !important;
+}
+
+
+/* ============================================================
+   ALERTS
+   ============================================================ */
+
+.d2l-alert {
+  background-color: #2c2c2c !important;
+  border-color: #555555 !important;
+  color: #e0e0e0 !important;
+}
+
+
+/* ============================================================
+   COLLAPSIBLE PANELS
+   ============================================================ */
+
+.d2l-collapsible-panel,
+.d2l-collapsible-panel-title,
+.d2l-collapsible-panel.scrolled,
+.d2l-collapsible-panel.scrolled .d2l-collapsible-panel-header,
+.d2l-collapsible-panel-header,
+.d2l-collapsible-panel-header-primary {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+
+/* ============================================================
+   LOADING & SKELETON
+   ============================================================ */
+
+.d2l-skeletize,
+.d2l-skeletize-container {
+  background-color: #2c2c2c !important;
+}
+
+.d2l-loading-spinner {
+  color: #4d9fff !important;
+}
+
+
+/* ============================================================
+   HTML CONTENT BLOCKS
+   ============================================================ */
+
+.d2l-html-block-rendered,
+.d2l-htmlblock-wc {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+/* Force dark backgrounds on ALL nested elements inside HTML blocks */
+.d2l-html-block-rendered div,
+.d2l-html-block-rendered table,
+.d2l-html-block-rendered td,
+.d2l-html-block-rendered th,
+.d2l-html-block-rendered tr,
+.d2l-html-block-rendered tbody,
+.d2l-html-block-rendered section,
+.d2l-html-block-rendered header,
+.d2l-html-block-rendered footer,
+.d2l-html-block-rendered nav,
+.d2l-html-block-rendered form,
+.d2l-html-block-rendered fieldset,
+.d2l-html-block-rendered p,
+.d2l-html-block-rendered span,
+.d2l-html-block-rendered ul,
+.d2l-html-block-rendered li {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+/* Links inside HTML blocks */
+.d2l-html-block-rendered a {
+  color: #5ba3ff !important;
+}
+
+/* Inputs inside HTML blocks (e.g. Omni search) */
+.d2l-html-block-rendered input,
+.d2l-html-block-rendered input[type="text"],
+.d2l-html-block-rendered input[type="search"],
+.d2l-html-block-rendered textarea,
+.d2l-html-block-rendered select {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* Headings inside HTML blocks */
+.d2l-html-block-rendered h1,
+.d2l-html-block-rendered h2,
+.d2l-html-block-rendered h3,
+.d2l-html-block-rendered h4,
+.d2l-html-block-rendered h5,
+.d2l-html-block-rendered h6 {
+  color: #ffffff !important;
+  background-color: #222222 !important;
+}
+
+
+/* ============================================================
+   STATUS INDICATORS
+   ============================================================ */
+
+.d2l-status-indicator {
+  color: #e0e0e0 !important;
+}
+
+
+/* ============================================================
+   PROFILE IMAGE — preserve, don't invert
+   ============================================================ */
+
+.d2l-profile-image-base,
+.d2l-profile-image-container {
+  filter: none !important;
+}
+
+
+/* ============================================================
+   IMAGE PRESERVATION — CRITICAL
+   Never invert images, icons, SVGs, videos, or canvases.
+   ============================================================ */
+
+img,
+svg,
+video,
+canvas,
+picture,
+d2l-icon,
+.d2l-icon,
+d2l-course-image,
+d2l-organization-image,
+.d2l-course-image,
+.d2l-organization-image {
+  filter: none !important;
+  opacity: 1 !important;
+}
+
+
+/* ============================================================
+   HARD-CODED INLINE COLOR OVERRIDES
+   ============================================================ */
+
+[style*="background-color: #f9fbff"],
+[style*="background-color:#f9fbff"],
+[style*="background: #f9fbff"],
+[style*="background-color: #FFFFFF"],
+[style*="background-color:#FFFFFF"],
+[style*="background-color: #ffffff"],
+[style*="background-color:#ffffff"],
+[style*="background-color: white"],
+[style*="background: white"],
+[style*="background: #FFFFFF"],
+[style*="background: #ffffff"] {
+  background-color: #1a1a1a !important;
+}
+
+[style*="background-color: #f1f5fb"],
+[style*="background-color:#f1f5fb"] {
+  background-color: #222222 !important;
+}
+
+[style*="background-color: #e3e9f1"],
+[style*="background-color:#e3e9f1"] {
+  background-color: #2c2c2c !important;
+}
+
+[style*="color: #202122"],
+[style*="color:#202122"],
+[style*="color: #000000"],
+[style*="color:#000000"],
+[style*="color: black"],
+[style*="color:black"] {
+  color: #e0e0e0 !important;
+}
+
+[style*="border-color: #D8D8D8"],
+[style*="border-color:#D8D8D8"],
+[style*="border-color: #b4b4b4"],
+[style*="border-color:#b4b4b4"],
+[style*="border-color: #cdd5dc"],
+[style*="border-color:#cdd5dc"] {
+  border-color: #3a3a3a !important;
+}
+
+
+/* ============================================================
+   IFRAME WIDGET WRAPPERS
+   ============================================================ */
+
+.d2l-widget-iframe-wrapper {
+  background-color: #222222 !important;
+}
+
+.d2l-iframe-loading-container {
+  background-color: #222222 !important;
+}
+
+
+/* ============================================================
+   SCROLLBAR STYLING (Webkit browsers)
+   ============================================================ */
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1a1a1a;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #555555;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #777777;
+}
+
+
+/* ============================================================
+   MISCELLANEOUS
+   ============================================================ */
+
+/* Tables */
+table,
+th,
+td {
+  border-color: #3a3a3a !important;
+}
+
+th {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+}
+
+td,
+.d2l-footer,
+.d2l-footer-background-color  {
+  background-color: #1a1a1a  !important;
+  color: #e0e0e0 !important;
+}
+
+/* Horizontal rules */
+hr {
+  border-color: #3a3a3a !important;
+}
+
+/* Placeholder containers */
+.d2l-placeholder,
+.d2l-placeholder-live {
+  background-color: #222222 !important;
+}
+
+/* Empty states */
+.d2l-empty-state-simple {
+  color: #999999 !important;
+}
+
+
+/* ============================================================
+   DROPDOWN LINK CONTRAST (Issue 3a - Course List)
+   ============================================================ */
+
+/* Dropdown menu backgrounds must be dark */
+.d2l-dropdown-content,
+.d2l-dropdown-menu,
+d2l-dropdown-content {
+  background-color: #222222 !important;
+}
+
+/* Dropdown links - increase contrast */
+.d2l-dropdown-content a,
+.d2l-dropdown-menu a,
+d2l-dropdown-content a,
+.dropdown-content a {
+  color: #82bbff !important; /* Lighter blue for better contrast */
+  background-color: transparent !important;
+}
+
+.d2l-dropdown-content a:hover,
+.d2l-dropdown-menu a:hover {
+  background-color: #2c2c2c !important;
+  color: #a0d0ff !important;
+}
+
+/* Course selector dropdown specific */
+.d2l-navigation-s-course-menu .d2l-dropdown-content,
+[data-prl*="courseSelector"] {
+  background-color: #222222 !important;
+}
+
+.d2l-navigation-s-course-menu a {
+  color: #82bbff !important;
+}
+
+
+/* ============================================================
+   EXTERNAL WIDGETS - WHITE BACKGROUND FIXES (Issues 3b, 3d)
+   ============================================================ */
+
+/* Aggressive inline style overrides for white backgrounds */
+.d2l-widget-content [style*="background-color: white"],
+.d2l-widget-content [style*="background-color:#fff"],
+.d2l-widget-content [style*="background-color: #fff"],
+.d2l-widget-content [style*="background-color:#FFFFFF"],
+.d2l-widget-content [style*="background-color: #FFFFFF"],
+.d2l-widget-content [style*="background: white"],
+.d2l-widget-content [style*="background:#fff"],
+.d2l-widget-content [style*="background: #fff"],
+.d2l-widget-content [style*="background:#FFFFFF"],
+.d2l-widget-content [style*="background: #FFFFFF"] {
+  background-color: #2c2c2c !important;
+  background: #2c2c2c !important;
+}
+
+/* Force dark on ALL nested elements inside widget content */
+.d2l-widget-content div,
+.d2l-widget-content-padding div,
+.d2l-widget-content table,
+.d2l-widget-content td,
+.d2l-widget-content th,
+.d2l-widget-content tr,
+.d2l-widget-content tbody,
+.d2l-widget-content section,
+.d2l-widget-content header,
+.d2l-widget-content footer,
+.d2l-widget-content nav,
+.d2l-widget-content form,
+.d2l-widget-content fieldset,
+.d2l-widget-content ul,
+.d2l-widget-content li {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+/* Widget content inline style overrides (belt and suspenders) */
+.d2l-widget-content div[style],
+.d2l-widget-content-padding div[style],
+.d2l-widget-content table[style],
+.d2l-widget-content td[style],
+.d2l-widget-content tr[style] {
+  background-color: #222222 !important;
+  background: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+/* Widget content text */
+.d2l-widget-content p,
+.d2l-widget-content span {
+  color: #e0e0e0 !important;
+}
+
+/* Widget content inputs (e.g. search boxes inside widgets) */
+.d2l-widget-content input,
+.d2l-widget-content input[type="text"],
+.d2l-widget-content input[type="search"],
+.d2l-widget-content textarea,
+.d2l-widget-content select {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* Widget headings */
+.d2l-widget-content h1,
+.d2l-widget-content h2,
+.d2l-widget-content h3,
+.d2l-widget-content h4 {
+  color: #ffffff !important;
+}
+
+/* Specific widget targeting by common patterns */
+.d2l-widget-iframe-wrapper,
+.d2l-iframe-loading-container {
+  background-color: #222222 !important;
+}
+
+
+/* ============================================================
+   COURSE TILES - IMAGE PLACEHOLDER BACKGROUNDS (Issue 3c)
+   ============================================================ */
+
+.d2l-course-image,
+.d2l-enrollment-card,
+.d2l-course-tile,
+d2l-enrollment-card,
+d2l-course-image {
+  background-color: #2c2c2c !important;
+}
+
+/* Course image containers with inline white backgrounds */
+.d2l-course-image[style*="background"],
+.d2l-enrollment-card [style*="background-color: white"],
+.d2l-enrollment-card [style*="background-color:#fff"],
+.d2l-enrollment-card [style*="background: white"],
+[class*="course"][style*="background-color: white"],
+[class*="course"][style*="background-color:#fff"] {
+  background-color: #2c2c2c !important;
+  background: #2c2c2c !important;
+}
+
+/* Course tile wrappers */
+.d2l-course-image-tile,
+.d2l-course-tile-image-container {
+  background-color: #2c2c2c !important;
+}
+
+/* My Courses grid backgrounds */
+.d2l-my-courses-card-grid,
+d2l-my-courses-card-grid {
+  background-color: transparent !important;
+}
+
+
+/* ============================================================
+   OFFICE 365 WIDGET - EMAIL & MESSAGES (Issue 3d, 3e)
+   ============================================================ */
+
+/* Email list container */
+.email-content,
+.item-list,
+[class*="email-"] {
+  background-color: #222222 !important;
+}
+
+/* Individual email items */
+.email,
+.email-content li,
+.item-list li,
+[class*="email-content"] li {
+  background-color: #2c2c2c !important;
+  border-color: #3a3a3a !important;
+  color: #e0e0e0 !important;
+}
+
+/* Email item hover state */
+.email:hover,
+.email-content li:hover,
+.item-list li:hover {
+  background-color: #3a3a3a !important;
+}
+
+/* Email text elements */
+.email .summary,
+.email .from,
+.email .subject,
+.email .extract,
+.email .time,
+.email .time p {
+  color: #e0e0e0 !important;
+  background-color: transparent !important;
+}
+
+/* Unread email indicator */
+.email.unread {
+  background-color: #1a2a3a !important;
+}
+
+/* Remove gradients on email items */
+.email[style*="background"],
+.item-list li[style*="background"] {
+  background-color: #2c2c2c !important;
+  background-image: none !important;
+  background: #2c2c2c !important;
+}
+
+/* Email links */
+.email a,
+.email-content a {
+  color: #5ba3ff !important;
+}
+
+
+/* ============================================================
+   COMMUNICATION & RESOURCES DROPDOWN MENUS (Issue 3e)
+   ============================================================ */
+
+/* Dropdown menu backgrounds */
+.d2l-navigation-s [role="menu"],
+[class*="dropdown"][role="menu"],
+[class*="menu-"] {
+  background-color: #222222 !important;
+}
+
+/* Menu items */
+[role="menuitem"],
+.menu-item,
+[class*="menu-item"] {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+[role="menuitem"]:hover,
+.menu-item:hover {
+  background-color: #2c2c2c !important;
+  color: #ffffff !important;
+}
+
+/* Menu item text (fix invisible light gray text) */
+[role="menuitem"] span,
+.menu-item span,
+[class*="menu-item"] span,
+[class*="menu-item"] a {
+  color: #e0e0e0 !important;
+}
+
+/* Resources / Communication dropdowns */
+[class*="Communication"] [role="menu"],
+[class*="Resources"] [role="menu"] {
+  background-color: #222222 !important;
+}
+
+/* Menu item labels */
+[role="menuitem"] > *,
+.menu-item > * {
+  color: #e0e0e0 !important;
+}
+
+/* Disabled menu items */
+[role="menuitem"][aria-disabled="true"],
+.menu-item.disabled {
+  color: #777777 !important;
+}
+
+
+/* ============================================================
+   ADDITIONAL INLINE STYLE OVERRIDES
+   ============================================================ */
+
+/* Catch-all for any remaining white backgrounds */
+[style*="background-color: rgb(255, 255, 255)"],
+[style*="background-color:rgb(255,255,255)"],
+[style*="background-color: rgb(255,255,255)"],
+[style*="background: rgb(255, 255, 255)"],
+[style*="background:rgb(255,255,255)"],
+[style*="background: rgb(255,255,255)"] {
+  background-color: #2c2c2c !important;
+}
+
+/* Light gray backgrounds that should be darker */
+[style*="background-color: #f1f5fb"],
+[style*="background-color:#f1f5fb"],
+[style*="background-color: #e3e9f1"],
+[style*="background-color:#e3e9f1"],
+[style*="background-color: #f9fbff"],
+[style*="background-color:#f9fbff"] {
+  background-color: #222222 !important;
+}
+
+/* Fix text color on force-darkened backgrounds */
+[style*="color: #000"],
+[style*="color:#000"],
+[style*="color: black"],
+[style*="color:black"],
+[style*="color: rgb(0,0,0)"],
+[style*="color:rgb(0,0,0)"] {
+  color: #e0e0e0 !important;
+}

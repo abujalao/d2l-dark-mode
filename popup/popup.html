@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>D2L Dark Mode Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <div class="header">
+      <div class="header-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16.5A7.5 7.5 0 0 1 12 4.5a7.49 7.49 0 0 1 5.3 2.2A7.49 7.49 0 0 1 12 19.5z" fill="#4d9fff"/>
+          <path d="M12 4.5V19.5A7.5 7.5 0 0 1 12 4.5z" fill="#4d9fff"/>
+        </svg>
+      </div>
+      <h1>D2L Dark Mode</h1>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-item">
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Dark Mode</span>
+            <span class="setting-hint">Apply dark theme to D2L pages</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="darkModeToggle" checked>
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">PDF Dark Mode</span>
+            <span class="setting-hint">Darken embedded PDF viewers</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="pdfDarkModeToggle">
+            <span class="toggle-track">
+              <span class="toggle-thumb"></span>
+            </span>
+          </label>
+        </div>
+        <p class="setting-note">Uses smart inversion on PDF content. Images inside PDFs are preserved.</p>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="resetButton" class="btn-reset">Reset to Defaults</button>
+    </div>
+
+    <footer>
+      <span class="version">v1.0.0</span>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

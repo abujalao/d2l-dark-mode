@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "D2L Brightspace Dark Mode",
+  "version": "1.0.0",
+  "description": "Intelligent dark mode for D2L/Brightspace with customizable settings. Preserves images, maintains button visibility, and supports PDF viewer dark mode.",
+  "permissions": [
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "*://*.brightspace.com/*",
+    "*://*.d2l.com/*",
+    "*://avenue.cllmcmaster.ca/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.brightspace.com/*",
+        "*://*.d2l.com/*",
+        "*://avenue.cllmcmaster.ca/*"
+      ],
+      "js": [
+        "content/content.js"
+      ],
+      "css": [
+        "content/dark-mode.css"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "content/pdf-dark-mode.css"
+      ],
+      "matches": [
+        "*://*.brightspace.com/*",
+        "*://*.d2l.com/*",
+        "*://avenue.cllmcmaster.ca/*"
+      ]
+    }
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
