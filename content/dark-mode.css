@@ -782,6 +782,279 @@ d2l-my-courses-card-grid {
 
 
 /* ============================================================
+   MY COURSES - SHADOW DOM HOST & OUTER ELEMENTS
+   ============================================================ */
+
+/* Custom element host selectors (outside shadow DOM) */
+d2l-card,
+d2l-enrollment-card,
+d2l-my-courses,
+d2l-my-courses-card-grid,
+d2l-enrollment-card-header,
+d2l-enrollment-card-body,
+d2l-enrollment-card-footer {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Course card text elements */
+.d2l-enrollment-card-header,
+.d2l-enrollment-card-body,
+.d2l-enrollment-card-footer,
+.d2l-enrollment-card-link,
+.d2l-course-tile-content,
+.d2l-course-tile-header,
+.d2l-course-tile-footer,
+.d2l-my-courses,
+.d2l-my-courses-container,
+.d2l-my-courses-section,
+.d2l-course-list {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+/* Course name and metadata */
+.d2l-course-name,
+.d2l-course-code,
+.d2l-course-semester,
+.d2l-enrollment-status {
+  color: #e0e0e0 !important;
+}
+
+/* Course card hover */
+d2l-card:hover,
+d2l-enrollment-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+}
+
+
+/* ============================================================
+   QUIZ PAGES
+   ============================================================ */
+
+/* Quiz page body & main containers */
+.d2l-page-main,
+.d2l-page-main-padding,
+.d2l-page-content,
+#ContentView,
+#QuizContentView,
+.d2l-page-collapsepane-container,
+.ddial_o2 {
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+}
+
+/* Quiz navigation bar */
+.d2l-quiz-navbar,
+.d2l-quiz-navbar-buttons,
+.d2l-quiz-navbar label,
+.d2l-quizzing-header,
+.d2l-quizzing-info,
+.d2l-quizzing-exit,
+.d2l-shim {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Quiz heading */
+.d2l-quiz-heading-1,
+h1, h2, h3, h4 {
+  color: #e0e0e0 !important;
+}
+
+/* Quiz timer */
+.d2l-quizzing-timer,
+.d2l-quizzing-timer-meter {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Question containers */
+.d2l-activity-question-container,
+.d2l-quiz-question-autosave-container,
+.d2l-quiz-question-clear-container,
+.d2l-quiz-answer-container,
+.d2l-quiz-text-blank-container {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* D2L Container Objects (dco) — quiz question wrappers */
+.dco,
+.dco_c,
+.dco_t,
+.dco_t_h,
+.dco_f {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Quiz status indicators */
+.d2l-quiz-status-questions,
+.d2l-quiz-status-info,
+.d2l-quiz-status-unsaved,
+.d2l-save-status-container,
+.d2l-quiz-attempt-save,
+.d2l-quiz-attempt-buttons {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Quiz status question items */
+.d2l-quiz-status-questions .dco {
+  border: 1px solid #555555 !important;
+  background-color: #2c2c2c !important;
+}
+
+/* Multiple choice / checkbox / radio answer options */
+.d2l-datalist-container,
+.d2l-datalist-checkboxitem,
+.d2l-datalist-radioitem,
+.d2l-datalist-item-content {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Checkbox and radio styling */
+.d2l-checkbox-image-checkmark,
+.d2l-imagecheckbox-container,
+.d2l-checkbox-image-placeholder,
+.d2l-checkbox-readonly-container {
+  background-color: #2c2c2c !important;
+  border-color: #555555 !important;
+}
+
+/* Text input areas in quizzes */
+.d2l-quiz-textbox-container,
+.d2l-quiz-textbox-container textarea,
+.d2l-quiz-textbox-html-container {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* Quiz dropdown selectors */
+.d2l-quiz-dropdown-container,
+.d2l-quiz-dropdown-container select {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* HTML editor in quiz long answers */
+.d2l-htmleditor,
+.d2l-htmleditor-iframecontainer,
+.d2l-htmleditor-header {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Fieldset styling (wraps quiz questions) */
+.dfs_m,
+.dfs_l,
+.dfs_l_f,
+fieldset,
+legend {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Question text readability */
+.d2l-activity-question-container p,
+.d2l-activity-question-container span,
+.d2l-activity-question-container div,
+.d2l-activity-question-container label,
+.d2l-quiz-answer-container p,
+.d2l-quiz-answer-container span,
+.d2l-quiz-answer-container div,
+.d2l-quiz-answer-container label,
+.dco p,
+.dco span,
+.dco div,
+.dco label {
+  color: #e0e0e0 !important;
+}
+
+/* Question header for retake/incorrect */
+.d2l-question-header-container-retake-incorrect,
+.d2l-question-navigation-container-retake-incorrect {
+  background-color: #3a1a1a !important;
+  color: #ff7a7a !important;
+  border-color: #555555 !important;
+}
+
+/* Quiz branding header colors (McMaster custom) */
+.cDark {
+  background-color: #4a1030 !important;
+  color: #e0e0e0 !important;
+}
+
+.cLight {
+  background-color: #3a3a3a !important;
+  color: #e0e0e0 !important;
+}
+
+.cSoft {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+}
+
+/* Quiz controls container */
+.d2l-qc-controls-container,
+.d2l-qc-stats-container {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Points input */
+.d2l-activity-points-input {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+/* Quiz image containers — don't invert but ensure dark container */
+.d2l-quiz-image-container {
+  background-color: #222222 !important;
+}
+
+/* General quiz page links */
+.d2l-quiz-navbar a,
+.d2l-quizzing-header a,
+.d2l-quiz-status-info a {
+  color: #5ba3ff !important;
+}
+
+/* Collapse pane (quiz sidebar) */
+.d2l-collapsepane,
+.d2l-collapsepane-content,
+#CollapsePaneTarget,
+.d2l-page-collapsepane {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+/* Quiz iframe body (when all_frames applies) */
+body.d2l-typography,
+body[class*="d2l"] {
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+}
+
+
+
+/* ============================================================
    OFFICE 365 WIDGET - EMAIL & MESSAGES (Issue 3d, 3e)
    ============================================================ */
 

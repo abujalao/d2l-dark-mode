@@ -17,6 +17,7 @@
   let pdfDarkModeEnabled = false;
   let shadowObserver = null;
   let pdfObserver = null;
+  const shadowObservers = new Set(); /* track all observers for cleanup */
 
   /* CSS that gets injected into every open Shadow Root */
   const SHADOW_CSS = `
@@ -36,6 +37,54 @@
       --d2l-color-olivine: #6bcc7d;
       --d2l-color-carnelian: #ff9d4d;
       --d2l-branding-primary-color: #ffffff;
+      background-color: #222222 !important;
+      color: #e0e0e0 !important;
+      border-color: #3a3a3a !important;
+    }
+
+    /* Card-specific inner elements */
+    .d2l-card-container,
+    .d2l-card-content,
+    .d2l-card-footer-content,
+    .d2l-card-header,
+    .d2l-card-badge,
+    .d2l-card-link-container,
+    [class*="card-container"],
+    [class*="card-content"],
+    [class*="card-footer"],
+    [class*="card-header"] {
+      background-color: #222222 !important;
+      color: #e0e0e0 !important;
+      border-color: #3a3a3a !important;
+    }
+
+    /* Enrollment card elements */
+    .d2l-enrollment-card-overlay,
+    .d2l-enrollment-card-icon-container,
+    .d2l-enrollment-card-status-indicator {
+      background-color: #222222 !important;
+      color: #e0e0e0 !important;
+    }
+
+    /* Collapsible panel elements */
+    .d2l-collapsible-panel,
+    .d2l-collapsible-panel-header,
+    .d2l-collapsible-panel-header-primary,
+    .d2l-collapsible-panel-header-secondary,
+    .d2l-collapsible-panel.scrolled,
+    .d2l-collapsible-panel.scrolled .d2l-collapsible-panel-header,
+    .d2l-collapsible-panel-content,
+    .d2l-collapsible-panel-before,
+    .d2l-collapsible-panel-title,
+    .d2l-collapsible-panel-divider {
+      background-color: #222222 !important;
+      color: #e0e0e0 !important;
+      border-color: #3a3a3a !important;
+    }
+
+    /* Generic divs/containers inside shadow */
+    div, span, p {
+      color: #e0e0e0 !important;
     }
 
     /* Buttons inside shadow DOM — keep visible */
@@ -60,13 +109,28 @@
     /* Generic background overrides for containers inside shadow */
     .d2l-dropdown-content,
     .d2l-menu,
+    .d2l-menu-items,
+    .d2l-hierarchical-view-content,
     .d2l-dialog-inner,
     .d2l-dialog-content,
     .d2l-dialog-header,
-    .d2l-dialog-footer {
+    .d2l-dialog-footer,
+    .content-container,
+    .content-position,
+    .content-width,
+    .dropdown-content-layout,
+    .dropdown-content,
+    .dropdown-header,
+    .dropdown-footer {
       background-color: #222222 !important;
       color: #e0e0e0 !important;
       border-color: #3a3a3a !important;
+    }
+
+    /* Menu item text */
+    .d2l-menu-item-text,
+    .d2l-menu-item-supporting {
+      color: #e0e0e0 !important;
     }
 
     /* Tooltip overrides */
@@ -80,6 +144,14 @@
       background-color: #2c2c2c !important;
       color: #e0e0e0 !important;
       border-color: #555555 !important;
+    }
+
+    /* Tab elements inside shadow DOM */
+    .d2l-tab-panel,
+    [role="tabpanel"],
+    [role="tab"] {
+      background-color: #222222 !important;
+      color: #e0e0e0 !important;
     }
   `;
 
@@ -145,65 +217,101 @@
 
   /**
    * Walk the entire DOM tree and inject styles into every open
-   * shadow root. Also set up a MutationObserver so new shadow
-   * hosts added later are handled automatically.
+   * shadow root. Set up MutationObservers on both the light DOM
+   * AND inside each shadow root so we catch nested components
+   * (e.g. d2l-card inside d2l-my-courses' shadow root).
    */
+  let rescanInterval = null;
+
   function startShadowObserver() {
     /* Process anything already in the DOM */
     injectAllShadowRoots(document.documentElement);
 
     if (shadowObserver) return; /* already observing */
 
-    shadowObserver = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType !== 1) continue;
-          injectAllShadowRoots(node);
-        }
-      }
-    });
+    shadowObserver = new MutationObserver(handleMutations);
+    shadowObserver.observe(document.documentElement, { childList: true, subtree: true });
+    shadowObservers.add(shadowObserver);
 
-    const target = document.documentElement;
-    shadowObserver.observe(target, { childList: true, subtree: true });
+    /*
+     * Safety net: some components attach shadow roots lazily
+     * after being added to the DOM. The MutationObserver sees the
+     * element added but shadowRoot is null at that point.
+     * Re-scan periodically to catch these late shadow roots.
+     */
+    if (!rescanInterval) {
+      rescanInterval = setInterval(() => {
+        injectAllShadowRoots(document.documentElement);
+      }, 2000);
+      /* Stop re-scanning after 30s to save resources */
+      setTimeout(() => {
+        if (rescanInterval) {
+          clearInterval(rescanInterval);
+          rescanInterval = null;
+        }
+      }, 30000);
+    }
+  }
+
+  function handleMutations(mutations) {
+    for (const mutation of mutations) {
+      for (const node of mutation.addedNodes) {
+        if (node.nodeType !== 1) continue;
+        injectAllShadowRoots(node);
+      }
+    }
   }
 
   function stopShadowObserver() {
-    if (shadowObserver) {
-      shadowObserver.disconnect();
-      shadowObserver = null;
+    for (const obs of shadowObservers) {
+      obs.disconnect();
+    }
+    shadowObservers.clear();
+    shadowObserver = null;
+    if (rescanInterval) {
+      clearInterval(rescanInterval);
+      rescanInterval = null;
     }
   }
 
   /**
    * Recursively find all elements under `root` that have an
    * open shadowRoot, then inject our dark-mode styles into each.
+   * Also sets up a MutationObserver inside each shadow root.
    */
   function injectAllShadowRoots(root) {
     if (!root) return;
 
+    /* If this element has a shadow root, inject + observe it */
     if (root.shadowRoot) {
       injectShadowStyles(root.shadowRoot);
+      observeShadowRoot(root.shadowRoot);
     }
 
+    /* Scan all descendants in the light DOM */
     const elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
     for (const el of elements) {
       if (el.shadowRoot) {
         injectShadowStyles(el.shadowRoot);
-        /* Recurse into nested shadow roots */
+        observeShadowRoot(el.shadowRoot);
+        /* Recurse into the shadow root to find nested components */
         injectAllShadowRoots(el.shadowRoot);
       }
     }
+  }
 
-    /* Also recurse inside this shadow root for nested components */
-    if (root.shadowRoot) {
-      const innerElements = root.shadowRoot.querySelectorAll('*');
-      for (const el of innerElements) {
-        if (el.shadowRoot) {
-          injectShadowStyles(el.shadowRoot);
-          injectAllShadowRoots(el.shadowRoot);
-        }
-      }
-    }
+  /**
+   * Set up a MutationObserver inside a shadow root so we catch
+   * components added dynamically inside other shadow roots.
+   */
+  function observeShadowRoot(shadowRoot) {
+    /* Don't double-observe */
+    if (shadowRoot._d2lDarkModeObserved) return;
+    shadowRoot._d2lDarkModeObserved = true;
+
+    const obs = new MutationObserver(handleMutations);
+    obs.observe(shadowRoot, { childList: true, subtree: true });
+    shadowObservers.add(obs);
   }
 
   function injectShadowStyles(shadowRoot) {
@@ -216,12 +324,20 @@
   }
 
   function removeShadowStyles() {
-    document.querySelectorAll('*').forEach((el) => {
+    removeShadowStylesFrom(document.documentElement);
+  }
+
+  function removeShadowStylesFrom(root) {
+    const elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
+    for (const el of elements) {
       if (el.shadowRoot) {
         const style = el.shadowRoot.querySelector('[data-d2l-dark-mode]');
         if (style) style.remove();
+        el.shadowRoot._d2lDarkModeObserved = false;
+        /* Recurse into shadow root */
+        removeShadowStylesFrom(el.shadowRoot);
       }
-    });
+    }
   }
 
   /* ----------------------------------------------------------
@@ -297,12 +413,21 @@
       src.includes('/d2l/common/assets/pdfjs') ||
       src.includes('/common/viewFile.d2lfile');
 
+    // Quiz page detection
+    const isQuizViewer =
+      src.includes('/quizzing/') ||
+      src.includes('/quiz/') ||
+      src.includes('quiz_attempt') ||
+      src.includes('quiz_start') ||
+      iframe.classList.contains('d2l-iframe') ||
+      iframe.id === 'ctl_2';
+
     const isContentViewer =
       src.includes('/content/') ||
       src.includes('ViewerController') ||
       iframe.classList.contains('d2l-iframe');
 
-    if (!isPDFViewer && !isContentViewer) return;
+    if (!isPDFViewer && !isContentViewer && !isQuizViewer) return;
 
     iframe.addEventListener('load', () => {
       try {
@@ -447,15 +572,120 @@
             }
           `;
         } else {
-          // General content viewer styles
+          // General content viewer + quiz styles for iframes
           style.textContent = `
             html, body {
               background-color: #1a1a1a !important;
               color: #e0e0e0 !important;
             }
             a { color: #5ba3ff !important; }
+            a:hover { color: #82bbff !important; }
             /* Preserve images inside iframes */
             img, svg, video, canvas { filter: none !important; }
+
+            /* Quiz containers */
+            .d2l-quiz-navbar,
+            .d2l-quizzing-header,
+            .d2l-quizzing-info,
+            .d2l-quizzing-exit,
+            .d2l-quiz-navbar-buttons {
+              background-color: #222222 !important;
+              color: #e0e0e0 !important;
+              border-color: #3a3a3a !important;
+            }
+
+            /* Question containers */
+            .dco, .dco_c, .dco_t, .dco_t_h, .dco_f,
+            .d2l-activity-question-container,
+            .d2l-quiz-question-autosave-container,
+            .d2l-quiz-answer-container,
+            .d2l-quiz-text-blank-container {
+              background-color: #222222 !important;
+              color: #e0e0e0 !important;
+              border-color: #3a3a3a !important;
+            }
+
+            /* Answer options */
+            .d2l-datalist-container,
+            .d2l-datalist-checkboxitem,
+            .d2l-datalist-radioitem,
+            .d2l-datalist-item-content {
+              background-color: #222222 !important;
+              color: #e0e0e0 !important;
+            }
+
+            /* Text readability */
+            p, span, div, label, legend, fieldset, td, th, tr, table {
+              color: #e0e0e0 !important;
+            }
+
+            table, td, th, tr {
+              background-color: #222222 !important;
+              border-color: #3a3a3a !important;
+            }
+
+            /* Inputs */
+            input, textarea, select {
+              background-color: #2c2c2c !important;
+              color: #e0e0e0 !important;
+              border-color: #555555 !important;
+            }
+
+            /* Headings */
+            h1, h2, h3, h4, h5, h6 {
+              color: #e0e0e0 !important;
+            }
+
+            /* Buttons */
+            button, .d2l-button, .vui-button {
+              background-color: #2c2c2c !important;
+              color: #e0e0e0 !important;
+              border-color: #555555 !important;
+            }
+
+            /* Quiz status */
+            .d2l-quiz-status-questions,
+            .d2l-quiz-status-info,
+            .d2l-quiz-attempt-save,
+            .d2l-quiz-attempt-buttons,
+            .d2l-save-status-container {
+              background-color: #222222 !important;
+              color: #e0e0e0 !important;
+            }
+
+            /* Fieldsets */
+            .dfs_m, .dfs_l, .dfs_l_f {
+              background-color: #222222 !important;
+              color: #e0e0e0 !important;
+            }
+
+            /* McMaster branding colors */
+            .cDark { background-color: #4a1030 !important; color: #e0e0e0 !important; }
+            .cLight { background-color: #3a3a3a !important; color: #e0e0e0 !important; }
+            .cSoft { background-color: #2c2c2c !important; color: #e0e0e0 !important; }
+
+            /* Timer */
+            .d2l-quizzing-timer, .d2l-quizzing-timer-meter {
+              background-color: #2c2c2c !important;
+              color: #e0e0e0 !important;
+            }
+
+            /* Collapse pane */
+            .d2l-collapsepane, .d2l-collapsepane-content,
+            #CollapsePaneTarget, .d2l-page-collapsepane {
+              background-color: #222222 !important;
+              color: #e0e0e0 !important;
+            }
+
+            /* Generic white background catch-all */
+            [style*="background-color: white"],
+            [style*="background-color:#fff"],
+            [style*="background-color: #fff"],
+            [style*="background-color:#FFFFFF"],
+            [style*="background-color: #FFFFFF"],
+            [style*="background-color: rgb(255, 255, 255)"] {
+              background-color: #222222 !important;
+            }
           `;
         }
 
