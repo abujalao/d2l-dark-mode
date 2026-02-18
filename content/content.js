@@ -108,6 +108,56 @@
     .change-image-success .icon-container, .change-image-failure .icon-container {
       background-color: #2c2c2c !important;
     }
+
+    /* Work To Do (W2D) & List Skeletons */
+    .d2l-w2d-collection-fixed, .d2l-w2d-heading-3, .d2l-w2d-block, 
+    .d2l-w2d-attribute-list, .d2l-w2d-list-item, .d2l-list-item-content,
+    .d2l-activity-name, .d2l-text-block, d2l-w2d-no-activities, 
+    .d2l-w2d-collection-overflow, .d2l-empty-template,
+    .d2l-list-content, .d2l-list-container, d2l-list {
+      background-color: #222222 !important;
+      color: #e0e0e0 !important;
+    }
+
+    /* Skeleton Loading States & Spinners */
+    .d2l-skeletize,
+    .d2l-skeletize-container,
+    .d2l-skeletize::before,
+    .d2l-skeletize::after {
+      background-color: #2c2c2c !important;
+      color: #e0e0e0 !important;
+    }
+
+    /* Loading Spinners - Fix White Background circles */
+    .d2l-loading-spinner-bg circle[fill="#FFF"],
+    .d2l-loading-spinner-bg circle[fill="#ffffff"] {
+      fill: #2c2c2c !important;
+    }
+
+    /* Fix empty state SVG icons in W2D */
+    .d2l-empty-icon svg path[fill="#202122"], 
+    .d2l-empty-icon svg path[fill="#494C4E"] {
+      fill: #e0e0e0 !important;
+    }
+
+
+    /* Fix empty state SVG icons in W2D */
+    .d2l-empty-icon svg path[fill="#202122"], 
+    .d2l-empty-icon svg path[fill="#494C4E"] {
+      fill: #e0e0e0 !important;
+    }
+
+    /* Loading Spinners (d2l-loading-spinner) - Fix White Background circles */
+    .d2l-loading-spinner-bg circle[fill="#FFF"],
+    .d2l-loading-spinner-bg circle[fill="#ffffff"] {
+      fill: #2c2c2c !important;
+    }
+
+    /* Skeleton Loading States */
+    .d2l-skeletize,
+    .d2l-skeletize-container {
+      background-color: #2c2c2c !important;
+    }
       
     :host(d2l-labs-navigation-band) {
       --d2l-branding-primary-color: #222222 !important;
