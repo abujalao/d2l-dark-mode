@@ -13,15 +13,24 @@ html,
 html[data-app-version] {
 
   /* === NEUTRAL GRAY SCALE (REVERSED for dark mode) === */
-  --d2l-color-regolith: #1a1a1a !important;   /* Was #f9fbff — lightest bg */
-  --d2l-color-sylvite: #222222 !important;     /* Was #f1f5fb — light bg */
-  --d2l-color-gypsum: #2c2c2c !important;      /* Was #e3e9f1 — light-medium bg */
-  --d2l-color-mica: #3a3a3a !important;        /* Was #cdd5dc — borders / medium gray */
-  --d2l-color-corundum: #555555 !important;    /* Was #b1b9be */
-  --d2l-color-chromite: #777777 !important;    /* Was #90989d */
-  --d2l-color-galena: #999999 !important;      /* Was #6e7477 */
-  --d2l-color-tungsten: #b8b8b8 !important;    /* Was #494c4e — secondary text */
-  --d2l-color-ferrite: #e0e0e0 !important;     /* Was #202122 — primary text */
+  --d2l-color-regolith: #1a1a1a !important;
+  /* Was #f9fbff — lightest bg */
+  --d2l-color-sylvite: #222222 !important;
+  /* Was #f1f5fb — light bg */
+  --d2l-color-gypsum: #2c2c2c !important;
+  /* Was #e3e9f1 — light-medium bg */
+  --d2l-color-mica: #3a3a3a !important;
+  /* Was #cdd5dc — borders / medium gray */
+  --d2l-color-corundum: #555555 !important;
+  /* Was #b1b9be */
+  --d2l-color-chromite: #777777 !important;
+  /* Was #90989d */
+  --d2l-color-galena: #999999 !important;
+  /* Was #6e7477 */
+  --d2l-color-tungsten: #b8b8b8 !important;
+  /* Was #494c4e — secondary text */
+  --d2l-color-ferrite: #e0e0e0 !important;
+  /* Was #202122 — primary text */
 
   /* === BLUES (Celestine) — Primary action / links === */
   --d2l-color-celestine-plus-2: #1a2a3a !important;
@@ -268,6 +277,7 @@ select {
   color: #e0e0e0 !important;
   border-color: #555555 !important;
 }
+
 .form-control:focus {
   border-color: #4d9fff !important;
   outline-color: #4d9fff !important;
@@ -604,8 +614,8 @@ th {
 
 td,
 .d2l-footer,
-.d2l-footer-background-color  {
-  background-color: #1a1a1a  !important;
+.d2l-footer-background-color {
+  background-color: #1a1a1a !important;
   color: #e0e0e0 !important;
 }
 
@@ -642,7 +652,8 @@ d2l-dropdown-content {
 .d2l-dropdown-menu a,
 d2l-dropdown-content a,
 .dropdown-content a {
-  color: #82bbff !important; /* Lighter blue for better contrast */
+  color: #82bbff !important;
+  /* Lighter blue for better contrast */
   background-color: transparent !important;
 }
 
@@ -860,7 +871,10 @@ d2l-enrollment-card:hover {
 
 /* Quiz heading */
 .d2l-quiz-heading-1,
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
   color: #e0e0e0 !important;
 }
 
@@ -1153,8 +1167,8 @@ body[class*="d2l"] {
 }
 
 /* Menu item labels */
-[role="menuitem"] > *,
-.menu-item > * {
+[role="menuitem"]>*,
+.menu-item>* {
   color: #e0e0e0 !important;
 }
 
@@ -1197,4 +1211,139 @@ body[class*="d2l"] {
 [style*="color: rgb(0,0,0)"],
 [style*="color:rgb(0,0,0)"] {
   color: #e0e0e0 !important;
+}
+
+
+/* ============================================================
+   W2D (WORK TO DO) OUTER CONTAINERS
+   The shadow DOM handles d2l-w2d-list / d2l-w2d-list-item;
+   this targets the non-shadow outer wrapper that can still
+   inherit a light background.
+   ============================================================ */
+
+.d2l-w2d-collection-fixed,
+.d2l-w2d-heading-3,
+.d2l-w2d-block,
+.d2l-w2d-attribute-list {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+}
+
+
+/* ============================================================
+   CHANGE IMAGE OVERLAY — ICON CONTAINER (belt-and-suspenders)
+   The primary fix lives in SHADOW_CSS in content.js.
+   This rule covers any light-DOM fallback path.
+   ============================================================ */
+
+.change-image-loading .icon-container,
+.change-image-success .icon-container,
+.change-image-failure .icon-container {
+  background-color: #2c2c2c !important;
+}
+
+
+/* ============================================================
+   MCMASTER LOGIN PAGE (avenue.mcmaster.ca)
+   Targets the pre-authentication landing page which uses
+   plain HTML IDs (no D2L shadow DOM / CSS variables).
+   Only active when the extension runs on avenue.mcmaster.ca.
+   ============================================================ */
+
+body,
+#wrapper {
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+}
+
+#nav_links {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+#nav_links a,
+#nav_links ul li a {
+  color: #5ba3ff !important;
+}
+
+#nav_links a:hover {
+  color: #82bbff !important;
+}
+
+#login_button {
+  background-color: #4d9fff !important;
+  color: #ffffff !important;
+  border-color: #2d5f9f !important;
+}
+
+#login_button:hover {
+  background-color: #5ba3ff !important;
+}
+
+#maintenance {
+  background-color: #2c2c2c !important;
+  color: #e0e0e0 !important;
+  border-color: #555555 !important;
+}
+
+#main,
+#announcements {
+  background-color: #1a1a1a !important;
+  color: #e0e0e0 !important;
+}
+
+#announcements a {
+  color: #5ba3ff !important;
+}
+
+#announcements hr {
+  border-color: #3a3a3a !important;
+}
+
+#foot_wrap,
+#main_footer,
+#text_footer {
+  background-color: #222222 !important;
+  color: #e0e0e0 !important;
+  border-color: #3a3a3a !important;
+}
+
+#text_footer hr {
+  border-color: #3a3a3a !important;
+}
+
+
+/* ============================================================
+   TINYMCE EDITOR (Rich Text Area)
+   ============================================================ */
+
+/* Target the body of the editor iframe specifically */
+.mce-content-body,
+body#tinymce {
+  background-color: #222222 !important;
+  color: #ffffff !important;
+}
+
+/* Force white text for paragraphs inside the editor */
+.mce-content-body p,
+body#tinymce p {
+  color: #ffffff !important;
+}
+
+
+/* ============================================================
+   COURSE BANNER FIXES
+   ============================================================ */
+
+/* Hide the error container unless the parent has the active error class */
+.d2l-course-banner:not(.d2l-load-error) .d2l-course-banner-error-image-container {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* Ensure the banner image is visible when there is no error */
+.d2l-course-banner:not(.d2l-load-error) .d2l-course-banner-image {
+  display: block !important;
+  opacity: 1 !important;
 }

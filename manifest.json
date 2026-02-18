@@ -8,9 +8,8 @@
     "activeTab"
   ],
   "host_permissions": [
-    "*://*.brightspace.com/*",
-    "*://*.d2l.com/*",
-    "*://avenue.cllmcmaster.ca/*"
+    "*://avenue.cllmcmaster.ca/*",
+    "*://avenue.mcmaster.ca/*"
   ],
   "action": {
     "default_popup": "popup/popup.html",
@@ -23,9 +22,8 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.brightspace.com/*",
-        "*://*.d2l.com/*",
-        "*://avenue.cllmcmaster.ca/*"
+        "*://avenue.cllmcmaster.ca/*",
+        "*://avenue.mcmaster.ca/*"
       ],
       "js": [
         "content/content.js"
@@ -34,6 +32,7 @@
         "content/dark-mode.css"
       ],
       "all_frames": true,
+      "match_about_blank": true,
       "run_at": "document_start"
     }
   ],
@@ -43,9 +42,8 @@
         "content/pdf-dark-mode.css"
       ],
       "matches": [
-        "*://*.brightspace.com/*",
-        "*://*.d2l.com/*",
-        "*://avenue.cllmcmaster.ca/*"
+        "*://avenue.cllmcmaster.ca/*",
+        "*://avenue.mcmaster.ca/*"
       ]
     }
   ],
