@@ -1350,13 +1350,14 @@ body#tinymce p {
 
 /* ============================================================
    PINNED COURSE HIGHLIGHT
+   Use :has() to target the parent row when it contains a pinned item.
    ============================================================ */
 
-.d2l-course-selector-item-pinned {
+.d2l-datalist-item-content:has(.d2l-course-selector-item-pinned) {
   border: 1px solid #4d9fff !important;
   background-color: rgb(11, 24, 29) !important;
 }
 
-.d2l-course-selector-item-pinned:hover {
+.d2l-datalist-item-content:has(.d2l-course-selector-item-pinned):hover {
   background-color: rgb(30, 69, 85) !important;
 }
