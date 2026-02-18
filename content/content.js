@@ -29,6 +29,7 @@
       --d2l-color-olivine: #6bcc7d;
       --d2l-color-carnelian: #ff9d4d;
       --d2l-branding-primary-color: #ffffff;
+      color-scheme: dark !important;
       background-color: #222222 !important;
       color: #e0e0e0 !important;
       border-color: #3a3a3a !important;
@@ -178,6 +179,83 @@
   const shadowObservers = new Set();
 
   /* ----------------------------------------------------------
+     LUMINANCE SCANNER
+     Catches elements whose background-color is set in D2L's
+     own CSS files (not via variables, not inline), which
+     neither :root variable overrides nor attribute selectors
+     can reach. Uses requestIdleCallback to be non-blocking.
+  ---------------------------------------------------------- */
+
+  const _scanned = new WeakSet();
+
+  function _linearize(v) {
+    v /= 255;
+    return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  }
+
+  function _luminance(r, g, b) {
+    return 0.2126 * _linearize(r) + 0.7152 * _linearize(g) + 0.0722 * _linearize(b);
+  }
+
+  function _parseRGB(str) {
+    const m = str.match(/rgba?\(\s*(\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\s*\)/);
+    if (!m) return null;
+    const alpha = m[4] !== undefined ? parseFloat(m[4]) : 1;
+    if (alpha < 0.05) return null; // near-transparent — skip
+    return [+m[1], +m[2], +m[3]];
+  }
+
+  function _darkenIfLight(el) {
+    if (!el || el.nodeType !== 1) return;
+    if (_scanned.has(el)) return;
+    _scanned.add(el);
+
+    const tag = el.tagName;
+    if (tag === 'IMG' || tag === 'VIDEO' || tag === 'CANVAS' ||
+        tag === 'SVG'  || tag === 'IFRAME') return;
+
+    const bg = window.getComputedStyle(el).backgroundColor;
+    const rgb = _parseRGB(bg);
+    if (!rgb) return;
+
+    if (_luminance(rgb[0], rgb[1], rgb[2]) > 0.4) {
+      el.style.setProperty('background-color', '#222222', 'important');
+
+      const fg = _parseRGB(window.getComputedStyle(el).color);
+      if (fg && _luminance(fg[0], fg[1], fg[2]) < 0.15) {
+        el.style.setProperty('color', '#e0e0e0', 'important');
+      }
+    }
+  }
+
+  function _scanList(elements) {
+    const arr = Array.from(elements);
+    let i = 0;
+
+    function chunk(deadline) {
+      while (i < arr.length && deadline.timeRemaining() > 1) {
+        _darkenIfLight(arr[i++]);
+      }
+      if (i < arr.length) requestIdleCallback(chunk, { timeout: 500 });
+    }
+
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(chunk, { timeout: 200 });
+    } else {
+      arr.forEach(_darkenIfLight); // synchronous fallback
+    }
+  }
+
+  function startLuminanceScanner() {
+    const run = () => _scanList(document.querySelectorAll('*'));
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', run, { once: true });
+    } else {
+      run();
+    }
+  }
+
+  /* ----------------------------------------------------------
      INITIALIZATION
   ---------------------------------------------------------- */
   chrome.storage.sync.get(['darkModeEnabled', 'pdfDarkModeEnabled'], (result) => {
@@ -206,6 +284,7 @@
      DARK MODE TOGGLE LOGIC
   ---------------------------------------------------------- */
   function enableDarkMode() {
+    injectDarkModeStylesheet();
     document.documentElement.classList.add('d2l-dark-mode-active');
 
     // Ensure body class is added even if script runs at document_start
@@ -217,13 +296,31 @@
       }, { once: true });
     }
     startShadowObserver();
+    startLuminanceScanner();
   }
 
   function disableDarkMode() {
+    removeDarkModeStylesheet();
     document.documentElement.classList.remove('d2l-dark-mode-active');
     document.body?.classList.remove('d2l-dark-mode-active');
     stopShadowObserver();
     removeShadowStyles();
+  }
+
+  function injectDarkModeStylesheet() {
+    if (document.getElementById('d2l-dark-mode-main-css')) return;
+
+    const link = document.createElement('link');
+    link.id = 'd2l-dark-mode-main-css';
+    link.rel = 'stylesheet';
+    link.href = chrome.runtime.getURL('content/dark-mode.css');
+
+    (document.head || document.documentElement).appendChild(link);
+  }
+
+  function removeDarkModeStylesheet() {
+    const link = document.getElementById('d2l-dark-mode-main-css');
+    if (link) link.remove();
   }
 
   /* ----------------------------------------------------------
@@ -264,6 +361,7 @@
           injectAllShadowRoots(node);
         }
       }
+      if (darkModeEnabled) _scanList(mutation.addedNodes);
     }
   }
 

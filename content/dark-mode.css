@@ -98,11 +98,23 @@ html[data-app-version] {
   --d2l-color-tourmaline: #ff5599 !important;
   --d2l-color-tourmaline-minus-1: #cc0066 !important;
 
-  /* === BRANDING === 
+  /* === BRANDING === */
   --d2l-branding-primary-color: #ffffff !important;
 
   /* === TYPOGRAPHY COLOR OVERRIDES === */
   --d2l-body-small-text_-_color: #b8b8b8 !important;
+
+  /* === DARK MODE BASE === */
+  color-scheme: dark;
+  background-color: #1a1a1a;
+  color: #e0e0e0;
+}
+
+
+/* Semantic fallback for non-D2L pages and older page layouts */
+main, article, section, aside {
+  background-color: inherit;
+  color: inherit;
 }
 
 
@@ -258,6 +270,7 @@ a:active {
 .d2l-input,
 .d2l-input-text,
 .d2l-input-search,
+.navigation-search,
 input[type="text"],
 input[type="search"],
 input[type="email"],
