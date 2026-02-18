@@ -1347,3 +1347,16 @@ body#tinymce p {
   display: block !important;
   opacity: 1 !important;
 }
+
+/* ============================================================
+   PINNED COURSE HIGHLIGHT
+   ============================================================ */
+
+.d2l-course-selector-item-pinned {
+  border: 1px solid #4d9fff !important;
+  background-color: rgb(11, 24, 29) !important;
+}
+
+.d2l-course-selector-item-pinned:hover {
+  background-color: rgb(30, 69, 85) !important;
+}

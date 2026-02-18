@@ -9,11 +9,11 @@
   /* ----------------------------------------------------------
      CSS DEFINITIONS
   ---------------------------------------------------------- */
-  
+
   // 1. Shadow DOM CSS (Parsed once, applied everywhere)
   const sharedShadowSheet = new CSSStyleSheet();
   const SHADOW_CSS = `
-    :host {
+    :host(:not(d2l-image-banner-overlay)) {
       --d2l-color-ferrite: #e0e0e0;
       --d2l-color-tungsten: #b8b8b8;
       --d2l-color-galena: #999999;
@@ -125,7 +125,7 @@
   let pdfDarkModeEnabled = false;
   let shadowObserver = null;
   let pdfObserver = null;
-  const shadowObservers = new Set(); 
+  const shadowObservers = new Set();
 
   /* ----------------------------------------------------------
      INITIALIZATION
@@ -157,7 +157,7 @@
   ---------------------------------------------------------- */
   function enableDarkMode() {
     document.documentElement.classList.add('d2l-dark-mode-active');
-    
+
     // Ensure body class is added even if script runs at document_start
     if (document.body) {
       document.body.classList.add('d2l-dark-mode-active');
@@ -185,7 +185,7 @@
     // Process existing elements immediately
     injectAllShadowRoots(document.documentElement);
 
-    if (shadowObserver) return; 
+    if (shadowObserver) return;
 
     shadowObserver = new MutationObserver(handleMutations);
     shadowObserver.observe(document.documentElement, { childList: true, subtree: true });
@@ -196,7 +196,7 @@
       rescanInterval = setInterval(() => {
         injectAllShadowRoots(document.documentElement);
       }, 2000);
-      
+
       // Stop safety net after 30s
       setTimeout(() => {
         if (rescanInterval) {
@@ -270,7 +270,7 @@
     function walk(root) {
       const elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
       if (root.shadowRoot) process(root.shadowRoot);
-      
+
       for (const el of elements) {
         if (el.shadowRoot) {
           process(el.shadowRoot);
@@ -372,12 +372,12 @@
     // Load Handler (Fixes Race Condition)
     try {
       // If content is already loaded (common in SPAs), inject immediately
-      if (iframe.contentDocument && 
-         (iframe.contentDocument.readyState === 'complete' || iframe.contentDocument.readyState === 'interactive')) {
-          injectIframeStyles(iframe, isPDFViewer);
+      if (iframe.contentDocument &&
+        (iframe.contentDocument.readyState === 'complete' || iframe.contentDocument.readyState === 'interactive')) {
+        injectIframeStyles(iframe, isPDFViewer);
       } else {
-          // Otherwise wait for load
-          iframe.addEventListener('load', () => injectIframeStyles(iframe, isPDFViewer));
+        // Otherwise wait for load
+        iframe.addEventListener('load', () => injectIframeStyles(iframe, isPDFViewer));
       }
     } catch (e) {
       // Cross-origin restriction caught here. 
@@ -388,7 +388,7 @@
   function injectIframeStyles(iframe, isPDFViewer) {
     try {
       const doc = iframe.contentDocument;
-      if (!doc) return; 
+      if (!doc) return;
       if (doc.getElementById('d2l-dark-mode-iframe')) return;
 
       const style = doc.createElement('style');
