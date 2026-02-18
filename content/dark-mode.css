@@ -13,6 +13,7 @@
 html.d2l-dark-mode-top {
   filter: invert(1) hue-rotate(180deg);
   background-color: white !important;
+  color: black !important;
 }
 
 /* ============================================================
@@ -56,6 +57,16 @@ html.d2l-dark-mode-active video,
 html.d2l-dark-mode-active canvas,
 html.d2l-dark-mode-active picture {
   filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* ============================================================
+   PDF DARK MODE
+   When PDF dark mode is active in a PDF viewer iframe,
+   don't counter-invert the canvas — let the page-level
+   filter invert the PDF content (white → dark, black → light).
+   ============================================================ */
+html.d2l-pdf-dark canvas {
+  filter: none !important;
 }
 
 /* ============================================================

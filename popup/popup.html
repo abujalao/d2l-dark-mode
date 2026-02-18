@@ -34,6 +34,34 @@
         </div>
         <p class="setting-note">Inverts page colors. Images and videos are preserved automatically.</p>
       </div>
+
+      <div class="setting-item">
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">PDF Dark Mode</span>
+            <span class="setting-hint">Darken PDFs in D2L's document viewer</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="pdfDarkModeToggle">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+        <p class="setting-note">Inverts PDF text and backgrounds. Diagrams may look different.</p>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-item">
+        <div class="setting-info">
+          <span class="setting-label">Custom Domains</span>
+          <span class="setting-hint">Add your university's Brightspace URL</span>
+        </div>
+        <div class="domain-input-row">
+          <input type="text" id="domainInput" placeholder="e.g. brightspace.uwo.ca">
+          <button id="addDomainBtn">Add</button>
+        </div>
+        <ul id="domainList" class="domain-list"></ul>
+      </div>
     </div>
 
     <div class="actions">
@@ -41,7 +69,7 @@
     </div>
 
     <footer>
-      <span class="version">v2.0.0</span>
+      <span class="version">v3.0.0</span>
     </footer>
   </div>
 

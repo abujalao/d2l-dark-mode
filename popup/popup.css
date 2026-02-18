@@ -141,6 +141,86 @@ h1 {
   outline-offset: 2px;
 }
 
+/* ---- Custom Domains ---- */
+.domain-input-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.domain-input-row input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #e0e0e0;
+  background-color: #1a1a1a;
+  border: 1px solid #3a3a3a;
+  border-radius: 6px;
+  outline: none;
+  font-family: inherit;
+}
+
+.domain-input-row input::placeholder {
+  color: #666666;
+}
+
+.domain-input-row input:focus {
+  border-color: #4d9fff;
+}
+
+.domain-input-row button {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  background-color: #4d9fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.domain-input-row button:hover {
+  background-color: #6db3ff;
+}
+
+.domain-list {
+  list-style: none;
+  margin-top: 8px;
+}
+
+.domain-list:empty {
+  display: none;
+}
+
+.domain-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+  font-size: 12px;
+  color: #bbbbbb;
+  border-top: 1px solid #2c2c2c;
+}
+
+.domain-list li:first-child {
+  border-top: none;
+}
+
+.domain-remove {
+  background: none;
+  border: none;
+  color: #888888;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.domain-remove:hover {
+  color: #ff6b6b;
+}
+
 /* ---- Actions ---- */
 .actions {
   margin-bottom: 14px;

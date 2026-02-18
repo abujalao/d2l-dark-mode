@@ -10,38 +10,69 @@
   'use strict';
 
   /* ----------------------------------------------------------
+     BRIGHTSPACE DETECTION
+     The script runs on all pages but should only activate on
+     Brightspace instances. Fast checks first, deferred DOM
+     check as fallback.
+  ---------------------------------------------------------- */
+  const KNOWN_BRIGHTSPACE_HOSTS = [
+    'avenue.mcmaster.ca',
+    'avenue.cllmcmaster.ca',
+  ];
+
+  function isBrightspace() {
+    const url = window.location.href;
+    if (/\/d2l\//.test(url)) return true;
+    if (document.documentElement.hasAttribute('data-app-version')) return true;
+    const hostname = window.location.hostname;
+    if (KNOWN_BRIGHTSPACE_HOSTS.some(h => hostname === h || hostname.endsWith('.' + h))) return true;
+    return false;
+  }
+
+  function isBrightspaceDeferred() {
+    return !!document.querySelector('d2l-navigation, [class*="d2l-"], meta[name="d2l"]');
+  }
+
+  function initIfBrightspace(customDomains) {
+    const hostname = window.location.hostname;
+    if (isBrightspace()) {
+      initExtension();
+      return;
+    }
+    if (customDomains.some(d => hostname === d || hostname.endsWith('.' + d))) {
+      initExtension();
+      return;
+    }
+    // Deferred check after DOM loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        if (isBrightspaceDeferred()) initExtension();
+      }, { once: true });
+    } else {
+      if (isBrightspaceDeferred()) initExtension();
+    }
+  }
+
+  // Load custom domains then run detection
+  chrome.storage.sync.get(['customDomains'], (result) => {
+    const customDomains = result.customDomains || [];
+    initIfBrightspace(customDomains);
+  });
+
+  let initialized = false;
+  function initExtension() {
+    if (initialized) return;
+    initialized = true;
+    initDarkMode();
+  }
+
+  function initDarkMode() {
+
+  /* ----------------------------------------------------------
      SHADOW DOM CSS — counter-invert media inside shadow roots
   ---------------------------------------------------------- */
   const sharedShadowSheet = new CSSStyleSheet();
-  const SHADOW_CSS = `
-    /* Counter-invert media */
-    img, video, canvas, picture {
-      filter: invert(1) hue-rotate(180deg) !important;
-    }
 
-    /* Top-layer popovers inside shadow DOM */
-    :popover-open {
-      filter: invert(1) hue-rotate(180deg) !important;
-    }
-
-    /* Host element itself promoted to top layer */
-    :host(:popover-open) {
-      filter: invert(1) hue-rotate(180deg) !important;
-    }
-
-    /* Counter-invert media inside shadow popovers */
-    :popover-open :is(img, video, canvas, picture) {
-      filter: invert(1) hue-rotate(180deg) !important;
-    }
-  `;
-  sharedShadowSheet.replaceSync(SHADOW_CSS);
-
-  /* ----------------------------------------------------------
-     STATE
-  ---------------------------------------------------------- */
-  let darkModeEnabled = true;
-  let shadowObserver = null;
-  const shadowObservers = new Set();
   /* ----------------------------------------------------------
      SMART ROOT DETECTION
      Determines if this frame should apply the inversion filter.
@@ -75,11 +106,54 @@
 
   const isEffectiveRoot = shouldApplyFilter();
 
+  // Builds shadow DOM CSS.
+  // Effective root: canvas always included (counter-inverted to show original colors).
+  // Child frames: canvas included only when PDF dark mode is OFF (double-inversion
+  // restores light PDF). When PDF dark mode is ON, canvas is excluded so the parent
+  // frame's single inversion keeps the PDF dark.
+  function buildShadowCSS(includeCanvas) {
+    const media = includeCanvas ? 'img, video, canvas, picture' : 'img, video, picture';
+    return `
+    ${media} {
+      filter: invert(1) hue-rotate(180deg) !important;
+    }
+    :popover-open {
+      filter: invert(1) hue-rotate(180deg) !important;
+    }
+    :host(:popover-open) {
+      filter: invert(1) hue-rotate(180deg) !important;
+    }
+    :popover-open :is(${media}) {
+      filter: invert(1) hue-rotate(180deg) !important;
+    }
+  `;
+  }
+  // Default: include canvas. applyPdfDarkMode() will update this for child frames.
+  sharedShadowSheet.replaceSync(buildShadowCSS(true));
+
+  /* ----------------------------------------------------------
+     PDF VIEWER DETECTION
+  ---------------------------------------------------------- */
+  function isPDFViewer() {
+    const url = window.location.href;
+    return /viewFile|viewer\.html|pdfjs/.test(url);
+  }
+
+  let pdfDarkModeEnabled = false;
+
+  /* ----------------------------------------------------------
+     STATE
+  ---------------------------------------------------------- */
+  let darkModeEnabled = true;
+  let shadowObserver = null;
+  const shadowObservers = new Set();
   /* ----------------------------------------------------------
      INITIALIZATION
   ---------------------------------------------------------- */
-  chrome.storage.sync.get(['darkModeEnabled'], (result) => {
+  chrome.storage.sync.get(['darkModeEnabled', 'pdfDarkModeEnabled'], (result) => {
     darkModeEnabled = result.darkModeEnabled !== false;
+    pdfDarkModeEnabled = result.pdfDarkModeEnabled === true;
+    applyPdfDarkMode();
     if (darkModeEnabled) enableDarkMode();
   });
 
@@ -89,7 +163,27 @@
       darkModeEnabled = changes.darkModeEnabled.newValue;
       darkModeEnabled ? enableDarkMode() : disableDarkMode();
     }
+    if (changes.pdfDarkModeEnabled) {
+      pdfDarkModeEnabled = changes.pdfDarkModeEnabled.newValue;
+      applyPdfDarkMode();
+    }
   });
+
+  function applyPdfDarkMode() {
+    if (pdfDarkModeEnabled && isPDFViewer()) {
+      document.documentElement.classList.add('d2l-pdf-dark');
+    } else {
+      document.documentElement.classList.remove('d2l-pdf-dark');
+    }
+
+    // Child frames (e.g. d2l-pdf-viewer in smart-curriculum): toggle canvas
+    // counter-inversion based on PDF dark mode setting.
+    // PDF dark OFF → include canvas → double-inversion → PDF appears light.
+    // PDF dark ON  → exclude canvas → parent's single inversion → PDF appears dark.
+    if (!isEffectiveRoot) {
+      sharedShadowSheet.replaceSync(buildShadowCSS(!pdfDarkModeEnabled));
+    }
+  }
 
   /* ----------------------------------------------------------
      ENABLE / DISABLE
@@ -120,7 +214,7 @@
 
   function disableDarkMode() {
     removeDarkModeStylesheet();
-    document.documentElement.classList.remove('d2l-dark-mode-active', 'd2l-dark-mode-top', 'd2l-dark-mode-nested');
+    document.documentElement.classList.remove('d2l-dark-mode-active', 'd2l-dark-mode-top', 'd2l-dark-mode-nested', 'd2l-pdf-dark');
     document.body?.classList.remove('d2l-dark-mode-active');
     stopShadowObserver();
     removeShadowStyles();
@@ -257,4 +351,6 @@
 
     walk(document.documentElement);
   }
+
+  } // end initDarkMode
 })();
