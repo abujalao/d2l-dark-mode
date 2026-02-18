@@ -1,11 +1,10 @@
 {
   "manifest_version": 3,
   "name": "D2L Brightspace Dark Mode",
-  "version": "1.0.0",
-  "description": "Intelligent dark mode for D2L/Brightspace with customizable settings. Preserves images, maintains button visibility, and supports PDF viewer dark mode.",
+  "version": "2.0.0",
+  "description": "Universal dark mode for D2L/Brightspace using CSS filter inversion. Automatically handles shadow DOM, iframes, and PDF viewers.",
   "permissions": [
-    "storage",
-    "activeTab"
+    "storage"
   ],
   "host_permissions": [
     "*://avenue.cllmcmaster.ca/*",
@@ -37,7 +36,6 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "content/pdf-dark-mode.css",
         "content/dark-mode.css"
       ],
       "matches": [
