@@ -38,15 +38,29 @@
       <div class="setting-item">
         <div class="setting-row">
           <div class="setting-info">
-            <span class="setting-label">PDF Dark Mode</span>
-            <span class="setting-hint">Darken PDFs in D2L's document viewer</span>
+            <span class="setting-label">Document Dark Mode</span>
+            <span class="setting-hint">Darken documents (PDFs, slides, etc.) in the viewer</span>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="pdfDarkModeToggle">
+            <input type="checkbox" id="documentDarkModeToggle">
             <span class="toggle-track"><span class="toggle-thumb"></span></span>
           </label>
         </div>
-        <p class="setting-note">Inverts PDF text and backgrounds. Diagrams may look different.</p>
+        <p class="setting-note">Inverts document text and backgrounds. Diagrams may look different.</p>
+      </div>
+
+      <div class="setting-item">
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Video Dark Mode</span>
+            <span class="setting-hint">Darken embedded videos (Echo360, YouTube, etc.)</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="videoDarkModeToggle">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+        <p class="setting-note">Off by default. Videos play in original colors unless this is enabled.</p>
       </div>
     </div>
 

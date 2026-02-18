@@ -16,8 +16,33 @@
      check as fallback.
   ---------------------------------------------------------- */
   const KNOWN_BRIGHTSPACE_HOSTS = [
+    // --- McMaster University ---
     'avenue.mcmaster.ca',
     'avenue.cllmcmaster.ca',
+
+    // --- Broad patterns (covers hundreds of institutions) ---
+    // All *.brightspace.com deployments (e.g. uottawa.brightspace.com, carleton.brightspace.com)
+    'brightspace.com',
+    // All Ontario school boards on the Ministry's Virtual Learning Environment
+    // (e.g. ocdsb.elearningontario.ca, yrdsb.elearningontario.ca, tvdsb.elearningontario.ca)
+    'elearningontario.ca',
+    // Older D2L/Desire2Learn hosted instances
+    // (e.g. durhamcollege.desire2learn.com, hwdsbtest.desire2learn.com)
+    'desire2learn.com',
+
+    // --- Specific custom domains ---
+    // University of Calgary
+    'elearn.ucalgary.ca',
+    // Bow Valley College
+    'd2l.bowvalleycollege.ca',
+    // Calgary Board of Education (CBE)
+    'd2l.cbe.ab.ca',
+    // Wilfrid Laurier University (MyLearningSpace)
+    'mylearningspace.wlu.ca',
+    // Fanshawe College (FanshaweOnline)
+    'fanshaweonline.ca',
+    // Hamilton-Wentworth District School Board (The Hub) portal
+    'myhome.hwdsb.on.ca',
   ];
 
   function isBrightspace() {
@@ -33,6 +58,20 @@
     return !!document.querySelector('d2l-navigation, [class*="d2l-"], meta[name="d2l"]');
   }
 
+  // Returns true when this frame is a cross-origin child (e.g. Echo360,
+  // YouTube embed). These frames should NOT run the dark mode logic —
+  // the parent frame handles their inversion via counter-invert on the
+  // iframe element.
+  function isCrossOriginChild() {
+    if (window.self === window.top) return false;
+    try {
+      window.parent.document; // throws if cross-origin
+      return false;
+    } catch {
+      return true;
+    }
+  }
+
   function initIfBrightspace(customDomains) {
     const hostname = window.location.hostname;
     if (isBrightspace()) {
@@ -43,7 +82,13 @@
       initExtension();
       return;
     }
-    // Deferred check after DOM loads
+    // Cross-origin child frames that didn't pass the strict checks above
+    // are third-party embeds (video players, widgets, etc.) — skip them.
+    // The broad isBrightspaceDeferred() check (e.g. [class*="d2l-"]) can
+    // false-positive inside embeds that happen to use "d2l-" in a class name.
+    if (isCrossOriginChild()) return;
+
+    // Deferred check after DOM loads (top frame & same-origin children only)
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
         if (isBrightspaceDeferred()) initExtension();
@@ -67,6 +112,48 @@
   }
 
   function initDarkMode() {
+
+  /* ----------------------------------------------------------
+     VIDEO IFRAME DETECTION (heuristic, no domain list)
+     Tiered approach:
+       Strong signals  → pass alone (video-only allow policies,
+                         explicit video title)
+       Weaker signals  → require allowfullscreen + a second hint
+     This avoids false-positives on widget iframes (Libraries,
+     campus services, etc.) that may have allowfullscreen but
+     are not video embeds.
+  ---------------------------------------------------------- */
+  function isVideoIframe(iframe) {
+    const allow = iframe.getAttribute('allow') || '';
+
+    // --- Strong signals (any one is sufficient) ---
+
+    // picture-in-picture / encrypted-media are video-only policies
+    if (/picture-in-picture|encrypted-media/.test(allow)) return true;
+
+    // Explicit "video" / "video player" / "media player" in title or aria-label
+    const text = ((iframe.title || '') + ' ' + (iframe.getAttribute('aria-label') || '')).toLowerCase();
+    if (/\bvideo\b|video.player|media.player/.test(text)) return true;
+
+    // --- Combined signals (allowfullscreen + one more hint) ---
+    const hasFullscreen = iframe.hasAttribute('allowfullscreen') || iframe.hasAttribute('allowFullScreen');
+    if (!hasFullscreen) return false;
+
+    // autoplay policy — widgets almost never request it
+    if (/autoplay/.test(allow)) return true;
+
+    // src path contains a video-related segment
+    try {
+      const path = new URL(iframe.src, window.location.href).pathname.toLowerCase();
+      if (/\/embed\/|\/player\/|\/video\/|\/watch|\/stream\/|\/lecture\/|\/media\//.test(path)) return true;
+    } catch { /* invalid src — skip */ }
+
+    // class or id contains "video" or "player"
+    const classAndId = ((iframe.className || '') + ' ' + (iframe.id || '')).toLowerCase();
+    if (/video|player/.test(classAndId)) return true;
+
+    return false;
+  }
 
   /* ----------------------------------------------------------
      SHADOW DOM CSS — counter-invert media inside shadow roots
@@ -108,9 +195,9 @@
 
   // Builds shadow DOM CSS.
   // Effective root: canvas always included (counter-inverted to show original colors).
-  // Child frames: canvas included only when PDF dark mode is OFF (double-inversion
-  // restores light PDF). When PDF dark mode is ON, canvas is excluded so the parent
-  // frame's single inversion keeps the PDF dark.
+  // Child frames: canvas included only when document dark mode is OFF (double-inversion
+  // restores light document). When document dark mode is ON, canvas is excluded so the
+  // parent frame's single inversion keeps the document dark.
   function buildShadowCSS(includeCanvas) {
     const media = includeCanvas ? 'img, video, canvas, picture' : 'img, video, picture';
     return `
@@ -128,18 +215,19 @@
     }
   `;
   }
-  // Default: include canvas. applyPdfDarkMode() will update this for child frames.
+  // Default: include canvas. applyDocDarkMode() will update this for child frames.
   sharedShadowSheet.replaceSync(buildShadowCSS(true));
 
   /* ----------------------------------------------------------
-     PDF VIEWER DETECTION
+     DOCUMENT VIEWER DETECTION
   ---------------------------------------------------------- */
-  function isPDFViewer() {
+  function isDocumentViewer() {
     const url = window.location.href;
     return /viewFile|viewer\.html|pdfjs/.test(url);
   }
 
-  let pdfDarkModeEnabled = false;
+  let documentDarkModeEnabled = false;
+  let videoDarkModeEnabled = false;
 
   /* ----------------------------------------------------------
      STATE
@@ -150,10 +238,14 @@
   /* ----------------------------------------------------------
      INITIALIZATION
   ---------------------------------------------------------- */
-  chrome.storage.sync.get(['darkModeEnabled', 'pdfDarkModeEnabled'], (result) => {
+  chrome.storage.sync.get(['darkModeEnabled', 'documentDarkModeEnabled', 'pdfDarkModeEnabled', 'videoDarkModeEnabled'], (result) => {
     darkModeEnabled = result.darkModeEnabled !== false;
-    pdfDarkModeEnabled = result.pdfDarkModeEnabled === true;
-    applyPdfDarkMode();
+    // Backward compat: prefer documentDarkModeEnabled, fall back to pdfDarkModeEnabled
+    documentDarkModeEnabled = result.documentDarkModeEnabled !== undefined
+      ? result.documentDarkModeEnabled === true
+      : result.pdfDarkModeEnabled === true;
+    videoDarkModeEnabled = result.videoDarkModeEnabled === true;
+    applyDocDarkMode();
     if (darkModeEnabled) enableDarkMode();
   });
 
@@ -163,25 +255,51 @@
       darkModeEnabled = changes.darkModeEnabled.newValue;
       darkModeEnabled ? enableDarkMode() : disableDarkMode();
     }
-    if (changes.pdfDarkModeEnabled) {
-      pdfDarkModeEnabled = changes.pdfDarkModeEnabled.newValue;
-      applyPdfDarkMode();
+    if (changes.documentDarkModeEnabled) {
+      documentDarkModeEnabled = changes.documentDarkModeEnabled.newValue;
+      applyDocDarkMode();
+    }
+    if (changes.videoDarkModeEnabled) {
+      videoDarkModeEnabled = changes.videoDarkModeEnabled.newValue;
+      if (darkModeEnabled) applyVideoMode();
     }
   });
 
-  function applyPdfDarkMode() {
-    if (pdfDarkModeEnabled && isPDFViewer()) {
-      document.documentElement.classList.add('d2l-pdf-dark');
+  function applyDocDarkMode() {
+    if (documentDarkModeEnabled && isDocumentViewer()) {
+      document.documentElement.classList.add('d2l-doc-dark');
     } else {
-      document.documentElement.classList.remove('d2l-pdf-dark');
+      document.documentElement.classList.remove('d2l-doc-dark');
     }
 
     // Child frames (e.g. d2l-pdf-viewer in smart-curriculum): toggle canvas
-    // counter-inversion based on PDF dark mode setting.
-    // PDF dark OFF → include canvas → double-inversion → PDF appears light.
-    // PDF dark ON  → exclude canvas → parent's single inversion → PDF appears dark.
+    // counter-inversion based on document dark mode setting.
+    // Doc dark OFF → include canvas → double-inversion → document appears light.
+    // Doc dark ON  → exclude canvas → parent's single inversion → document appears dark.
     if (!isEffectiveRoot) {
-      sharedShadowSheet.replaceSync(buildShadowCSS(!pdfDarkModeEnabled));
+      sharedShadowSheet.replaceSync(buildShadowCSS(!documentDarkModeEnabled));
+    }
+  }
+
+  /* ----------------------------------------------------------
+     VIDEO MODE — counter-invert video iframes
+     When videoDarkModeEnabled is OFF (default), video iframes
+     get counter-inverted so they appear in original colors.
+     When ON, the counter-inversion is removed so parent's
+     inversion darkens the video.
+  ---------------------------------------------------------- */
+  function applyVideoMode() {
+    const iframes = document.querySelectorAll('iframe');
+    for (const iframe of iframes) {
+      if (isVideoIframe(iframe)) {
+        if (videoDarkModeEnabled) {
+          // Let parent inversion darken the video
+          iframe.style.removeProperty('filter');
+        } else {
+          // Counter-invert to preserve original colors
+          iframe.style.filter = 'invert(1) hue-rotate(180deg)';
+        }
+      }
     }
   }
 
@@ -210,14 +328,22 @@
     }
 
     startShadowObserver();
+    applyVideoMode();
   }
 
   function disableDarkMode() {
     removeDarkModeStylesheet();
-    document.documentElement.classList.remove('d2l-dark-mode-active', 'd2l-dark-mode-top', 'd2l-dark-mode-nested', 'd2l-pdf-dark');
+    document.documentElement.classList.remove('d2l-dark-mode-active', 'd2l-dark-mode-top', 'd2l-dark-mode-nested', 'd2l-doc-dark');
     document.body?.classList.remove('d2l-dark-mode-active');
     stopShadowObserver();
     removeShadowStyles();
+    // Clean up video iframe inline filters
+    const iframes = document.querySelectorAll('iframe');
+    for (const iframe of iframes) {
+      if (isVideoIframe(iframe)) {
+        iframe.style.removeProperty('filter');
+      }
+    }
   }
 
   /* ----------------------------------------------------------
@@ -259,10 +385,12 @@
     });
     shadowObservers.add(shadowObserver);
 
-    // Safety net for lazy-loaded web components
+    // Safety net for lazy-loaded web components and late-arriving video iframes
+    // (iframes may be added to DOM before their attributes are set)
     if (!rescanInterval) {
       rescanInterval = setInterval(() => {
         injectAllShadowRoots(document.documentElement);
+        applyVideoMode();
       }, 2000);
 
       setTimeout(() => {
@@ -279,8 +407,28 @@
       for (const node of mutation.addedNodes) {
         if (node.nodeType === 1) {
           injectAllShadowRoots(node);
+          // Apply video mode to newly added iframes
+          if (node.tagName === 'IFRAME' && isVideoIframe(node)) {
+            applyVideoModeToIframe(node);
+          }
+          // Also check children for iframes
+          const iframes = node.querySelectorAll ? node.querySelectorAll('iframe') : [];
+          for (const iframe of iframes) {
+            if (isVideoIframe(iframe)) {
+              applyVideoModeToIframe(iframe);
+            }
+          }
         }
       }
+    }
+  }
+
+  function applyVideoModeToIframe(iframe) {
+    if (!darkModeEnabled) return;
+    if (videoDarkModeEnabled) {
+      iframe.style.removeProperty('filter');
+    } else {
+      iframe.style.filter = 'invert(1) hue-rotate(180deg)';
     }
   }
 

@@ -60,12 +60,12 @@ html.d2l-dark-mode-active picture {
 }
 
 /* ============================================================
-   PDF DARK MODE
-   When PDF dark mode is active in a PDF viewer iframe,
+   DOCUMENT DARK MODE
+   When document dark mode is active in a document viewer iframe,
    don't counter-invert the canvas — let the page-level
-   filter invert the PDF content (white → dark, black → light).
+   filter invert the document content (white → dark, black → light).
    ============================================================ */
-html.d2l-pdf-dark canvas {
+html.d2l-doc-dark canvas {
   filter: none !important;
 }
 

@@ -6,7 +6,8 @@ chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     chrome.storage.sync.set({
       darkModeEnabled: true,
-      pdfDarkModeEnabled: false,
+      documentDarkModeEnabled: false,
+      videoDarkModeEnabled: false,
       customDomains: []
     });
   }
