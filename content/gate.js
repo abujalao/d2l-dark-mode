@@ -10,6 +10,22 @@
   'use strict';
 
   var CFG = self.D2LConfig;
+
+  // Handle about:blank / about:srcdoc iframes — these inherit the parent's
+  // origin and need dark mode scripts if the parent is a Brightspace page.
+  var isAboutFrame = location.protocol === 'about:';
+  if (isAboutFrame) {
+    try {
+      if (window.parent.document.documentElement.classList.contains(CFG.CSS.ACTIVE)) {
+        document.documentElement.classList.add(CFG.CSS.ACTIVE);
+        chrome.runtime.sendMessage({ type: 'injectScripts' });
+      }
+    } catch (e) {
+      // cross-origin — shouldn't happen for about: frames but be safe
+    }
+    return;
+  }
+
   var hostname = location.hostname;
   var isKnownHost = CFG.KNOWN_HOSTS.some(function (h) {
     return hostname === h || hostname.endsWith('.' + h);

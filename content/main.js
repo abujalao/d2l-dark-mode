@@ -19,7 +19,14 @@
     D2L.state.videoDarkModeEnabled = result[CFG.STORAGE_KEYS.VIDEO_DARK_MODE] === true;
 
     D2L.applyDocDarkMode();
-    if (D2L.state.darkModeEnabled) D2L.enableDarkMode();
+    if (D2L.state.darkModeEnabled) {
+      D2L.enableDarkMode();
+    } else {
+      // Clean up the ACTIVE class that gate.js added synchronously at
+      // document_start — without this, orphaned CSS rules (color-scheme: dark,
+      // image counter-inversion) would remain active even with dark mode OFF.
+      D2L.disableDarkMode();
+    }
   });
 
   chrome.storage.onChanged.addListener(function (changes, namespace) {

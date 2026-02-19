@@ -83,15 +83,18 @@
         var node = addedNodes[n];
         if (node.nodeType === 1) {
           D2L.injectAllShadowRoots(node);
-          // Apply video mode to newly added iframes
+          // Apply video mode to newly added iframes (including in shadow roots)
           if (node.tagName === 'IFRAME' && D2L.isVideoIframe(node)) {
             D2L.applyVideoModeToIframe(node);
           }
-          // Also check children for iframes
-          var iframes = node.querySelectorAll ? node.querySelectorAll('iframe') : [];
-          for (var i = 0; i < iframes.length; i++) {
-            if (D2L.isVideoIframe(iframes[i])) {
-              D2L.applyVideoModeToIframe(iframes[i]);
+          if (D2L._applyVideoModeIn) {
+            D2L._applyVideoModeIn(node);
+          } else {
+            var iframes = node.querySelectorAll ? node.querySelectorAll('iframe') : [];
+            for (var i = 0; i < iframes.length; i++) {
+              if (D2L.isVideoIframe(iframes[i])) {
+                D2L.applyVideoModeToIframe(iframes[i]);
+              }
             }
           }
         }

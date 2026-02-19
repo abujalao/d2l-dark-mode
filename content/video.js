@@ -32,8 +32,10 @@
     // picture-in-picture too, which is caught above. Bail out early.
     if (/encrypted-media/.test(allow) && /clipboard-write/.test(allow)) return false;
 
-    // --- Combined signals (allowfullscreen + one more hint) ---
-    var hasFullscreen = iframe.hasAttribute('allowfullscreen') || iframe.hasAttribute('allowFullScreen');
+    // --- Combined signals (fullscreen capability + one more hint) ---
+    var hasFullscreen = iframe.hasAttribute('allowfullscreen')
+      || iframe.hasAttribute('allowFullScreen')
+      || /\bfullscreen\b/.test(allow);
     if (!hasFullscreen) return false;
 
     // autoplay policy — widgets almost never request it
@@ -53,13 +55,29 @@
   };
 
   /**
-   * Scans all iframes and applies/removes counter-inversion based on state.
+   * Scans all iframes (including those inside shadow roots) and applies/removes
+   * counter-inversion based on state.
    */
   D2L.applyVideoMode = function () {
-    var iframes = document.querySelectorAll('iframe');
+    D2L._applyVideoModeIn(document);
+  };
+
+  /**
+   * Recursively scans a root (document or shadow root) for video iframes,
+   * descending into shadow roots to find iframes that querySelectorAll misses.
+   */
+  D2L._applyVideoModeIn = function (root) {
+    var iframes = root.querySelectorAll ? root.querySelectorAll('iframe') : [];
     for (var i = 0; i < iframes.length; i++) {
       if (D2L.isVideoIframe(iframes[i])) {
         D2L.applyVideoModeToIframe(iframes[i]);
+      }
+    }
+    // Walk into shadow roots
+    var elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
+    for (var j = 0; j < elements.length; j++) {
+      if (elements[j].shadowRoot) {
+        D2L._applyVideoModeIn(elements[j].shadowRoot);
       }
     }
   };

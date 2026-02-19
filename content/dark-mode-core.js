@@ -27,14 +27,31 @@
 
     try {
       var parentDoc = window.parent.document;
+      var parentIsFrameset = parentDoc.querySelector('frameset') !== null;
+      if (parentIsFrameset) return true;
+
+      // Check if parent already has the full filter classes (ideal case)
       var parentHasFilter = parentDoc.documentElement.classList.contains(CFG.CSS.TOP) ||
         parentDoc.documentElement.classList.contains(CFG.CSS.NESTED);
-      var parentIsFrameset = parentDoc.querySelector('frameset') !== null;
+      if (parentHasFilter) return false;
 
-      if (parentIsFrameset || !parentHasFilter) {
-        return true;
-      }
-      return false;
+      // Check if parent has the ACTIVE class set synchronously by gate.js at
+      // document_start — this is guaranteed to be present before any dynamically
+      // injected scripts run, eliminating the timing race.
+      if (parentDoc.documentElement.classList.contains(CFG.CSS.ACTIVE)) return false;
+
+      // Check if parent URL matches Brightspace patterns (parent is D2L but
+      // hasn't finished initializing yet)
+      var parentHref = window.parent.location.href;
+      var parentHostname = window.parent.location.hostname;
+      if (CFG.PATTERNS.D2L_PATH.test(parentHref)) return false;
+      if (parentDoc.documentElement.hasAttribute('data-app-version')) return false;
+      if (CFG.KNOWN_HOSTS.some(function (h) {
+        return parentHostname === h || parentHostname.endsWith('.' + h);
+      })) return false;
+
+      // Parent is not Brightspace — this frame should apply its own filter
+      return true;
     } catch (e) {
       return true;
     }
