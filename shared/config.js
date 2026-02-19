@@ -87,6 +87,15 @@
       return result.pdfDarkModeEnabled === true;
     },
 
+    /* ---- Content scripts injected by gate.js via service worker ---- */
+    CONTENT_SCRIPTS: [
+      'content/detection.js',
+      'content/video.js',
+      'content/shadow-dom.js',
+      'content/dark-mode-core.js',
+      'content/main.js',
+    ],
+
     /**
      * Returns the array of all storage keys to fetch (includes legacy key for migration).
      * @returns {string[]}

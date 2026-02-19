@@ -1,13 +1,14 @@
 /**
- * D2L Dark Mode — Brightspace Detection
- * Determines whether the current page is a Brightspace instance.
+ * D2L Dark Mode — Brightspace Detection Helpers
+ * Utility functions for Brightspace detection.
+ * Orchestration (initIfBrightspace) has moved to gate.js.
  */
 
 (function () {
   'use strict';
 
-  const D2L = window.D2L = window.D2L || {};
-  const CFG = window.D2LConfig;
+  var D2L = window.D2L = window.D2L || {};
+  var CFG = window.D2LConfig;
 
   /**
    * Fast synchronous check: URL path, data attribute, or known host.
@@ -39,38 +40,6 @@
       return false;
     } catch (e) {
       return true;
-    }
-  };
-
-  /**
-   * Orchestrates Brightspace detection with deferred fallback.
-   * @param {string[]} customDomains
-   * @param {Function} callback - called once if Brightspace is detected
-   */
-  D2L.initIfBrightspace = function (customDomains, callback) {
-    var hostname = window.location.hostname;
-
-    if (D2L.isBrightspace()) {
-      callback();
-      return;
-    }
-
-    if (customDomains.some(function (d) { return hostname === d || hostname.endsWith('.' + d); })) {
-      callback();
-      return;
-    }
-
-    // Cross-origin child frames that didn't pass strict checks are third-party
-    // embeds (video players, widgets, etc.) — skip them.
-    if (D2L.isCrossOriginChild()) return;
-
-    // Deferred check after DOM loads (top frame & same-origin children only)
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function () {
-        if (D2L.isBrightspaceDeferred()) callback();
-      }, { once: true });
-    } else {
-      if (D2L.isBrightspaceDeferred()) callback();
     }
   };
 })();

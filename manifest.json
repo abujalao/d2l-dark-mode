@@ -4,7 +4,8 @@
   "version": "3.0.0",
   "description": "Universal dark mode for D2L/Brightspace using CSS filter inversion. Automatically handles shadow DOM, iframes, and PDF viewers.",
   "permissions": [
-    "storage"
+    "storage",
+    "scripting"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -24,15 +25,10 @@
       ],
       "js": [
         "shared/config.js",
-        "content/detection.js",
-        "content/video.js",
-        "content/shadow-dom.js",
-        "content/dark-mode-core.js",
-        "content/main.js"
+        "content/gate.js"
       ],
       "css": [],
       "all_frames": true,
-      "match_about_blank": true,
       "run_at": "document_start"
     }
   ],
