@@ -55,6 +55,10 @@
     /* ---- Brightspace Deferred Detection Selector ---- */
     BRIGHTSPACE_DEFERRED_SELECTOR: 'd2l-navigation, [class*="d2l-"], meta[name="d2l"]',
 
+    /* ---- Excluded Hosts (corporate / non-LMS sites that share D2L branding) ---- */
+    EXCLUDED_HOSTS: [     // D2L corporate website — not a Brightspace LMS
+    ],
+
     /* ---- Known Brightspace Hosts ---- */
     KNOWN_HOSTS: [
       // McMaster University

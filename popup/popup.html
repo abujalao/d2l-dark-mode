@@ -8,83 +8,123 @@
 </head>
 <body>
   <div class="popup-container">
+
+    <!-- Header -->
     <div class="header">
-      <div class="header-icon">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zm0 16.5A7.5 7.5 0 0 1 12 4.5a7.49 7.49 0 0 1 5.3 2.2A7.49 7.49 0 0 1 12 19.5z" fill="#4d9fff"/>
-          <path d="M12 4.5V19.5A7.5 7.5 0 0 1 12 4.5z" fill="#4d9fff"/>
+      <div class="header-left">
+        <div class="header-icon">
+          <img id="popupLogo" width="28" height="28" style="border-radius:6px" src="">
+        </div>
+        <h1>D2L Dark Mode</h1>
+      </div>
+      <span class="version" id="versionLabel"></span>
+    </div>
+
+    <!-- Detection Banner -->
+    <div class="detection-banner" id="detectionBanner">
+      <div class="detection-status">
+        <span class="detection-dot" id="detectionDot"></span>
+        <span class="detection-label" id="detectionLabel">Checking...</span>
+      </div>
+      <span class="detection-url" id="detectionUrl"></span>
+    </div>
+
+    <!-- Power Button Hero -->
+    <div class="power-section">
+      <button class="power-button" id="powerButton" aria-label="Toggle Dark Mode">
+        <svg class="power-moon-svg" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path class="moon-path" d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12c4.418 0 8.418-2.393 10.545-6.154A10 10 0 0 1 14 10a9.97 9.97 0 0 1 4.09-8.065A12.07 12.07 0 0 0 16 4z" fill="currentColor"/>
+          <circle class="moon-star" cx="24" cy="7" r="1.5" fill="currentColor" opacity="0.7"/>
+          <circle class="moon-star-sm" cx="27" cy="11" r="0.8" fill="currentColor" opacity="0.5"/>
         </svg>
-      </div>
-      <h1>D2L Dark Mode</h1>
+      </button>
+      <span class="power-status" id="powerStatus">Dark Mode: ON</span>
     </div>
 
-    <div class="setting-group">
-      <div class="setting-item">
-        <div class="setting-row">
-          <div class="setting-info">
-            <span class="setting-label">Dark Mode</span>
-            <span class="setting-hint">Apply dark theme to all D2L pages</span>
-          </div>
-          <label class="toggle">
-            <input type="checkbox" id="darkModeToggle" checked>
-            <span class="toggle-track">
-              <span class="toggle-thumb"></span>
-            </span>
-          </label>
-        </div>
-        <p class="setting-note">Inverts page colors. Images and videos are preserved automatically.</p>
-      </div>
+    <!-- Advanced Settings (Collapsible) -->
+    <div class="collapsible-section" id="advancedSection">
+      <button class="collapsible-header" id="advancedHeader">
+        <span class="collapsible-title">Advanced Settings</span>
+        <svg class="collapsible-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="collapsible-content">
+        <div class="collapsible-inner">
 
-      <div class="setting-item">
-        <div class="setting-row">
-          <div class="setting-info">
-            <span class="setting-label">Document Dark Mode</span>
-            <span class="setting-hint">Darken documents (PDFs, slides, etc.) in the viewer</span>
+          <div class="setting-item">
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label-row">
+                  <svg class="toggle-icon" id="docIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 1h5l4 4v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                    <path d="M9 1v4h4" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                    <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1"/>
+                    <line x1="5" y1="10.5" x2="9" y2="10.5" stroke="currentColor" stroke-width="1"/>
+                  </svg>
+                  <span class="setting-label">Document Dark Mode</span>
+                </div>
+                <span class="setting-hint">Darken PDFs, slides, and documents</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="documentDarkModeToggle">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
           </div>
-          <label class="toggle">
-            <input type="checkbox" id="documentDarkModeToggle">
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          </label>
-        </div>
-        <p class="setting-note">Inverts document text and backgrounds. Diagrams may look different.</p>
-      </div>
 
-      <div class="setting-item">
-        <div class="setting-row">
-          <div class="setting-info">
-            <span class="setting-label">Video Dark Mode</span>
-            <span class="setting-hint">Darken embedded videos (Echo360, YouTube, etc.)</span>
+          <div class="setting-item">
+            <div class="setting-row">
+              <div class="setting-info">
+                <div class="setting-label-row">
+                  <svg class="toggle-icon" id="videoIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                    <path d="M6.5 5v6l5-3-5-3z" fill="currentColor"/>
+                  </svg>
+                  <span class="setting-label">Video Dark Mode</span>
+                </div>
+                <span class="setting-hint">Darken Echo360, YouTube, etc.</span>
+              </div>
+              <label class="toggle">
+                <input type="checkbox" id="videoDarkModeToggle">
+                <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              </label>
+            </div>
           </div>
-          <label class="toggle">
-            <input type="checkbox" id="videoDarkModeToggle">
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          </label>
-        </div>
-        <p class="setting-note">Off by default. Videos play in original colors unless this is enabled.</p>
-      </div>
-    </div>
 
-    <div class="setting-group">
-      <div class="setting-item">
-        <div class="setting-info">
-          <span class="setting-label">Custom Domains</span>
-          <span class="setting-hint">Add your university's Brightspace URL</span>
         </div>
-        <div class="domain-input-row">
-          <input type="text" id="domainInput" placeholder="e.g. brightspace.uwo.ca">
-          <button id="addDomainBtn">Add</button>
-        </div>
-        <ul id="domainList" class="domain-list"></ul>
       </div>
     </div>
 
+    <!-- Custom Domains (Collapsible) -->
+    <div class="collapsible-section" id="domainsSection">
+      <button class="collapsible-header" id="domainsHeader">
+        <span class="collapsible-title">Custom Domains</span>
+        <svg class="collapsible-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="collapsible-content">
+        <div class="collapsible-inner">
+          <div class="setting-item">
+            <div class="setting-info">
+              <span class="setting-hint">Add your university's Brightspace URL</span>
+            </div>
+            <div class="domain-input-row">
+              <input type="text" id="domainInput" placeholder="e.g. brightspace.uwo.ca">
+              <button id="addDomainBtn">Add</button>
+            </div>
+            <ul id="domainList" class="domain-list"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reset -->
     <div class="actions">
       <button id="resetButton" class="btn-reset">Reset to Defaults</button>
     </div>
 
-    <footer>
-      <span class="version" id="versionLabel"></span>
-    </footer>
   </div>
 
   <script src="../shared/config.js"></script>

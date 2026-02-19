@@ -27,6 +27,13 @@
   }
 
   var hostname = location.hostname;
+
+  // Bail out immediately on excluded hosts (corporate sites, not LMS)
+  var isExcluded = CFG.EXCLUDED_HOSTS.some(function (h) {
+    return hostname === h || hostname.endsWith('.' + h);
+  });
+  if (isExcluded) return;
+
   var isKnownHost = CFG.KNOWN_HOSTS.some(function (h) {
     return hostname === h || hostname.endsWith('.' + h);
   });

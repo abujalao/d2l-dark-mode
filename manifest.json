@@ -5,7 +5,9 @@
   "description": "Universal dark mode for D2L/Brightspace using CSS filter inversion. Automatically handles shadow DOM, iframes, and PDF viewers.",
   "permissions": [
     "storage",
-    "scripting"
+    "scripting",
+    "activeTab",
+    "tabs"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -13,9 +15,9 @@
   "action": {
     "default_popup": "popup/popup.html",
     "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
+      "16": "icons/icon16_active.png",
+      "48": "icons/icon48_active.png",
+      "128": "icons/icon128_active.png"
     }
   },
   "content_scripts": [
@@ -36,7 +38,15 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "content/dark-mode.css"
+        "content/dark-mode.css",
+        "icons/icon16.png",
+        "icons/icon48.png",
+        "icons/icon128.png",
+        "icons/icon16_active.png",
+        "icons/icon48_active.png",
+        "icons/icon128_active.png",
+        "icons/popupLogo_active.png",
+        "icons/popupLogo_notactive.png"
       ],
       "matches": [
         "<all_urls>"
@@ -47,8 +57,8 @@
     "service_worker": "background/service-worker.js"
   },
   "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
+    "16": "icons/icon16_active.png",
+    "48": "icons/icon48_active.png",
+    "128": "icons/icon128_active.png"
   }
 }
