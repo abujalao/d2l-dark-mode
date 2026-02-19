@@ -45,7 +45,7 @@
     PATTERNS: {
       D2L_PATH: /\/d2l\//,
       DOCUMENT_VIEWER: /viewFile|viewer\.html|pdfjs/,
-      VIDEO_STRONG_ALLOW: /picture-in-picture|encrypted-media/,
+      VIDEO_STRONG_ALLOW: /picture-in-picture/,
       VIDEO_TITLE: /\bvideo\b|video.player|media.player/,
       VIDEO_AUTOPLAY: /autoplay/,
       VIDEO_PATH: /\/embed\/|\/player\/|\/video\/|\/watch|\/stream\/|\/lecture\/|\/media\//,

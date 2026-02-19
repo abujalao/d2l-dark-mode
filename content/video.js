@@ -25,6 +25,13 @@
     var text = ((iframe.title || '') + ' ' + (iframe.getAttribute('aria-label') || '')).toLowerCase();
     if (CFG.PATTERNS.VIDEO_TITLE.test(text)) return true;
 
+    // --- Negative check: D2L Lessons content viewer ---
+    // D2L content viewer frames include both encrypted-media and clipboard-write
+    // in their allow policy (for DRM playback and clipboard operations).
+    // Video embeds that also carry encrypted-media (YouTube) always include
+    // picture-in-picture too, which is caught above. Bail out early.
+    if (/encrypted-media/.test(allow) && /clipboard-write/.test(allow)) return false;
+
     // --- Combined signals (allowfullscreen + one more hint) ---
     var hasFullscreen = iframe.hasAttribute('allowfullscreen') || iframe.hasAttribute('allowFullScreen');
     if (!hasFullscreen) return false;
