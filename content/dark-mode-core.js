@@ -1,0 +1,136 @@
+/**
+ * D2L Dark Mode — Enable/Disable Engine
+ * State management, filter logic, stylesheet injection, and document viewer handling.
+ */
+
+(function () {
+  'use strict';
+
+  const D2L = window.D2L = window.D2L || {};
+  const CFG = window.D2LConfig;
+
+  /* ---- Shared mutable state ---- */
+  D2L.state = {
+    darkModeEnabled: true,
+    documentDarkModeEnabled: false,
+    videoDarkModeEnabled: false,
+    initialized: false,
+  };
+
+  /**
+   * Smart root detection — determines if this frame should apply the inversion filter.
+   * Returns true if: top window, orphan (cross-origin parent), parent is frameset,
+   * or parent does not have the filter active.
+   */
+  D2L.shouldApplyFilter = function () {
+    if (window.self === window.top) return true;
+
+    try {
+      var parentDoc = window.parent.document;
+      var parentHasFilter = parentDoc.documentElement.classList.contains(CFG.CSS.TOP) ||
+        parentDoc.documentElement.classList.contains(CFG.CSS.NESTED);
+      var parentIsFrameset = parentDoc.querySelector('frameset') !== null;
+
+      if (parentIsFrameset || !parentHasFilter) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return true;
+    }
+  };
+
+  /** Computed once — is this frame the effective root for inversion? */
+  D2L.isEffectiveRoot = D2L.shouldApplyFilter();
+
+  /**
+   * Checks if the current page is a document viewer (PDF, slides, etc.).
+   */
+  D2L.isDocumentViewer = function () {
+    return CFG.PATTERNS.DOCUMENT_VIEWER.test(window.location.href);
+  };
+
+  /**
+   * Toggles the document dark mode class and updates shadow CSS for child frames.
+   */
+  D2L.applyDocDarkMode = function () {
+    if (D2L.state.documentDarkModeEnabled && D2L.isDocumentViewer()) {
+      document.documentElement.classList.add(CFG.CSS.DOC_DARK);
+    } else {
+      document.documentElement.classList.remove(CFG.CSS.DOC_DARK);
+    }
+
+    // Child frames: toggle canvas counter-inversion based on document dark mode.
+    if (!D2L.isEffectiveRoot) {
+      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled));
+    }
+  };
+
+  /**
+   * Enables dark mode: injects stylesheet, adds CSS classes, starts observers.
+   */
+  D2L.enableDarkMode = function () {
+    D2L.injectDarkModeStylesheet();
+
+    document.documentElement.classList.add(CFG.CSS.ACTIVE);
+
+    if (D2L.isEffectiveRoot) {
+      document.documentElement.classList.add(CFG.CSS.TOP);
+      document.documentElement.classList.add(CFG.CSS.NESTED);
+    }
+
+    if (document.body) {
+      document.body.classList.add(CFG.CSS.ACTIVE);
+    } else {
+      document.addEventListener('DOMContentLoaded', function () {
+        document.body.classList.add(CFG.CSS.ACTIVE);
+      }, { once: true });
+    }
+
+    D2L.startShadowObserver();
+    D2L.applyVideoMode();
+  };
+
+  /**
+   * Disables dark mode: removes stylesheet, classes, stops observers, cleans up.
+   */
+  D2L.disableDarkMode = function () {
+    D2L.removeDarkModeStylesheet();
+    document.documentElement.classList.remove(CFG.CSS.ACTIVE, CFG.CSS.TOP, CFG.CSS.NESTED, CFG.CSS.DOC_DARK);
+    if (document.body) {
+      document.body.classList.remove(CFG.CSS.ACTIVE);
+    }
+    D2L.stopShadowObserver();
+    D2L.removeShadowStyles();
+
+    // Clean up video iframe inline filters
+    var iframes = document.querySelectorAll('iframe');
+    for (var i = 0; i < iframes.length; i++) {
+      if (D2L.isVideoIframe(iframes[i])) {
+        iframes[i].style.removeProperty('filter');
+      }
+    }
+  };
+
+  /**
+   * Injects the main dark-mode CSS stylesheet (link element).
+   */
+  D2L.injectDarkModeStylesheet = function () {
+    if (document.getElementById(CFG.CSS.STYLESHEET_ID)) return;
+
+    var link = document.createElement('link');
+    link.id = CFG.CSS.STYLESHEET_ID;
+    link.rel = 'stylesheet';
+    link.href = chrome.runtime.getURL('content/dark-mode.css');
+
+    (document.head || document.documentElement).appendChild(link);
+  };
+
+  /**
+   * Removes the main dark-mode CSS stylesheet.
+   */
+  D2L.removeDarkModeStylesheet = function () {
+    var link = document.getElementById(CFG.CSS.STYLESHEET_ID);
+    if (link) link.remove();
+  };
+})();

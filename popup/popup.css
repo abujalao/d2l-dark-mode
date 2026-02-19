@@ -2,6 +2,27 @@
    D2L Dark Mode — Popup Styles
    ============================================================ */
 
+:root {
+  --bg-primary:    #1a1a1a;
+  --bg-secondary:  #222222;
+  --bg-tertiary:   #2c2c2c;
+  --bg-input:      #3a3a3a;
+  --text-primary:  #e0e0e0;
+  --text-secondary:#bbbbbb;
+  --text-muted:    #888888;
+  --text-note:     #777777;
+  --text-faint:    #666666;
+  --text-dim:      #555555;
+  --text-white:    #ffffff;
+  --accent:        #4d9fff;
+  --accent-hover:  #6db3ff;
+  --toggle-off:    #3a3a3a;
+  --toggle-thumb:  #cccccc;
+  --danger:        #ff6b6b;
+  --border:        #2c2c2c;
+  --border-input:  #3a3a3a;
+}
+
 *,
 *::before,
 *::after {
@@ -13,8 +34,8 @@
 body {
   width: 300px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-  background-color: #1a1a1a;
-  color: #e0e0e0;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -39,7 +60,7 @@ body {
 h1 {
   font-size: 16px;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-white);
   letter-spacing: -0.2px;
 }
 
@@ -48,7 +69,7 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  background-color: #222222;
+  background-color: var(--bg-secondary);
   border-radius: 10px;
   overflow: hidden;
   margin-bottom: 14px;
@@ -59,7 +80,7 @@ h1 {
 }
 
 .setting-item + .setting-item {
-  border-top: 1px solid #2c2c2c;
+  border-top: 1px solid var(--border);
 }
 
 .setting-row {
@@ -77,18 +98,18 @@ h1 {
 .setting-label {
   font-size: 14px;
   font-weight: 500;
-  color: #e0e0e0;
+  color: var(--text-primary);
 }
 
 .setting-hint {
   font-size: 11px;
-  color: #888888;
+  color: var(--text-muted);
 }
 
 .setting-note {
   margin-top: 8px;
   font-size: 11px;
-  color: #777777;
+  color: var(--text-note);
   line-height: 1.4;
 }
 
@@ -110,7 +131,7 @@ h1 {
   display: block;
   width: 42px;
   height: 24px;
-  background-color: #3a3a3a;
+  background-color: var(--toggle-off);
   border-radius: 24px;
   transition: background-color 0.25s ease;
   position: relative;
@@ -122,22 +143,22 @@ h1 {
   left: 2px;
   width: 20px;
   height: 20px;
-  background-color: #cccccc;
+  background-color: var(--toggle-thumb);
   border-radius: 50%;
   transition: transform 0.25s ease, background-color 0.25s ease;
 }
 
 .toggle input:checked + .toggle-track {
-  background-color: #4d9fff;
+  background-color: var(--accent);
 }
 
 .toggle input:checked + .toggle-track .toggle-thumb {
   transform: translateX(18px);
-  background-color: #ffffff;
+  background-color: var(--text-white);
 }
 
 .toggle input:focus-visible + .toggle-track {
-  outline: 2px solid #4d9fff;
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
 
@@ -152,28 +173,28 @@ h1 {
   flex: 1;
   padding: 6px 10px;
   font-size: 12px;
-  color: #e0e0e0;
-  background-color: #1a1a1a;
-  border: 1px solid #3a3a3a;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-input);
   border-radius: 6px;
   outline: none;
   font-family: inherit;
 }
 
 .domain-input-row input::placeholder {
-  color: #666666;
+  color: var(--text-faint);
 }
 
 .domain-input-row input:focus {
-  border-color: #4d9fff;
+  border-color: var(--accent);
 }
 
 .domain-input-row button {
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 500;
-  color: #ffffff;
-  background-color: #4d9fff;
+  color: var(--text-white);
+  background-color: var(--accent);
   border: none;
   border-radius: 6px;
   cursor: pointer;
@@ -181,7 +202,7 @@ h1 {
 }
 
 .domain-input-row button:hover {
-  background-color: #6db3ff;
+  background-color: var(--accent-hover);
 }
 
 .domain-list {
@@ -199,8 +220,8 @@ h1 {
   justify-content: space-between;
   padding: 5px 0;
   font-size: 12px;
-  color: #bbbbbb;
-  border-top: 1px solid #2c2c2c;
+  color: var(--text-secondary);
+  border-top: 1px solid var(--border);
 }
 
 .domain-list li:first-child {
@@ -210,7 +231,7 @@ h1 {
 .domain-remove {
   background: none;
   border: none;
-  color: #888888;
+  color: var(--text-muted);
   font-size: 16px;
   cursor: pointer;
   padding: 0 4px;
@@ -218,7 +239,7 @@ h1 {
 }
 
 .domain-remove:hover {
-  color: #ff6b6b;
+  color: var(--danger);
 }
 
 /* ---- Actions ---- */
@@ -232,8 +253,8 @@ h1 {
   padding: 9px 0;
   font-size: 13px;
   font-weight: 500;
-  color: #bbbbbb;
-  background-color: #222222;
+  color: var(--text-secondary);
+  background-color: var(--bg-secondary);
   border: none;
   border-radius: 8px;
   cursor: pointer;
@@ -241,23 +262,23 @@ h1 {
 }
 
 .btn-reset:hover {
-  background-color: #2c2c2c;
-  color: #e0e0e0;
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
 }
 
 .btn-reset:active {
-  background-color: #1a1a1a;
+  background-color: var(--bg-primary);
 }
 
 /* ---- Footer ---- */
 footer {
   text-align: center;
   padding-top: 10px;
-  border-top: 1px solid #2c2c2c;
+  border-top: 1px solid var(--border);
 }
 
 .version {
   font-size: 10px;
-  color: #555555;
+  color: var(--text-dim);
   letter-spacing: 0.3px;
 }

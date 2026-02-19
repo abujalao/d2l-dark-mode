@@ -1,3 +1,5 @@
+/* Class names are defined in shared/config.js (D2LConfig.CSS). Keep in sync. */
+
 /*
  * D2L Brightspace Dark Mode — Universal Filter Approach
  * Applies filter: invert(1) hue-rotate(180deg) on <html> in the top frame.

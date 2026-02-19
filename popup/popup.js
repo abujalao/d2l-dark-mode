@@ -3,6 +3,7 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  const CFG = window.D2LConfig;
   const darkModeToggle = document.getElementById('darkModeToggle');
   const documentDarkModeToggle = document.getElementById('documentDarkModeToggle');
   const videoDarkModeToggle = document.getElementById('videoDarkModeToggle');
@@ -11,30 +12,30 @@ document.addEventListener('DOMContentLoaded', () => {
   const domainList = document.getElementById('domainList');
   const resetButton = document.getElementById('resetButton');
 
+  /* ---- Version label ---- */
+  document.getElementById('versionLabel').textContent = 'v' + chrome.runtime.getManifest().version;
+
   /* ---- Load saved settings ---- */
-  chrome.storage.sync.get(['darkModeEnabled', 'documentDarkModeEnabled', 'pdfDarkModeEnabled', 'videoDarkModeEnabled', 'customDomains'], (result) => {
-    darkModeToggle.checked = result.darkModeEnabled !== false; // default ON
-    // Backward compat: prefer documentDarkModeEnabled, fall back to pdfDarkModeEnabled
-    documentDarkModeToggle.checked = result.documentDarkModeEnabled !== undefined
-      ? result.documentDarkModeEnabled === true
-      : result.pdfDarkModeEnabled === true; // default OFF
-    videoDarkModeToggle.checked = result.videoDarkModeEnabled === true; // default OFF
-    renderDomainList(result.customDomains || []);
+  chrome.storage.sync.get(CFG.allReadKeys(), (result) => {
+    darkModeToggle.checked = result[CFG.STORAGE_KEYS.DARK_MODE] !== false; // default ON
+    documentDarkModeToggle.checked = CFG.resolveDocumentDarkMode(result); // default OFF
+    videoDarkModeToggle.checked = result[CFG.STORAGE_KEYS.VIDEO_DARK_MODE] === true; // default OFF
+    renderDomainList(result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || []);
   });
 
   /* ---- Persist changes on toggle ---- */
   darkModeToggle.addEventListener('change', () => {
-    chrome.storage.sync.set({ darkModeEnabled: darkModeToggle.checked });
+    chrome.storage.sync.set({ [CFG.STORAGE_KEYS.DARK_MODE]: darkModeToggle.checked });
   });
 
   /* ---- Document dark mode toggle ---- */
   documentDarkModeToggle.addEventListener('change', () => {
-    chrome.storage.sync.set({ documentDarkModeEnabled: documentDarkModeToggle.checked });
+    chrome.storage.sync.set({ [CFG.STORAGE_KEYS.DOCUMENT_DARK_MODE]: documentDarkModeToggle.checked });
   });
 
   /* ---- Video dark mode toggle ---- */
   videoDarkModeToggle.addEventListener('change', () => {
-    chrome.storage.sync.set({ videoDarkModeEnabled: videoDarkModeToggle.checked });
+    chrome.storage.sync.set({ [CFG.STORAGE_KEYS.VIDEO_DARK_MODE]: videoDarkModeToggle.checked });
   });
 
   /* ---- Custom domains ---- */
@@ -55,11 +56,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function addDomain() {
     const domain = domainInput.value.trim().toLowerCase();
     if (!domain) return;
-    chrome.storage.sync.get(['customDomains'], (result) => {
-      const domains = result.customDomains || [];
+    chrome.storage.sync.get([CFG.STORAGE_KEYS.CUSTOM_DOMAINS], (result) => {
+      const domains = result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
       if (domains.includes(domain)) return;
       domains.push(domain);
-      chrome.storage.sync.set({ customDomains: domains }, () => {
+      chrome.storage.sync.set({ [CFG.STORAGE_KEYS.CUSTOM_DOMAINS]: domains }, () => {
         domainInput.value = '';
         renderDomainList(domains);
       });
@@ -67,10 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function removeDomain(index) {
-    chrome.storage.sync.get(['customDomains'], (result) => {
-      const domains = result.customDomains || [];
+    chrome.storage.sync.get([CFG.STORAGE_KEYS.CUSTOM_DOMAINS], (result) => {
+      const domains = result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
       domains.splice(index, 1);
-      chrome.storage.sync.set({ customDomains: domains }, () => {
+      chrome.storage.sync.set({ [CFG.STORAGE_KEYS.CUSTOM_DOMAINS]: domains }, () => {
         renderDomainList(domains);
       });
     });
@@ -83,11 +84,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /* ---- Reset button ---- */
   resetButton.addEventListener('click', () => {
-    chrome.storage.sync.set({ darkModeEnabled: true, documentDarkModeEnabled: false, videoDarkModeEnabled: false, customDomains: [] }, () => {
-      darkModeToggle.checked = true;
-      documentDarkModeToggle.checked = false;
-      videoDarkModeToggle.checked = false;
-      renderDomainList([]);
+    chrome.storage.sync.set({ ...CFG.DEFAULTS }, () => {
+      darkModeToggle.checked = CFG.DEFAULTS.darkModeEnabled;
+      documentDarkModeToggle.checked = CFG.DEFAULTS.documentDarkModeEnabled;
+      videoDarkModeToggle.checked = CFG.DEFAULTS.videoDarkModeEnabled;
+      renderDomainList(CFG.DEFAULTS.customDomains);
     });
   });
 });

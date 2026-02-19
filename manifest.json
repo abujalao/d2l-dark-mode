@@ -23,7 +23,12 @@
         "<all_urls>"
       ],
       "js": [
-        "content/content.js"
+        "shared/config.js",
+        "content/detection.js",
+        "content/video.js",
+        "content/shadow-dom.js",
+        "content/dark-mode-core.js",
+        "content/main.js"
       ],
       "css": [],
       "all_frames": true,
