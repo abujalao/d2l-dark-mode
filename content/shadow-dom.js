@@ -20,10 +20,15 @@
   /**
    * Builds shadow DOM CSS for counter-inverting media elements.
    * @param {boolean} includeCanvas - whether to counter-invert canvas elements
+   * @param {boolean} [includeVideo=true] - whether to counter-invert video elements
    * @returns {string}
    */
-  D2L.buildShadowCSS = function (includeCanvas) {
-    var media = includeCanvas ? 'img, video, canvas, picture' : 'img, video, picture';
+  D2L.buildShadowCSS = function (includeCanvas, includeVideo) {
+    if (includeVideo === undefined) includeVideo = true;
+    var parts = ['img', 'picture'];
+    if (includeVideo) parts.push('video');
+    if (includeCanvas) parts.push('canvas');
+    var media = parts.join(', ');
     return '\n' +
       '    ' + media + ' {\n' +
       '      filter: invert(1) hue-rotate(180deg) !important;\n' +

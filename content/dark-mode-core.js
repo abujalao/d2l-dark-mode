@@ -79,7 +79,7 @@
 
     // Child frames: toggle canvas counter-inversion based on document dark mode.
     if (!D2L.isEffectiveRoot) {
-      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled));
+      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled, !D2L.state.videoDarkModeEnabled));
     }
   };
 
@@ -113,7 +113,7 @@
    */
   D2L.disableDarkMode = function () {
     D2L.removeDarkModeStylesheet();
-    document.documentElement.classList.remove(CFG.CSS.ACTIVE, CFG.CSS.TOP, CFG.CSS.NESTED, CFG.CSS.DOC_DARK);
+    document.documentElement.classList.remove(CFG.CSS.ACTIVE, CFG.CSS.TOP, CFG.CSS.NESTED, CFG.CSS.DOC_DARK, CFG.CSS.VIDEO_DARK);
     if (document.body) {
       document.body.classList.remove(CFG.CSS.ACTIVE);
     }

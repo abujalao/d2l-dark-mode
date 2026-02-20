@@ -32,6 +32,7 @@
       TOP: 'd2l-dark-mode-top',
       NESTED: 'd2l-dark-mode-nested',
       DOC_DARK: 'd2l-doc-dark',
+      VIDEO_DARK: 'd2l-video-dark',
       STYLESHEET_ID: 'd2l-dark-mode-main-css',
     },
 
@@ -44,7 +45,7 @@
     /* ---- URL / DOM Patterns ---- */
     PATTERNS: {
       D2L_PATH: /\/d2l\//,
-      DOCUMENT_VIEWER: /viewFile|viewer\.html|pdfjs/,
+      DOCUMENT_VIEWER: /viewFile|viewer\.html|pdfjs|smart-curriculum/,
       VIDEO_STRONG_ALLOW: /picture-in-picture/,
       VIDEO_TITLE: /\bvideo\b|video.player|media.player/,
       VIDEO_AUTOPLAY: /autoplay/,

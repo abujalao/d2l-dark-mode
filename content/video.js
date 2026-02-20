@@ -60,6 +60,19 @@
    */
   D2L.applyVideoMode = function () {
     D2L._applyVideoModeIn(document);
+
+    // Toggle class on <html> so CSS can conditionally counter-invert native <video> elements
+    if (D2L.state.videoDarkModeEnabled) {
+      document.documentElement.classList.add(CFG.CSS.VIDEO_DARK);
+    } else {
+      document.documentElement.classList.remove(CFG.CSS.VIDEO_DARK);
+    }
+
+    // Rebuild shadow CSS so shadow-DOM <video> elements follow the same rule.
+    // Respect document dark mode: in child frames with doc dark mode ON, exclude canvas.
+    var includeVideo = !D2L.state.videoDarkModeEnabled;
+    var includeCanvas = D2L.isEffectiveRoot || !D2L.state.documentDarkModeEnabled;
+    D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(includeCanvas, includeVideo));
   };
 
   /**

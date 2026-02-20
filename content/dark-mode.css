@@ -31,8 +31,14 @@ html.d2l-dark-mode-active :fullscreen {
 }
 
 /* Counter-invert media inside top-layer elements */
-html.d2l-dark-mode-active :popover-open :is(img, video, canvas, picture),
-html.d2l-dark-mode-active dialog:modal :is(img, video, canvas, picture) {
+html.d2l-dark-mode-active :popover-open :is(img, canvas, picture),
+html.d2l-dark-mode-active dialog:modal :is(img, canvas, picture) {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Counter-invert video inside top-layer ONLY when video dark mode is off */
+html.d2l-dark-mode-active:not(.d2l-video-dark) :popover-open video,
+html.d2l-dark-mode-active:not(.d2l-video-dark) dialog:modal video {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
@@ -55,9 +61,13 @@ html.d2l-dark-mode-active {
    and should remain inverted (appearing as light-on-dark).
    ============================================================ */
 html.d2l-dark-mode-active img:not(svg img),
-html.d2l-dark-mode-active video,
 html.d2l-dark-mode-active canvas,
 html.d2l-dark-mode-active picture {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Counter-invert video ONLY when video dark mode is off */
+html.d2l-dark-mode-active:not(.d2l-video-dark) video {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
