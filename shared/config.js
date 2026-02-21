@@ -16,6 +16,7 @@
       PDF_DARK_MODE: 'pdfDarkModeEnabled',           // legacy key for backward compat
       VIDEO_DARK_MODE: 'videoDarkModeEnabled',
       CUSTOM_DOMAINS: 'customDomains',
+      EXCLUDED_DOMAINS: 'excludedDomains',
     },
 
     /* ---- Defaults (used on install and reset) ---- */
@@ -24,6 +25,7 @@
       documentDarkModeEnabled: false,
       videoDarkModeEnabled: false,
       customDomains: [],
+      excludedDomains: [],
     },
 
     /* ---- CSS Class Names & IDs ---- */
@@ -57,7 +59,8 @@
     BRIGHTSPACE_DEFERRED_SELECTOR: 'd2l-navigation, [class*="d2l-"], meta[name="d2l"]',
 
     /* ---- Excluded Hosts (corporate / non-LMS sites that share D2L branding) ---- */
-    EXCLUDED_HOSTS: [     // D2L corporate website — not a Brightspace LMS
+    EXCLUDED_HOSTS: [
+      "d2l.com", // D2L corporate website — not a Brightspace LMS
     ],
 
     /* ---- Known Brightspace Hosts ---- */
@@ -112,6 +115,7 @@
         this.STORAGE_KEYS.PDF_DARK_MODE,
         this.STORAGE_KEYS.VIDEO_DARK_MODE,
         this.STORAGE_KEYS.CUSTOM_DOMAINS,
+        this.STORAGE_KEYS.EXCLUDED_DOMAINS,
       ];
     },
   };

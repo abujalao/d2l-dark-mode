@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>D2L Dark Mode Settings</title>
+  <title>DarkSpace</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
@@ -15,7 +15,7 @@
         <div class="header-icon">
           <img id="popupLogo" width="28" height="28" style="border-radius:6px" src="">
         </div>
-        <h1>D2L Dark Mode</h1>
+        <h1>DarkSpace</h1>
       </div>
       <span class="version" id="versionLabel"></span>
     </div>
@@ -107,6 +107,7 @@
       <div class="collapsible-content">
         <div class="collapsible-inner">
           <div class="setting-item">
+            <span class="domain-sublabel">Include</span>
             <div class="setting-info">
               <span class="setting-hint">Add your university's Brightspace URL</span>
             </div>
@@ -115,6 +116,18 @@
               <button id="addDomainBtn">Add</button>
             </div>
             <ul id="domainList" class="domain-list"></ul>
+          </div>
+          <div class="domain-divider"></div>
+          <div class="setting-item">
+            <span class="domain-sublabel">Exclude</span>
+            <div class="setting-info">
+              <span class="setting-hint">Disable dark mode on specific domains</span>
+            </div>
+            <div class="domain-input-row">
+              <input type="text" id="excludedDomainInput" placeholder="e.g. example.brightspace.com">
+              <button id="addExcludedDomainBtn">Add</button>
+            </div>
+            <ul id="excludedDomainList" class="domain-list"></ul>
           </div>
         </div>
       </div>

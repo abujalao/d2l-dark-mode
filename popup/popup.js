@@ -13,6 +13,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const domainInput = document.getElementById('domainInput');
   const addDomainBtn = document.getElementById('addDomainBtn');
   const domainList = document.getElementById('domainList');
+  const excludedDomainInput = document.getElementById('excludedDomainInput');
+  const addExcludedDomainBtn = document.getElementById('addExcludedDomainBtn');
+  const excludedDomainList = document.getElementById('excludedDomainList');
   const resetButton = document.getElementById('resetButton');
   const detectionBanner = document.getElementById('detectionBanner');
   const detectionDot = document.getElementById('detectionDot');
@@ -70,33 +73,34 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Detect D2L via URL (independent of whether dark mode is on).
-  function isD2LUrl(url) {
-    if (!url) return false;
-    try {
-      const hostname = new URL(url).hostname;
-      const isKnownHost = CFG.KNOWN_HOSTS.some(
-        (h) => hostname === h || hostname.endsWith('.' + h)
-      );
-      return isKnownHost || CFG.PATTERNS.D2L_PATH.test(url);
-    } catch {
-      return false;
-    }
-  }
-
+  // Check the page directly for gate.js's persistent detection marker.
+  // This survives service worker restarts and is independent of dark mode state.
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
-    if (!tab || !tab.url) {
+    if (!tab || !tab.id || !tab.url) {
       showDetectionStatus(false, null);
       logoState.isD2L = false;
       updatePopupLogo();
       return;
     }
 
-    const detected = isD2LUrl(tab.url);
-    showDetectionStatus(detected, tab.url);
-    logoState.isD2L = detected;
-    updatePopupLogo();
+    // Skip restricted URLs where scripting isn't allowed
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:')) {
+      showDetectionStatus(false, null);
+      logoState.isD2L = false;
+      updatePopupLogo();
+      return;
+    }
+
+    chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      func: () => document.documentElement.hasAttribute('data-d2l-detected'),
+    }, (results) => {
+      const detected = !chrome.runtime.lastError && results && results[0] && results[0].result === true;
+      showDetectionStatus(detected, tab.url);
+      logoState.isD2L = detected;
+      updatePopupLogo();
+    });
   });
 
   /* ---- Load saved settings ---- */
@@ -113,6 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateToggleIcon(videoIcon, videoDarkModeToggle.checked);
 
     renderDomainList(result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || []);
+    renderExcludedList(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
   });
 
   /* ---- Power button ---- */
@@ -234,6 +239,56 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') addDomain();
   });
 
+  /* ---- Excluded domains ---- */
+  function renderExcludedList(domains) {
+    excludedDomainList.innerHTML = '';
+    domains.forEach((domain, index) => {
+      const li = document.createElement('li');
+      li.textContent = domain;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'domain-remove';
+      removeBtn.textContent = '\u00d7';
+      removeBtn.addEventListener('click', () => removeExcludedDomain(index));
+      li.appendChild(removeBtn);
+      excludedDomainList.appendChild(li);
+    });
+
+    // Update collapsible height if domains section is open
+    if (domainsSection.classList.contains('is-open')) {
+      const content = domainsSection.querySelector('.collapsible-content');
+      content.style.maxHeight = content.scrollHeight + 'px';
+    }
+  }
+
+  function addExcludedDomain() {
+    const domain = excludedDomainInput.value.trim().toLowerCase();
+    if (!domain) return;
+    chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], (result) => {
+      const domains = result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [];
+      if (domains.includes(domain)) return;
+      domains.push(domain);
+      chrome.storage.sync.set({ [CFG.STORAGE_KEYS.EXCLUDED_DOMAINS]: domains }, () => {
+        excludedDomainInput.value = '';
+        renderExcludedList(domains);
+      });
+    });
+  }
+
+  function removeExcludedDomain(index) {
+    chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], (result) => {
+      const domains = result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [];
+      domains.splice(index, 1);
+      chrome.storage.sync.set({ [CFG.STORAGE_KEYS.EXCLUDED_DOMAINS]: domains }, () => {
+        renderExcludedList(domains);
+      });
+    });
+  }
+
+  addExcludedDomainBtn.addEventListener('click', addExcludedDomain);
+  excludedDomainInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') addExcludedDomain();
+  });
+
   /* ---- Reset button ---- */
   resetButton.addEventListener('click', () => {
     chrome.storage.sync.set({ ...CFG.DEFAULTS }, () => {
@@ -244,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
       updateToggleIcon(docIcon, false);
       updateToggleIcon(videoIcon, false);
       renderDomainList(CFG.DEFAULTS.customDomains);
+      renderExcludedList(CFG.DEFAULTS.excludedDomains);
 
       // Collapse sections
       advancedSection.classList.remove('is-open');

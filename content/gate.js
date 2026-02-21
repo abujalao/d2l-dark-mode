@@ -39,8 +39,7 @@
   });
 
   // Fast synchronous check — no IPC, no storage access
-  var isFastMatch = CFG.PATTERNS.D2L_PATH.test(location.href)
-    || document.documentElement.hasAttribute('data-app-version')
+  var isFastMatch = document.documentElement.hasAttribute('data-app-version')
     || isKnownHost;
 
   // Cross-origin child frame that failed the fast check → definitely not
@@ -53,33 +52,49 @@
     }
   }
 
-  function injectHeavy() {
-    chrome.runtime.sendMessage({ type: 'injectScripts' });
+  function checkExcludedThenInject(excluded) {
+    if (excluded.some(function (d) {
+      return hostname === d || hostname.endsWith('.' + d);
+    })) {
+      // User excluded this domain — undo any early FOUC-prevention class
+      document.documentElement.classList.remove(CFG.CSS.ACTIVE);
+      return;
+    }
+    document.documentElement.setAttribute('data-d2l-detected', 'true');
+    chrome.runtime.sendMessage({ type: 'injectScripts', d2lDetected: true });
   }
 
   if (isFastMatch) {
     // Apply immediate dark class to prevent FOUC, then load heavy scripts
     document.documentElement.classList.add(CFG.CSS.ACTIVE);
-    injectHeavy();
+    // Fast-match path: only need excluded domains from storage (one call)
+    chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], function (result) {
+      checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
+    });
   } else {
     // Top frame or same-origin child on unknown domain.
     // First try a DOM check (no IPC); if that also fails, fall back to
-    // checking the user's custom domains via storage (one IPC call only
-    // when the page has no D2L indicators at all).
+    // checking the user's custom domains via storage.
     function tryDOMThenCustomDomains() {
       if (document.querySelector(CFG.BRIGHTSPACE_DEFERRED_SELECTOR)) {
-        injectHeavy();
+        // DOM detected D2L — only need excluded domains (one call)
+        chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], function (result) {
+          checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
+        });
         return;
       }
-      // DOM had no D2L selectors — check user-configured custom domains
-      chrome.storage.sync.get([CFG.STORAGE_KEYS.CUSTOM_DOMAINS], function (result) {
-        var customDomains = result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
-        if (customDomains.some(function (d) {
-          return hostname === d || hostname.endsWith('.' + d);
-        })) {
-          injectHeavy();
+      // DOM had no D2L selectors — fetch both custom and excluded in one call
+      chrome.storage.sync.get(
+        [CFG.STORAGE_KEYS.CUSTOM_DOMAINS, CFG.STORAGE_KEYS.EXCLUDED_DOMAINS],
+        function (result) {
+          var customDomains = result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
+          if (customDomains.some(function (d) {
+            return hostname === d || hostname.endsWith('.' + d);
+          })) {
+            checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
+          }
         }
-      });
+      );
     }
 
     if (document.readyState === 'loading') {

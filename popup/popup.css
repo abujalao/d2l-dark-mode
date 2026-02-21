@@ -368,6 +368,23 @@ h1 {
   outline-offset: 2px;
 }
 
+/* ---- Domain Sublabels ---- */
+.domain-sublabel {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.domain-divider {
+  height: 1px;
+  background-color: var(--border);
+  margin: 4px 0;
+}
+
 /* ---- Custom Domains ---- */
 .domain-input-row {
   display: flex;
