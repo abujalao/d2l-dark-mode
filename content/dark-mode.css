@@ -19,38 +19,55 @@ html.d2l-dark-mode-top {
 }
 
 /* ============================================================
-   TOP LAYER
+   TOP LAYER  (effective-root frames only)
    Popovers, modal dialogs, and fullscreen elements live in the
    browser's top layer, outside the html filter's reach.
    Apply the inversion directly on these elements.
+
+   IMPORTANT: use d2l-dark-mode-top, NOT d2l-dark-mode-active.
+   In child frames the visual inversion comes from the parent's
+   compositing, which DOES affect top-layer elements. Adding
+   another inversion there would counter-invert them back to
+   light mode (invisible text).
    ============================================================ */
-html.d2l-dark-mode-active :popover-open,
-html.d2l-dark-mode-active dialog:modal,
-html.d2l-dark-mode-active :fullscreen {
+html.d2l-dark-mode-top :popover-open,
+html.d2l-dark-mode-top dialog:modal,
+html.d2l-dark-mode-top :fullscreen {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
 /* Counter-invert media inside top-layer elements */
-html.d2l-dark-mode-active :popover-open :is(img, canvas, picture),
-html.d2l-dark-mode-active dialog:modal :is(img, canvas, picture) {
+html.d2l-dark-mode-top :popover-open :is(img, canvas, picture),
+html.d2l-dark-mode-top dialog:modal :is(img, canvas, picture) {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
 /* Counter-invert video inside top-layer ONLY when video dark mode is off */
-html.d2l-dark-mode-active:not(.d2l-video-dark) :popover-open video,
-html.d2l-dark-mode-active:not(.d2l-video-dark) dialog:modal video {
+html.d2l-dark-mode-top:not(.d2l-video-dark) :popover-open video,
+html.d2l-dark-mode-top:not(.d2l-video-dark) dialog:modal video {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
 
 /* ============================================================
-   NATIVE DARK SCHEME
-   Ensures form controls, scrollbars, date pickers, etc.
-   use their built-in dark appearance. This property
-   inherits into shadow DOM.
+   BASELINE FOR ALL DARK-MODE FRAMES
+   Explicit white background ensures the canvas (browser default
+   bg) stays white before the top-frame filter inverts it to
+   black. Without this, some frames may have transparent or
+   mismatched canvas backgrounds.
+
+   Note: color-scheme: dark is intentionally NOT used here.
+   While it darkens scrollbars and form controls natively, it
+   also changes CSS system colors (Canvas → dark, CanvasText →
+   white) which causes invisible-text bugs in child frames
+   where D2L components rely on default/inherited colors.
+   The inversion filter already makes the page look dark;
+   scrollbars are styled explicitly below.
    ============================================================ */
 html.d2l-dark-mode-active {
   color-scheme: dark;
+  background-color: white !important;
+  color: black !important;
 }
 
 /* ============================================================

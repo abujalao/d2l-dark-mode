@@ -78,8 +78,9 @@
     }
 
     // Child frames: toggle canvas counter-inversion based on document dark mode.
+    // Popover rules are never needed in child frames (parent compositing handles top-layer).
     if (!D2L.isEffectiveRoot) {
-      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled, !D2L.state.videoDarkModeEnabled));
+      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled, !D2L.state.videoDarkModeEnabled, false));
     }
   };
 
@@ -120,13 +121,8 @@
     D2L.stopShadowObserver();
     D2L.removeShadowStyles();
 
-    // Clean up video iframe inline filters
-    var iframes = document.querySelectorAll('iframe');
-    for (var i = 0; i < iframes.length; i++) {
-      if (D2L.isVideoIframe(iframes[i])) {
-        iframes[i].style.removeProperty('filter');
-      }
-    }
+    // Clean up all iframe inline filters (walks into shadow roots)
+    D2L._cleanupIframeFilters(document);
   };
 
   /**
