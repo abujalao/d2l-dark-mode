@@ -105,6 +105,7 @@
     }
 
     D2L.startShadowObserver();
+    D2L.startFullscreenHandler();
     D2L.applyVideoMode();
   };
 
@@ -118,10 +119,12 @@
       document.body.classList.remove(CFG.CSS.ACTIVE);
     }
     D2L.stopShadowObserver();
+    D2L.stopFullscreenHandler();
     D2L.removeShadowStyles();
 
-    // Clean up all iframe inline filters (walks into shadow roots)
+    // Clean up all iframe inline filters and fullscreen overrides (walks into shadow roots)
     D2L._cleanupIframeFilters(document);
+    D2L._clearFullscreenVideoFilter(document);
   };
 
   /**

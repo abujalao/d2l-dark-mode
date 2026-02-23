@@ -57,7 +57,9 @@
       // filter cannot reach. Flip the normal rule: cancel counter-inversion
       // when it exists (video dark mode OFF), add inversion when it does
       // not (video dark mode ON) so the video stays dark.
-      '    video:fullscreen, iframe.d2l-video-iframe:fullscreen {\n' +
+      // :host(:fullscreen) covers the common case where a wrapper custom element
+      // (e.g. d2l-labs-media-player) goes fullscreen instead of the <video> itself.
+      '    video:fullscreen, :host(:fullscreen) video, iframe.d2l-video-iframe:fullscreen {\n' +
       '      filter: ' + (includeVideo ? 'none' : 'invert(1) hue-rotate(180deg)') + ' !important;\n' +
       '    }\n';
   };

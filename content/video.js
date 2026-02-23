@@ -136,6 +136,83 @@
     }
   };
 
+  /* ---- Fullscreen handler ----
+   * When any element goes fullscreen, it enters the browser's top layer,
+   * escaping the html filter. The shadow CSS counter-inversion on <video>
+   * then inverts the video (making it dark). CSS :fullscreen in adopted
+   * stylesheets does not reliably fire in Chrome, so we use JS instead. */
+
+  D2L.startFullscreenHandler = function () {
+    document.addEventListener('fullscreenchange', D2L._handleFullscreenChange);
+  };
+
+  D2L.stopFullscreenHandler = function () {
+    document.removeEventListener('fullscreenchange', D2L._handleFullscreenChange);
+  };
+
+  D2L._handleFullscreenChange = function () {
+    if (!D2L.state.darkModeEnabled) return;
+
+    var fsElement = document.fullscreenElement;
+    if (fsElement) {
+      // Entering fullscreen: the html filter no longer applies.
+      // Override the counter-inversion on videos inside the fullscreen element.
+      var filterValue = D2L.state.videoDarkModeEnabled
+        ? 'invert(1) hue-rotate(180deg)'
+        : 'none';
+      D2L._setFullscreenVideoFilter(fsElement, filterValue);
+    } else {
+      // Exiting fullscreen: remove inline overrides so CSS rules take over.
+      D2L._clearFullscreenVideoFilter(document);
+    }
+  };
+
+  /**
+   * Sets an inline !important filter on all <video> elements inside a root,
+   * walking into shadow roots.
+   */
+  D2L._setFullscreenVideoFilter = function (root, filterValue) {
+    // Handle the root itself if it's a video
+    if (root.tagName === 'VIDEO') {
+      root.style.setProperty('filter', filterValue, 'important');
+      root._d2lFullscreenFixed = true;
+      return;
+    }
+    function walk(r) {
+      var videos = r.querySelectorAll ? r.querySelectorAll('video') : [];
+      for (var i = 0; i < videos.length; i++) {
+        videos[i].style.setProperty('filter', filterValue, 'important');
+        videos[i]._d2lFullscreenFixed = true;
+      }
+      var elems = r.querySelectorAll ? r.querySelectorAll('*') : [];
+      for (var j = 0; j < elems.length; j++) {
+        if (elems[j].shadowRoot) walk(elems[j].shadowRoot);
+      }
+    }
+    walk(root);
+    if (root.shadowRoot) walk(root.shadowRoot);
+  };
+
+  /**
+   * Removes inline filter overrides from videos that were fixed during fullscreen.
+   */
+  D2L._clearFullscreenVideoFilter = function (root) {
+    function walk(r) {
+      var videos = r.querySelectorAll ? r.querySelectorAll('video') : [];
+      for (var i = 0; i < videos.length; i++) {
+        if (videos[i]._d2lFullscreenFixed) {
+          videos[i].style.removeProperty('filter');
+          delete videos[i]._d2lFullscreenFixed;
+        }
+      }
+      var elems = r.querySelectorAll ? r.querySelectorAll('*') : [];
+      for (var j = 0; j < elems.length; j++) {
+        if (elems[j].shadowRoot) walk(elems[j].shadowRoot);
+      }
+    }
+    walk(root);
+  };
+
   /**
    * Apply or remove counter-inversion on a single video iframe.
    */

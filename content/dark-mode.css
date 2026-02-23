@@ -67,6 +67,18 @@ html.d2l-dark-mode-active.d2l-video-dark iframe.d2l-video-iframe:fullscreen {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
+/* Child frames: when an ancestor element (e.g. d2l-labs-media-player) goes
+   fullscreen, the iframe enters the parent frame's top layer and the parent's
+   html filter no longer applies. Cancel the video counter-inversion that was
+   compensating for the parent filter. The :not(.d2l-dark-mode-top) selector
+   ensures this only fires in child frames — the top frame has its own rules. */
+html.d2l-dark-mode-active:not(.d2l-dark-mode-top):not(.d2l-video-dark) :fullscreen video {
+  filter: none !important;
+}
+
+html.d2l-dark-mode-active:not(.d2l-dark-mode-top).d2l-video-dark :fullscreen video {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
 
 /* ============================================================
    COUNTER-INVERT MEDIA (LIGHT DOM)
