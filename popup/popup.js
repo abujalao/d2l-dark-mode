@@ -189,6 +189,20 @@ document.addEventListener('DOMContentLoaded', () => {
   setupCollapsible(advancedHeader, advancedSection, 'popup_advancedOpen');
   setupCollapsible(domainsHeader, domainsSection, 'popup_domainsOpen');
 
+  /* ---- Hostname extraction helper ---- */
+  function extractHostname(input) {
+    input = input.trim().toLowerCase();
+    // If it looks like it has a path or protocol, try URL parsing
+    if (input.includes('/') || input.includes(':')) {
+      try {
+        // Prepend protocol if missing so URL constructor works
+        var toParse = input.includes('://') ? input : 'https://' + input;
+        return new URL(toParse).hostname;
+      } catch (e) {}
+    }
+    return input;
+  }
+
   /* ---- Custom domains ---- */
   function renderDomainList(domains) {
     domainList.innerHTML = '';
@@ -211,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function addDomain() {
-    const domain = domainInput.value.trim().toLowerCase();
+    const domain = extractHostname(domainInput.value);
     if (!domain) return;
     chrome.storage.sync.get([CFG.STORAGE_KEYS.CUSTOM_DOMAINS], (result) => {
       const domains = result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
@@ -261,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function addExcludedDomain() {
-    const domain = excludedDomainInput.value.trim().toLowerCase();
+    const domain = extractHostname(excludedDomainInput.value);
     if (!domain) return;
     chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], (result) => {
       const domains = result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [];
