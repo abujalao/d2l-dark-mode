@@ -21,39 +21,49 @@
    * Builds shadow DOM CSS for counter-inverting media elements.
    * @param {boolean} includeCanvas - whether to counter-invert canvas elements
    * @param {boolean} [includeVideo=true] - whether to counter-invert video elements
-   * @param {boolean} [includePopover=true] - whether to include :popover-open rules
-   *   (only needed in the effective root frame; in child frames the parent's
-   *   compositing already inverts top-layer elements)
    * @returns {string}
    */
-  D2L.buildShadowCSS = function (includeCanvas, includeVideo, includePopover) {
+  D2L.buildShadowCSS = function (includeCanvas, includeVideo) {
     if (includeVideo === undefined) includeVideo = true;
-    if (includePopover === undefined) includePopover = true;
     var parts = ['img', 'picture'];
     if (includeVideo) parts.push('video');
     if (includeCanvas) parts.push('canvas');
     var media = parts.join(', ');
-    var css = '\n' +
+    // Compensating selector: media nested inside a background-image element
+    // would be triple-inverted (page + parent + own). Cancel their own filter.
+    var compensate = 'img, picture';
+    if (includeCanvas) compensate += ', canvas';
+    if (includeVideo) compensate += ', video';
+    return '\n' +
       '    ' + media + ' {\n' +
       '      filter: invert(1) hue-rotate(180deg) !important;\n' +
+      '    }\n' +
+      '    :popover-open {\n' +
+      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
+      '    }\n' +
+      '    :host(:popover-open) {\n' +
+      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
+      '    }\n' +
+      '    :popover-open :is(' + media + ') {\n' +
+      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
+      '    }\n' +
+      '    [style*="background-image"] {\n' +
+      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
+      '    }\n' +
+      '    [style*="background-image"] :is(' + compensate + ') {\n' +
+      '      filter: none !important;\n' +
+      '    }\n' +
+      // In fullscreen the video enters the top layer where the page-level
+      // filter cannot reach. Flip the normal rule: cancel counter-inversion
+      // when it exists (video dark mode OFF), add inversion when it does
+      // not (video dark mode ON) so the video stays dark.
+      '    video:fullscreen, iframe.d2l-video-iframe:fullscreen {\n' +
+      '      filter: ' + (includeVideo ? 'none' : 'invert(1) hue-rotate(180deg)') + ' !important;\n' +
       '    }\n';
-    if (includePopover) {
-      css +=
-        '    :popover-open {\n' +
-        '      filter: invert(1) hue-rotate(180deg) !important;\n' +
-        '    }\n' +
-        '    :host(:popover-open) {\n' +
-        '      filter: invert(1) hue-rotate(180deg) !important;\n' +
-        '    }\n' +
-        '    :popover-open :is(' + media + ') {\n' +
-        '      filter: invert(1) hue-rotate(180deg) !important;\n' +
-        '    }\n';
-    }
-    return css;
   };
 
-  // Default: include canvas and popover. applyDocDarkMode()/applyVideoMode() will update later.
-  D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(true, true, true));
+  // Default: include canvas. applyDocDarkMode() will update this for child frames.
+  D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(true));
 
   /**
    * Starts the MutationObserver on document.documentElement and periodic rescan.

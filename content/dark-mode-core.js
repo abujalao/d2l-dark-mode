@@ -78,9 +78,8 @@
     }
 
     // Child frames: toggle canvas counter-inversion based on document dark mode.
-    // Popover rules are never needed in child frames (parent compositing handles top-layer).
     if (!D2L.isEffectiveRoot) {
-      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled, !D2L.state.videoDarkModeEnabled, false));
+      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled, !D2L.state.videoDarkModeEnabled));
     }
   };
 

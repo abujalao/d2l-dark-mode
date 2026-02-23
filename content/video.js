@@ -86,12 +86,9 @@
 
     // Rebuild shadow CSS so shadow-DOM <video> elements follow the same rule.
     // Respect document dark mode: in child frames with doc dark mode ON, exclude canvas.
-    // Popover rules only apply in the effective root — in child frames the parent's
-    // compositing already inverts top-layer elements.
     var includeVideo = !D2L.state.videoDarkModeEnabled;
     var includeCanvas = D2L.isEffectiveRoot || !D2L.state.documentDarkModeEnabled;
-    var includePopover = D2L.isEffectiveRoot;
-    D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(includeCanvas, includeVideo, includePopover));
+    D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(includeCanvas, includeVideo));
   };
 
   /**
@@ -143,6 +140,9 @@
    * Apply or remove counter-inversion on a single video iframe.
    */
   D2L.applyVideoModeToIframe = function (iframe) {
+    if (!iframe.classList.contains(CFG.CSS.VIDEO_IFRAME)) {
+      iframe.classList.add(CFG.CSS.VIDEO_IFRAME);
+    }
     if (!D2L.state.darkModeEnabled) return;
     if (D2L.state.videoDarkModeEnabled) {
       iframe.style.removeProperty('filter');

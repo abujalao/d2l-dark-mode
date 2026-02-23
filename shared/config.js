@@ -35,6 +35,7 @@
       NESTED: 'd2l-dark-mode-nested',
       DOC_DARK: 'd2l-doc-dark',
       VIDEO_DARK: 'd2l-video-dark',
+      VIDEO_IFRAME: 'd2l-video-iframe',
       STYLESHEET_ID: 'd2l-dark-mode-main-css',
     },
 

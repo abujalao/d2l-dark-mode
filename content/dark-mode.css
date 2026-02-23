@@ -16,59 +16,57 @@ html.d2l-dark-mode-top {
   filter: invert(1) hue-rotate(180deg);
   background-color: white !important;
   color: black !important;
+  color-scheme: dark;
 }
 
 /* ============================================================
-   TOP LAYER  (effective-root frames only)
+   TOP LAYER
    Popovers, modal dialogs, and fullscreen elements live in the
    browser's top layer, outside the html filter's reach.
    Apply the inversion directly on these elements.
 
-   IMPORTANT: use d2l-dark-mode-top, NOT d2l-dark-mode-active.
-   In child frames the visual inversion comes from the parent's
-   compositing, which DOES affect top-layer elements. Adding
-   another inversion there would counter-invert them back to
-   light mode (invisible text).
+   :fullscreen excludes <video> and <iframe>:
+   • Video has dedicated rules below for correct fullscreen
+     behaviour in both video-dark-mode ON and OFF states.
+   • Iframes going fullscreen (because child content requested
+     it) already manage their own dark mode internally — adding
+     a parent filter would double-invert the child content.
    ============================================================ */
-html.d2l-dark-mode-top :popover-open,
-html.d2l-dark-mode-top dialog:modal,
-html.d2l-dark-mode-top :fullscreen {
+html.d2l-dark-mode-active :popover-open,
+html.d2l-dark-mode-active dialog:modal,
+html.d2l-dark-mode-active :fullscreen:not(video):not(iframe) {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
 /* Counter-invert media inside top-layer elements */
-html.d2l-dark-mode-top :popover-open :is(img, canvas, picture),
-html.d2l-dark-mode-top dialog:modal :is(img, canvas, picture) {
+html.d2l-dark-mode-active :popover-open :is(img, canvas, picture),
+html.d2l-dark-mode-active dialog:modal :is(img, canvas, picture) {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
 /* Counter-invert video inside top-layer ONLY when video dark mode is off */
-html.d2l-dark-mode-top:not(.d2l-video-dark) :popover-open video,
-html.d2l-dark-mode-top:not(.d2l-video-dark) dialog:modal video {
+html.d2l-dark-mode-active:not(.d2l-video-dark) :popover-open video,
+html.d2l-dark-mode-active:not(.d2l-video-dark) dialog:modal video,
+html.d2l-dark-mode-active:not(.d2l-video-dark) :fullscreen:not(video):not(iframe) video {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
-
-/* ============================================================
-   BASELINE FOR ALL DARK-MODE FRAMES
-   Explicit white background ensures the canvas (browser default
-   bg) stays white before the top-frame filter inverts it to
-   black. Without this, some frames may have transparent or
-   mismatched canvas backgrounds.
-
-   Note: color-scheme: dark is intentionally NOT used here.
-   While it darkens scrollbars and form controls natively, it
-   also changes CSS system colors (Canvas → dark, CanvasText →
-   white) which causes invisible-text bugs in child frames
-   where D2L components rely on default/inherited colors.
-   The inversion filter already makes the page look dark;
-   scrollbars are styled explicitly below.
-   ============================================================ */
-html.d2l-dark-mode-active {
-  color-scheme: dark;
-  background-color: white !important;
-  color: black !important;
+/* Fullscreen <video> — when the video element itself is :fullscreen,
+   it enters the top layer and escapes both the html filter AND parent
+   iframe compositing. Without dedicated rules it appears wrong.
+   Video dark mode OFF → no filter (show original colours).
+   Video dark mode ON  → apply inversion so the video stays dark. */
+html.d2l-dark-mode-active:not(.d2l-video-dark) video:fullscreen,
+html.d2l-dark-mode-active:not(.d2l-video-dark) iframe.d2l-video-iframe:fullscreen {
+  filter: none !important;
 }
+
+
+html.d2l-dark-mode-active.d2l-video-dark video:fullscreen,
+html.d2l-dark-mode-active.d2l-video-dark iframe.d2l-video-iframe:fullscreen {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
 
 /* ============================================================
    COUNTER-INVERT MEDIA (LIGHT DOM)
@@ -86,6 +84,35 @@ html.d2l-dark-mode-active picture {
 /* Counter-invert video ONLY when video dark mode is off */
 html.d2l-dark-mode-active:not(.d2l-video-dark) video {
   filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* ============================================================
+   COUNTER-INVERT CSS BACKGROUND-IMAGE (LIGHT DOM)
+   Elements with background-image in their inline style (user-authored
+   banners, callout boxes, course thumbnails) are not <img> tags and
+   slip through the rules above. Apply the counter-inversion to the
+   element itself so the image appears in its original colors.
+
+   Because filter applies to the entire element subtree, any nested
+   <img>/<canvas>/<picture>/<video> elements would otherwise be
+   triple-inverted (html + parent + own rule). The rules below cancel
+   their individual counter-inversion inside a background-image parent,
+   leaving the parent's filter as the sole correction.
+   ============================================================ */
+html.d2l-dark-mode-active [style*="background-image"] {
+  filter: invert(1) hue-rotate(180deg) !important;
+}
+
+/* Cancel per-element counter-inversion for media nested inside
+   a background-image element — the parent filter already covers them. */
+html.d2l-dark-mode-active [style*="background-image"] img:not(svg img),
+html.d2l-dark-mode-active [style*="background-image"] canvas,
+html.d2l-dark-mode-active [style*="background-image"] picture {
+  filter: none !important;
+}
+
+html.d2l-dark-mode-active:not(.d2l-video-dark) [style*="background-image"] video {
+  filter: none !important;
 }
 
 /* ============================================================
