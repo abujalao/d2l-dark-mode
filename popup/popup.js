@@ -51,13 +51,19 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('versionLabel').textContent = 'v' + chrome.runtime.getManifest().version;
 
   /* ---- D2L Detection ---- */
-  function showDetectionStatus(isD2L, url) {
+  function showDetectionStatus(isD2L, url, source) {
     if (isD2L) {
       detectionBanner.classList.add('detected');
-      detectionLabel.textContent = 'D2L Detected';
+      if (source === 'excluded') {
+        detectionLabel.textContent = 'Brightspace Detected (Excluded)';
+      } else if (source === 'custom') {
+        detectionLabel.textContent = 'Detected via Custom Domain';
+      } else {
+        detectionLabel.textContent = 'Brightspace Detected';
+      }
     } else {
       detectionBanner.classList.remove('detected');
-      detectionLabel.textContent = 'Not a D2L page';
+      detectionLabel.textContent = 'Not a Brightspace page';
     }
 
     if (url) {
@@ -94,10 +100,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => document.documentElement.hasAttribute('data-d2l-detected'),
+      func: () => ({
+        detected: document.documentElement.hasAttribute('data-d2l-detected'),
+        source: document.documentElement.getAttribute('data-d2l-source') || 'auto',
+      }),
     }, (results) => {
-      const detected = !chrome.runtime.lastError && results && results[0] && results[0].result === true;
-      showDetectionStatus(detected, tab.url);
+      const data = !chrome.runtime.lastError && results && results[0] && results[0].result;
+      const detected = data && data.detected === true;
+      const source = data ? data.source : 'auto';
+      showDetectionStatus(detected, tab.url, source);
       logoState.isD2L = detected;
       updatePopupLogo();
     });

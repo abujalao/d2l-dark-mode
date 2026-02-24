@@ -46,7 +46,7 @@ chrome.runtime.onMessage.addListener(function (msg, sender) {
   chrome.scripting.executeScript({
     target: { tabId: sender.tab.id, frameIds: [sender.frameId] },
     files: D2LConfig.CONTENT_SCRIPTS,
-  });
+  }).catch(function () { /* frame may have been destroyed before injection */ });
 });
 
 /* ---- Dynamic toolbar icon ---- */

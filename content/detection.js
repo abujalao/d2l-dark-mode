@@ -16,7 +16,9 @@
   D2L.isBrightspace = function () {
     var url = window.location.href;
     if (CFG.PATTERNS.D2L_PATH.test(url)) return true;
-    if (document.documentElement.hasAttribute('data-app-version')) return true;
+    var htmlEl = document.documentElement;
+    if (htmlEl.hasAttribute('data-app-version')
+      && (htmlEl.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1) return true;
     var hostname = window.location.hostname;
     if (CFG.KNOWN_HOSTS.some(function (h) { return hostname === h || hostname.endsWith('.' + h); })) return true;
     return false;

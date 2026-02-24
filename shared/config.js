@@ -60,7 +60,7 @@
     /* Targets Brightspace-specific custom elements, data attributes, and body classes.
        Avoids the overly broad [class*="d2l-"] which false-positives on non-LMS sites
        that happen to use a CSS class containing "d2l-". */
-    BRIGHTSPACE_DEFERRED_SELECTOR: 'd2l-navigation, d2l-labs-navigation, d2l-my-courses, [data-app-version], [data-cdn*="brightspace"], body.d2l-body, meta[name="d2l"]',
+    BRIGHTSPACE_DEFERRED_SELECTOR: 'd2l-navigation, d2l-labs-navigation, d2l-my-courses, [data-cdn*="brightspace"], body.d2l-body, meta[name="d2l"]',
 
     /* ---- Excluded Hosts (corporate / non-LMS sites that share D2L branding) ---- */
     EXCLUDED_HOSTS: [

@@ -38,17 +38,22 @@
     return hostname === h || hostname.endsWith('.' + h);
   });
 
-  // Fast synchronous check — no IPC, no storage access
-  var isFastMatch = document.documentElement.hasAttribute('data-app-version')
+  // Fast synchronous check — no IPC, no storage access.
+  // Requires both data-app-version AND a Brightspace CDN reference on <html>
+  // to avoid false positives on non-D2L sites that use data-app-version.
+  var htmlEl = document.documentElement;
+  var isFastMatch = (htmlEl.hasAttribute('data-app-version')
+      && (htmlEl.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1)
     || isKnownHost;
 
   // Same-origin child frames (document viewers, content iframes) inherit the
   // parent's host but may lack data-app-version. Check if the parent is Brightspace.
   if (!isFastMatch && window.self !== window.top) {
     try {
-      var parentDoc = window.parent.document;
-      if (parentDoc.documentElement.hasAttribute('data-app-version')
-        || parentDoc.documentElement.classList.contains(CFG.CSS.ACTIVE)) {
+      var parentHtml = window.parent.document.documentElement;
+      if (parentHtml.classList.contains(CFG.CSS.ACTIVE)
+        || (parentHtml.hasAttribute('data-app-version')
+            && (parentHtml.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1)) {
         isFastMatch = true;
       }
     } catch (e) { /* cross-origin — handled below */ }
@@ -64,15 +69,18 @@
     }
   }
 
-  function checkExcludedThenInject(excluded) {
+  function checkExcludedThenInject(excluded, source) {
     if (excluded.some(function (d) {
       return hostname === d || hostname.endsWith('.' + d);
     })) {
       // User excluded this domain — undo any early FOUC-prevention class
       document.documentElement.classList.remove(CFG.CSS.ACTIVE);
+      document.documentElement.setAttribute('data-d2l-detected', 'true');
+      document.documentElement.setAttribute('data-d2l-source', 'excluded');
       return;
     }
     document.documentElement.setAttribute('data-d2l-detected', 'true');
+    document.documentElement.setAttribute('data-d2l-source', source || 'auto');
     chrome.runtime.sendMessage({ type: 'injectScripts', d2lDetected: true });
   }
 
@@ -81,7 +89,7 @@
     document.documentElement.classList.add(CFG.CSS.ACTIVE);
     // Fast-match path: only need excluded domains from storage (one call)
     chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], function (result) {
-      checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
+      checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [], 'auto');
     });
   } else {
     // Top frame or same-origin child on unknown domain.
@@ -91,7 +99,7 @@
       if (document.querySelector(CFG.BRIGHTSPACE_DEFERRED_SELECTOR)) {
         // DOM detected D2L — only need excluded domains (one call)
         chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], function (result) {
-          checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
+          checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [], 'auto');
         });
         return;
       }
@@ -103,7 +111,7 @@
           if (customDomains.some(function (d) {
             return hostname === d || hostname.endsWith('.' + d);
           })) {
-            checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
+            checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [], 'custom');
           }
         }
       );

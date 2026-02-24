@@ -45,7 +45,9 @@
       var parentHref = window.parent.location.href;
       var parentHostname = window.parent.location.hostname;
       if (CFG.PATTERNS.D2L_PATH.test(parentHref)) return false;
-      if (parentDoc.documentElement.hasAttribute('data-app-version')) return false;
+      var parentHtml = parentDoc.documentElement;
+      if (parentHtml.hasAttribute('data-app-version')
+        && (parentHtml.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1) return false;
       if (CFG.KNOWN_HOSTS.some(function (h) {
         return parentHostname === h || parentHostname.endsWith('.' + h);
       })) return false;
