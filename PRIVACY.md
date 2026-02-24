@@ -12,8 +12,8 @@ The extension requests the following permissions solely to provide its core func
 
 - **storage** — Save your preferences locally.
 - **scripting** — Detect whether the current page is a D2L Brightspace site.
-- **activeTab / tabs** — Read the active tab's URL to display detection status in the popup.
-- **Host permissions (`<all_urls>`)** — Run a lightweight content script that identifies D2L Brightspace pages across any university domain.
+- **activeTab / tabs** — Access the current tab to determine whether it is a Brightspace page.
+- **Host permissions (`<all_urls>`)** — Allow the extension to detect and activate only on Brightspace instances hosted across different domains.
 
 ## Third Parties
 
@@ -25,4 +25,4 @@ If this policy is updated, the changes will be reflected in this document with a
 
 ## Contact
 
-If you have questions about this policy, please open an issue on the [GitHub repository](https://github.com/abujalao/d2l-dark-mode).
+If you have any questions, email [obdsrdev+darkspace@gmail.com](mailto:obdsrdev+darkspace@gmail.com).
