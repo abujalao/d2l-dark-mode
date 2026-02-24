@@ -57,7 +57,10 @@
     },
 
     /* ---- Brightspace Deferred Detection Selector ---- */
-    BRIGHTSPACE_DEFERRED_SELECTOR: 'd2l-navigation, [class*="d2l-"], meta[name="d2l"]',
+    /* Targets Brightspace-specific custom elements, data attributes, and body classes.
+       Avoids the overly broad [class*="d2l-"] which false-positives on non-LMS sites
+       that happen to use a CSS class containing "d2l-". */
+    BRIGHTSPACE_DEFERRED_SELECTOR: 'd2l-navigation, d2l-labs-navigation, d2l-my-courses, [data-app-version], [data-cdn*="brightspace"], body.d2l-body, meta[name="d2l"]',
 
     /* ---- Excluded Hosts (corporate / non-LMS sites that share D2L branding) ---- */
     EXCLUDED_HOSTS: [
@@ -65,24 +68,9 @@
     ],
 
     /* ---- Known Brightspace Hosts ---- */
-    KNOWN_HOSTS: [
-      // McMaster University
-      'avenue.mcmaster.ca',
-      'avenue.cllmcmaster.ca',
-
-      // Broad patterns (covers hundreds of institutions)
-      'brightspace.com',
-      'elearningontario.ca',
-      'desire2learn.com',
-
-      // Specific custom domains
-      'elearn.ucalgary.ca',
-      'd2l.bowvalleycollege.ca',
-      'd2l.cbe.ab.ca',
-      'mylearningspace.wlu.ca',
-      'fanshaweonline.ca',
-      'myhome.hwdsb.on.ca',
-    ],
+    /* All Brightspace instances are auto-detected via data-app-version and the
+       deferred selector. Users can also add custom domains via the popup. */
+    KNOWN_HOSTS: [],
 
     /**
      * Resolve document dark mode from storage result, handling legacy pdfDarkModeEnabled key.

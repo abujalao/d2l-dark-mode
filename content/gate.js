@@ -42,6 +42,18 @@
   var isFastMatch = document.documentElement.hasAttribute('data-app-version')
     || isKnownHost;
 
+  // Same-origin child frames (document viewers, content iframes) inherit the
+  // parent's host but may lack data-app-version. Check if the parent is Brightspace.
+  if (!isFastMatch && window.self !== window.top) {
+    try {
+      var parentDoc = window.parent.document;
+      if (parentDoc.documentElement.hasAttribute('data-app-version')
+        || parentDoc.documentElement.classList.contains(CFG.CSS.ACTIVE)) {
+        isFastMatch = true;
+      }
+    } catch (e) { /* cross-origin — handled below */ }
+  }
+
   // Cross-origin child frame that failed the fast check → definitely not
   // a Brightspace frame (video embeds, widgets, etc.) — exit with zero async work
   if (!isFastMatch && window.self !== window.top) {

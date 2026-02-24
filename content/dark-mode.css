@@ -19,6 +19,15 @@ html.d2l-dark-mode-top {
   color-scheme: dark;
 }
 
+/* Child frames: break color-scheme inheritance from the top frame.
+   Without this, color-scheme: dark propagates through the iframe chain,
+   causing nested documents (e.g. Ares/eReserves LTI) to use dark Canvas
+   system colors — black background with their own explicit black text
+   becomes invisible. Resetting to 'normal' restores white Canvas backgrounds. */
+html.d2l-dark-mode-active:not(.d2l-dark-mode-top) {
+  color-scheme: normal !important;
+}
+
 /* ============================================================
    TOP LAYER
    Popovers, modal dialogs, and fullscreen elements live in the
@@ -111,6 +120,7 @@ html.d2l-dark-mode-active:not(.d2l-video-dark) video {
    their individual counter-inversion inside a background-image parent,
    leaving the parent's filter as the sole correction.
    ============================================================ */
+/* Inline background-image counter-inversion. */
 html.d2l-dark-mode-active [style*="background-image"] {
   filter: invert(1) hue-rotate(180deg) !important;
 }
