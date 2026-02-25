@@ -1,23 +1,35 @@
 # Privacy Policy - DarkSpace (D2L Brightspace Dark Mode)
 
-**Last updated:** February 23, 2026
+**Last updated:** February 25, 2026
 
 ## Data Collection
 
-DarkSpace does **not** collect, transmit, or share any personal data or browsing activity. All user preferences (dark mode state, document/video dark mode toggles, custom domains) are stored locally in your browser using `chrome.storage.sync` and are never sent to any external server.
+DarkSpace does **not** collect, transmit, or share any personal data or browsing activity. The extension makes no network requests and contains no analytics or tracking. All user preferences (dark mode state, document/video dark mode toggles, custom domains) are stored in your browser using `chrome.storage.sync`. If you are signed into Chrome, these preferences may sync across your devices through Google's standard sync feature.
 
 ## Permissions
 
 The extension requests the following permissions solely to provide its core functionality:
 
-- **storage** — Save your preferences locally.
-- **scripting** — Detect whether the current page is a D2L Brightspace site.
-- **activeTab / tabs** — Access the current tab to determine whether it is a Brightspace page.
-- **Host permissions (`<all_urls>`)** — Allow the extension to detect and activate only on Brightspace instances hosted across different domains.
+- **Storage**: Save your preferences locally.
+- **Scripting**: Inject dark mode styles and scripts into Brightspace pages, and detect whether the current page is a Brightspace site.
+- **ActiveTab / Tabs**: Access the current tab to determine whether it is a Brightspace page.
+- **Host permissions (`<all_urls>`)**: Brightspace is hosted across hundreds of different university domains. The extension runs a lightweight detection check on every page; on non-Brightspace pages, no modifications are made and no data is read or stored.
+
+## Limited Use
+
+DarkSpace's use of information received from Chrome APIs adheres to the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/limited-use/), including the Limited Use requirements. The extension does not transfer, sell, or use user data for purposes unrelated to the extension's core functionality.
+
+## Data Deletion
+
+DarkSpace stores all data locally in your browser. To delete all extension data, simply uninstall the extension from Chrome. You can also reset your preferences to defaults at any time using the "Reset to Defaults" button in the extension popup.
 
 ## Third Parties
 
-No data is sold, transferred, or disclosed to any third party for any purpose.
+No data is sold, transferred, or disclosed to any third party for any purpose. The extension contains no third-party code, libraries, or external services.
+
+## Remote Code
+
+DarkSpace does not load or execute any remote code. All functionality is bundled within the extension.
 
 ## Changes
 
