@@ -11,9 +11,9 @@ DarkSpace does **not** collect, transmit, or share any personal data or browsing
 The extension requests the following permissions solely to provide its core functionality:
 
 - **Storage**: Save your preferences locally.
-- **Scripting**: Inject dark mode styles and scripts into Brightspace pages, and detect whether the current page is a Brightspace site.
+- **Scripting**: Apply dark mode to Brightspace pages by injecting stylesheets and supporting scripts (for handling embedded content, video players, and dynamically loaded elements), and detect whether the current page is a Brightspace site.
 - **ActiveTab / Tabs**: Access the current tab to determine whether it is a Brightspace page.
-- **Host permissions (`<all_urls>`)**: Brightspace is hosted across hundreds of different university domains. The extension runs a lightweight detection check on every page; on non-Brightspace pages, no modifications are made and no data is read or stored.
+- **Host permissions (`<all_urls>`)**: Brightspace is hosted across numerous institutional domains. The extension runs a lightweight detection check on every page; on non-Brightspace pages, no modifications are made and no data is read or stored.
 
 ## Limited Use
 
