@@ -14,18 +14,16 @@ chrome.runtime.onInstalled.addListener((details) => {
 // Maps tabId → hostname so we can distinguish full navigations from SPA navigations
 const d2lTabs = new Map();
 
-// Cache dark mode state and custom domains so updateIcon() never hits storage.
+// Cache dark mode state so updateIcon() never hits storage.
 // Use a promise to ensure the cache is ready before processing messages,
 // preventing a race where the service worker wakes and handles injectScripts
 // before the storage read completes (which would default to active).
 let cachedDarkMode = null;
-let cachedCustomDomains = [];
 const cacheReady = new Promise((resolve) => {
   chrome.storage.sync.get(
-    [D2LConfig.STORAGE_KEYS.DARK_MODE, D2LConfig.STORAGE_KEYS.CUSTOM_DOMAINS],
+    [D2LConfig.STORAGE_KEYS.DARK_MODE],
     (result) => {
       cachedDarkMode = result[D2LConfig.STORAGE_KEYS.DARK_MODE] !== false;
-      cachedCustomDomains = result[D2LConfig.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
       resolve();
     }
   );
@@ -67,13 +65,25 @@ function updateIcon(tabId) {
 }
 
 /**
- * Check if a hostname is a known or custom Brightspace domain.
- * Used to re-detect D2L tabs after the service worker wakes with an empty d2lTabs Map.
+ * Re-detect a tab as Brightspace by checking the page's data-d2l-detected
+ * attribute — the ground truth set by gate.js. This survives service worker
+ * restarts because the attribute lives on the page, not in SW memory.
+ * If detected, re-adds the tab to d2lTabs. Calls callback when done.
  */
-function isBrightspaceHost(hostname) {
-  if (D2LConfig.KNOWN_HOSTS.some(h => hostname === h || hostname.endsWith('.' + h))) return true;
-  if (cachedCustomDomains.some(h => hostname === h || hostname.endsWith('.' + h))) return true;
-  return false;
+function redetectTab(tabId, callback) {
+  chrome.tabs.get(tabId, (tab) => {
+    if (chrome.runtime.lastError || !tab || !tab.url) return callback();
+    if (/^(chrome|chrome-extension|about|edge):/.test(tab.url)) return callback();
+    chrome.scripting.executeScript({
+      target: { tabId: tabId },
+      func: () => document.documentElement.hasAttribute('data-d2l-detected'),
+    }, (results) => {
+      if (!chrome.runtime.lastError && results && results[0] && results[0].result === true) {
+        try { d2lTabs.set(tabId, new URL(tab.url).hostname); } catch (e) {}
+      }
+      callback();
+    });
+  });
 }
 
 // Clean up when tabs close
@@ -99,14 +109,11 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
   if (changeInfo.status === 'complete') {
     cacheReady.then(function () {
-      // Re-detect after service worker wake (d2lTabs lost)
-      if (!d2lTabs.has(tabId)) {
-        try {
-          var hostname = new URL(tab.url).hostname;
-          if (isBrightspaceHost(hostname)) d2lTabs.set(tabId, hostname);
-        } catch (e) {}
+      if (d2lTabs.has(tabId)) {
+        updateIcon(tabId);
+      } else {
+        redetectTab(tabId, function () { updateIcon(tabId); });
       }
-      updateIcon(tabId);
     });
   }
 });
@@ -115,17 +122,10 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 // Re-detect Brightspace tabs that were lost when the service worker slept.
 chrome.tabs.onActivated.addListener((info) => {
   cacheReady.then(function () {
-    if (!d2lTabs.has(info.tabId)) {
-      chrome.tabs.get(info.tabId, (tab) => {
-        if (chrome.runtime.lastError || !tab.url) return updateIcon(info.tabId);
-        try {
-          var hostname = new URL(tab.url).hostname;
-          if (isBrightspaceHost(hostname)) d2lTabs.set(info.tabId, hostname);
-        } catch (e) {}
-        updateIcon(info.tabId);
-      });
-    } else {
+    if (d2lTabs.has(info.tabId)) {
       updateIcon(info.tabId);
+    } else {
+      redetectTab(info.tabId, function () { updateIcon(info.tabId); });
     }
   });
 });
@@ -133,11 +133,8 @@ chrome.tabs.onActivated.addListener((info) => {
 // Update cached state + icons when dark mode is toggled from the popup
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync') return;
-  if (changes[D2LConfig.STORAGE_KEYS.CUSTOM_DOMAINS]) {
-    cachedCustomDomains = changes[D2LConfig.STORAGE_KEYS.CUSTOM_DOMAINS].newValue || [];
-  }
-  if (!changes.darkModeEnabled) return;
-  cachedDarkMode = changes.darkModeEnabled.newValue !== false;
+  if (!changes[D2LConfig.STORAGE_KEYS.DARK_MODE]) return;
+  cachedDarkMode = changes[D2LConfig.STORAGE_KEYS.DARK_MODE].newValue !== false;
   // Update icon for all tracked D2L tabs + the active tab
   for (const tabId of d2lTabs.keys()) {
     updateIcon(tabId);
@@ -153,12 +150,10 @@ cacheReady.then(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs[0]) return;
     var tab = tabs[0];
-    if (!d2lTabs.has(tab.id)) {
-      try {
-        var hostname = new URL(tab.url).hostname;
-        if (isBrightspaceHost(hostname)) d2lTabs.set(tab.id, hostname);
-      } catch (e) {}
+    if (d2lTabs.has(tab.id)) {
+      updateIcon(tab.id);
+    } else {
+      redetectTab(tab.id, function () { updateIcon(tab.id); });
     }
-    updateIcon(tab.id);
   });
 });

@@ -91,7 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Skip restricted URLs where scripting isn't allowed
-    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:')) {
+    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:') || tab.url.startsWith('edge://')) {
       showDetectionStatus(false, null);
       logoState.isD2L = false;
       updatePopupLogo();
