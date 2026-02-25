@@ -17,7 +17,7 @@ The extension requests the following permissions solely to provide its core func
 
 ## Limited Use
 
-DarkSpace's use of information received from Chrome APIs adheres to the [Chrome Web Store User Data Policy](https://developer.chrome.com/docs/webstore/program-policies/limited-use/), including the Limited Use requirements. The extension does not transfer, sell, or use user data for purposes unrelated to the extension's core functionality.
+DarkSpace's use of information received from Chrome APIs adheres to the [Chrome Web Store Limited Use Policy](https://developer.chrome.com/docs/webstore/program-policies/limited-use/). The extension does not transfer, sell, or use user data for purposes unrelated to its core functionality.
 
 ## Data Deletion
 
