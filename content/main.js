@@ -1,7 +1,6 @@
 /**
  * D2L Dark Mode — Content Script Entry Point
- * Reads settings from storage (single call) and orchestrates dark mode.
- * Detection is handled by gate.js — this script only runs on confirmed Brightspace pages.
+ * Only runs on confirmed Brightspace pages (detection is handled by gate.js).
  */
 
 (function () {
@@ -22,9 +21,7 @@
     if (D2L.state.darkModeEnabled) {
       D2L.enableDarkMode();
     } else {
-      // Clean up the ACTIVE class that gate.js added synchronously at
-      // document_start — without this, orphaned CSS rules (color-scheme: dark,
-      // image counter-inversion) would remain active even with dark mode OFF.
+      // Clean up the ACTIVE class that gate.js added at document_start
       D2L.disableDarkMode();
     }
   });

@@ -1,9 +1,7 @@
 /**
  * D2L Dark Mode — Gatekeeper Script
- * Lightweight entry point that runs on every page at document_start.
- * Performs a fast synchronous check to determine if this page could be Brightspace.
- * If yes, injects heavy scripts via the service worker. If no, exits immediately
- * with zero storage calls, zero IPC, and zero DOM modification.
+ * Runs on every page at document_start. Determines if this is a Brightspace
+ * page and triggers content script injection via the service worker.
  */
 
 (function () {
@@ -11,8 +9,7 @@
 
   var CFG = self.D2LConfig;
 
-  // Handle about:blank / about:srcdoc iframes — these inherit the parent's
-  // origin and need dark mode scripts if the parent is a Brightspace page.
+  // about: iframes inherit the parent's origin and need dark mode if parent has it
   var isAboutFrame = location.protocol === 'about:';
   if (isAboutFrame) {
     try {
@@ -20,15 +17,13 @@
         document.documentElement.classList.add(CFG.CSS.ACTIVE);
         chrome.runtime.sendMessage({ type: 'injectScripts' });
       }
-    } catch (e) {
-      // cross-origin — shouldn't happen for about: frames but be safe
-    }
+    } catch (e) {}
     return;
   }
 
   var hostname = location.hostname;
 
-  // Bail out immediately on excluded hosts (corporate sites, not LMS)
+  // Skip excluded hosts
   var isExcluded = CFG.EXCLUDED_HOSTS.some(function (h) {
     return hostname === h || hostname.endsWith('.' + h);
   });
@@ -38,16 +33,13 @@
     return hostname === h || hostname.endsWith('.' + h);
   });
 
-  // Fast synchronous check — no IPC, no storage access.
-  // Requires both data-app-version AND a Brightspace CDN reference on <html>
-  // to avoid false positives on non-D2L sites that use data-app-version.
+  // Fast synchronous check: data-app-version + Brightspace CDN, or known host
   var htmlEl = document.documentElement;
   var isFastMatch = (htmlEl.hasAttribute('data-app-version')
       && (htmlEl.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1)
     || isKnownHost;
 
-  // Same-origin child frames (document viewers, content iframes) inherit the
-  // parent's host but may lack data-app-version. Check if the parent is Brightspace.
+  // Same-origin child frames may lack data-app-version; check parent instead
   if (!isFastMatch && window.self !== window.top) {
     try {
       var parentHtml = window.parent.document.documentElement;
@@ -56,16 +48,15 @@
             && (parentHtml.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1)) {
         isFastMatch = true;
       }
-    } catch (e) { /* cross-origin — handled below */ }
+    } catch (e) {}
   }
 
-  // Cross-origin child frame that failed the fast check → definitely not
-  // a Brightspace frame (video embeds, widgets, etc.) — exit with zero async work
+  // Cross-origin child frames that failed the fast check are not Brightspace
   if (!isFastMatch && window.self !== window.top) {
     try {
-      void window.parent.document; // throws if cross-origin
+      void window.parent.document;
     } catch (e) {
-      return; // cross-origin child, not Brightspace
+      return;
     }
   }
 
@@ -73,7 +64,7 @@
     if (excluded.some(function (d) {
       return hostname === d || hostname.endsWith('.' + d);
     })) {
-      // User excluded this domain — undo any early FOUC-prevention class
+      // Undo FOUC-prevention class for excluded domains
       document.documentElement.classList.remove(CFG.CSS.ACTIVE);
       document.documentElement.setAttribute('data-d2l-detected', 'true');
       document.documentElement.setAttribute('data-d2l-source', 'excluded');
@@ -85,25 +76,21 @@
   }
 
   if (isFastMatch) {
-    // Apply immediate dark class to prevent FOUC, then load heavy scripts
+    // Apply dark class immediately to prevent FOUC
     document.documentElement.classList.add(CFG.CSS.ACTIVE);
-    // Fast-match path: only need excluded domains from storage (one call)
     chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], function (result) {
       checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [], 'auto');
     });
   } else {
-    // Top frame or same-origin child on unknown domain.
-    // First try a DOM check (no IPC); if that also fails, fall back to
-    // checking the user's custom domains via storage.
+    // Unknown domain: try DOM detection, then fall back to custom domains
     function tryDOMThenCustomDomains() {
       if (document.querySelector(CFG.BRIGHTSPACE_DEFERRED_SELECTOR)) {
-        // DOM detected D2L — only need excluded domains (one call)
         chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], function (result) {
           checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [], 'auto');
         });
         return;
       }
-      // DOM had no D2L selectors — fetch both custom and excluded in one call
+      // No D2L selectors found — check custom domains
       chrome.storage.sync.get(
         [CFG.STORAGE_KEYS.CUSTOM_DOMAINS, CFG.STORAGE_KEYS.EXCLUDED_DOMAINS],
         function (result) {

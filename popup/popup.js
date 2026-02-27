@@ -1,11 +1,8 @@
-/**
- * D2L Dark Mode — Popup Logic (Redesigned)
- */
+/** D2L Dark Mode — Popup */
 
 document.addEventListener('DOMContentLoaded', () => {
   const CFG = window.D2LConfig;
 
-  // --- DOM references ---
   const powerButton = document.getElementById('powerButton');
   const powerStatus = document.getElementById('powerStatus');
   const documentDarkModeToggle = document.getElementById('documentDarkModeToggle');
@@ -24,18 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const docIcon = document.getElementById('docIcon');
   const videoIcon = document.getElementById('videoIcon');
 
-  // Collapsible elements
   const advancedHeader = document.getElementById('advancedHeader');
   const advancedSection = document.getElementById('advancedSection');
   const domainsHeader = document.getElementById('domainsHeader');
   const domainsSection = document.getElementById('domainsSection');
 
-  // Track dark mode state locally
   let darkModeOn = true;
 
-  /* ---- Popup logo ---- */
-  // Both the D2L detection and the storage read resolve independently.
-  // Use a small shared state object so we only update the logo once both are done.
+  // Logo updates once both D2L detection and storage read have resolved
   const logoState = { isD2L: null, darkOn: null };
 
   function updatePopupLogo() {
@@ -47,7 +40,6 @@ document.addEventListener('DOMContentLoaded', () => {
     );
   }
 
-  /* ---- Version label ---- */
   document.getElementById('versionLabel').textContent = 'v' + chrome.runtime.getManifest().version;
 
   /* ---- D2L Detection ---- */
@@ -79,8 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Check the page directly for gate.js's persistent detection marker.
-  // This survives service worker restarts and is independent of dark mode state.
+  // Check gate.js's persistent detection marker on the page
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
     if (!tab || !tab.id || !tab.url) {
@@ -90,7 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Skip restricted URLs where scripting isn't allowed
     if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:') || tab.url.startsWith('edge://')) {
       showDetectionStatus(false, null);
       logoState.isD2L = false;
@@ -114,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  /* ---- Load saved settings ---- */
+  /* ---- Settings ---- */
   chrome.storage.sync.get(CFG.allReadKeys(), (result) => {
     darkModeOn = result[CFG.STORAGE_KEYS.DARK_MODE] !== false;
     updatePowerButton(darkModeOn);
@@ -131,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderExcludedList(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
   });
 
-  /* ---- Power button ---- */
+  /* ---- Power Button ---- */
   function updatePowerButton(isOn) {
     if (isOn) {
       powerButton.classList.add('is-active');
@@ -150,7 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
     chrome.storage.sync.set({ [CFG.STORAGE_KEYS.DARK_MODE]: darkModeOn });
   });
 
-  /* ---- Toggle icon animation ---- */
+  /* ---- Toggle Icons ---- */
   function updateToggleIcon(icon, isActive) {
     if (isActive) {
       icon.classList.add('is-active');
@@ -159,21 +149,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  /* ---- Document dark mode toggle ---- */
+  /* ---- Document Dark Mode ---- */
   documentDarkModeToggle.addEventListener('change', () => {
     chrome.storage.sync.set({ [CFG.STORAGE_KEYS.DOCUMENT_DARK_MODE]: documentDarkModeToggle.checked });
     updateToggleIcon(docIcon, documentDarkModeToggle.checked);
   });
 
-  /* ---- Video dark mode toggle ---- */
+  /* ---- Video Dark Mode ---- */
   videoDarkModeToggle.addEventListener('change', () => {
     chrome.storage.sync.set({ [CFG.STORAGE_KEYS.VIDEO_DARK_MODE]: videoDarkModeToggle.checked });
     updateToggleIcon(videoIcon, videoDarkModeToggle.checked);
   });
 
-  /* ---- Collapsible sections ---- */
+  /* ---- Collapsible Sections ---- */
   function setupCollapsible(header, section, storageKey) {
-    // Load persisted collapse state (local, not sync)
     chrome.storage.local.get([storageKey], (result) => {
       if (result[storageKey] === true) {
         section.classList.add('is-open');
@@ -192,7 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
         content.style.maxHeight = '0';
       }
 
-      // Persist state
       chrome.storage.local.set({ [storageKey]: isOpen });
     });
   }
@@ -200,13 +188,11 @@ document.addEventListener('DOMContentLoaded', () => {
   setupCollapsible(advancedHeader, advancedSection, 'popup_advancedOpen');
   setupCollapsible(domainsHeader, domainsSection, 'popup_domainsOpen');
 
-  /* ---- Hostname extraction helper ---- */
+  /* ---- Hostname Extraction ---- */
   function extractHostname(input) {
     input = input.trim().toLowerCase();
-    // If it looks like it has a path or protocol, try URL parsing
     if (input.includes('/') || input.includes(':')) {
       try {
-        // Prepend protocol if missing so URL constructor works
         var toParse = input.includes('://') ? input : 'https://' + input;
         return new URL(toParse).hostname;
       } catch (e) {}
@@ -214,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return input;
   }
 
-  /* ---- Custom domains ---- */
+  /* ---- Custom Domains ---- */
   function renderDomainList(domains) {
     domainList.innerHTML = '';
     domains.forEach((domain, index) => {
@@ -228,7 +214,6 @@ document.addEventListener('DOMContentLoaded', () => {
       domainList.appendChild(li);
     });
 
-    // Update collapsible height if domains section is open
     if (domainsSection.classList.contains('is-open')) {
       const content = domainsSection.querySelector('.collapsible-content');
       content.style.maxHeight = content.scrollHeight + 'px';
@@ -264,7 +249,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') addDomain();
   });
 
-  /* ---- Excluded domains ---- */
+  /* ---- Excluded Domains ---- */
   function renderExcludedList(domains) {
     excludedDomainList.innerHTML = '';
     domains.forEach((domain, index) => {
@@ -278,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
       excludedDomainList.appendChild(li);
     });
 
-    // Update collapsible height if domains section is open
     if (domainsSection.classList.contains('is-open')) {
       const content = domainsSection.querySelector('.collapsible-content');
       content.style.maxHeight = content.scrollHeight + 'px';
@@ -314,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') addExcludedDomain();
   });
 
-  /* ---- Reset button ---- */
+  /* ---- Reset ---- */
   resetButton.addEventListener('click', () => {
     chrome.storage.sync.set({ ...CFG.DEFAULTS }, () => {
       darkModeOn = CFG.DEFAULTS.darkModeEnabled;
@@ -326,7 +310,6 @@ document.addEventListener('DOMContentLoaded', () => {
       renderDomainList(CFG.DEFAULTS.customDomains);
       renderExcludedList(CFG.DEFAULTS.excludedDomains);
 
-      // Collapse sections
       advancedSection.classList.remove('is-open');
       advancedSection.querySelector('.collapsible-content').style.maxHeight = '0';
       domainsSection.classList.remove('is-open');

@@ -1,8 +1,4 @@
-/**
- * D2L Dark Mode — Shared Configuration
- * Single source of truth for all constants, storage keys, defaults, and patterns.
- * Used by content scripts (window) and service worker (ServiceWorkerGlobalScope).
- */
+/** D2L Dark Mode — Shared Configuration */
 
 (function () {
   'use strict';
@@ -13,7 +9,7 @@
     STORAGE_KEYS: {
       DARK_MODE: 'darkModeEnabled',
       DOCUMENT_DARK_MODE: 'documentDarkModeEnabled',
-      PDF_DARK_MODE: 'pdfDarkModeEnabled',           // legacy key for backward compat
+      PDF_DARK_MODE: 'pdfDarkModeEnabled',           // legacy key
       VIDEO_DARK_MODE: 'videoDarkModeEnabled',
       CUSTOM_DOMAINS: 'customDomains',
       EXCLUDED_DOMAINS: 'excludedDomains',
@@ -57,26 +53,17 @@
     },
 
     /* ---- Brightspace Deferred Detection Selector ---- */
-    /* Targets Brightspace-specific custom elements, data attributes, and body classes.
-       Avoids the overly broad [class*="d2l-"] which false-positives on non-LMS sites
-       that happen to use a CSS class containing "d2l-". */
     BRIGHTSPACE_DEFERRED_SELECTOR: 'd2l-navigation, d2l-labs-navigation, d2l-my-courses, [data-cdn*="brightspace"], body.d2l-body, meta[name="d2l"]',
 
-    /* ---- Excluded Hosts (corporate / non-LMS sites that share D2L branding) ---- */
+    /* ---- Excluded Hosts ---- */
     EXCLUDED_HOSTS: [
-      "d2l.com", // D2L corporate website — not a Brightspace LMS
+      "d2l.com",
     ],
 
     /* ---- Known Brightspace Hosts ---- */
-    /* All Brightspace instances are auto-detected via data-app-version and the
-       deferred selector. Users can also add custom domains via the popup. */
     KNOWN_HOSTS: [],
 
-    /**
-     * Resolve document dark mode from storage result, handling legacy pdfDarkModeEnabled key.
-     * @param {Object} result - chrome.storage.sync.get result
-     * @returns {boolean}
-     */
+    /** Resolve document dark mode, falling back to legacy pdfDarkModeEnabled key. */
     resolveDocumentDarkMode: function (result) {
       if (result.documentDarkModeEnabled !== undefined) {
         return result.documentDarkModeEnabled === true;
@@ -84,7 +71,7 @@
       return result.pdfDarkModeEnabled === true;
     },
 
-    /* ---- Content scripts injected by gate.js via service worker ---- */
+    /* ---- Content Scripts ---- */
     CONTENT_SCRIPTS: [
       'content/detection.js',
       'content/video.js',
@@ -93,10 +80,7 @@
       'content/main.js',
     ],
 
-    /**
-     * Returns the array of all storage keys to fetch (includes legacy key for migration).
-     * @returns {string[]}
-     */
+    /** All storage keys to fetch (includes legacy key for migration). */
     allReadKeys: function () {
       return [
         this.STORAGE_KEYS.DARK_MODE,

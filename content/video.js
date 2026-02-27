@@ -1,7 +1,4 @@
-/**
- * D2L Dark Mode — Video Iframe Detection & Mode
- * Tiered heuristic to identify video iframes and apply/remove counter-inversion.
- */
+/** D2L Dark Mode — Video Iframe Detection & Mode */
 
 (function () {
   'use strict';
@@ -9,105 +6,78 @@
   const D2L = window.D2L = window.D2L || {};
   const CFG = window.D2LConfig;
 
-  /**
-   * Tiered heuristic to identify video iframes.
-   * Strong signals pass alone; weaker signals require allowfullscreen + a second hint.
-   */
+  /** Tiered heuristic to identify video iframes. */
   D2L.isVideoIframe = function (iframe) {
     var allow = iframe.getAttribute('allow') || '';
 
-    // --- Strongest positive signal ---
-    // picture-in-picture is exclusive to video players
+    // Strongest signal: picture-in-picture is exclusive to video players
     if (CFG.PATTERNS.VIDEO_STRONG_ALLOW.test(allow)) return true;
 
-    // --- Negative checks: known non-video iframe types ---
-    // These run BEFORE the title check because D2L Lessons wrappers often
-    // carry course titles that contain the word "Video" (e.g.,
-    // "WHMIS 1A00 Video - ...") which would otherwise false-positive.
-
-    // D2L Lessons content viewer: encrypted-media + clipboard-write in allow
+    // Negative checks run before title check to avoid false positives
+    // from D2L Lessons wrappers with "Video" in course titles
     if (/encrypted-media/.test(allow) && /clipboard-write/.test(allow)) return false;
 
-    // Compute class+id once for both negative and positive checks below
     var classAndId = ((iframe.className || '') + ' ' + (iframe.id || '')).toLowerCase();
-
-    // D2L HTML topic iframe: course content pages carry broad allow policies
-    // that overlap with video signals.
     if (/html-topic-iframe/.test(classAndId)) return false;
 
-    // D2L hosted content served from /content/enforced/ are never video iframes.
-    // Race-condition-proof: src is set at iframe creation time.
+    // /content/enforced/ paths are D2L-hosted content, never video
     try {
       var srcUrl = new URL(iframe.src, window.location.href);
       if (/^\/content\/enforced\//.test(srcUrl.pathname)) return false;
-    } catch (e) { /* invalid src — skip */ }
+    } catch (e) {}
 
-    // --- Medium positive signal ---
-    // Explicit "video" / "video player" / "media player" in title or aria-label.
-    // Placed after negative checks to avoid false-positives on D2L wrappers
-    // whose course title happens to contain "Video".
+    // Title or aria-label contains "video" / "media player"
     var text = ((iframe.title || '') + ' ' + (iframe.getAttribute('aria-label') || '')).toLowerCase();
     if (CFG.PATTERNS.VIDEO_TITLE.test(text)) return true;
 
-    // --- Combined signals (fullscreen capability + one more hint) ---
+    // Combined signals: fullscreen + one more hint
     var hasFullscreen = iframe.hasAttribute('allowfullscreen')
       || iframe.hasAttribute('allowFullScreen')
       || /\bfullscreen\b/.test(allow);
     if (!hasFullscreen) return false;
 
-    // autoplay policy — widgets almost never request it
+    // autoplay policy is a strong video signal
     if (CFG.PATTERNS.VIDEO_AUTOPLAY.test(allow)) return true;
 
-    // src path contains a video-related segment
+    // Video-related path segment
     try {
       var path = new URL(iframe.src, window.location.href).pathname.toLowerCase();
       if (CFG.PATTERNS.VIDEO_PATH.test(path)) return true;
-    } catch (e) { /* invalid src — skip */ }
+    } catch (e) {}
 
-    // class or id contains "video" or "player"
+    // Class or id contains "video" or "player"
     if (CFG.PATTERNS.VIDEO_CLASS_ID.test(classAndId)) return true;
 
     return false;
   };
 
-  /**
-   * Scans all iframes (including those inside shadow roots) and applies/removes
-   * counter-inversion based on state.
-   */
+  /** Applies video mode to all iframes, including those in shadow roots. */
   D2L.applyVideoMode = function () {
     D2L._applyVideoModeIn(document);
 
-    // Toggle class on <html> so CSS can conditionally counter-invert native <video> elements
     if (D2L.state.videoDarkModeEnabled) {
       document.documentElement.classList.add(CFG.CSS.VIDEO_DARK);
     } else {
       document.documentElement.classList.remove(CFG.CSS.VIDEO_DARK);
     }
 
-    // Rebuild shadow CSS so shadow-DOM <video> elements follow the same rule.
-    // Respect document dark mode: in child frames with doc dark mode ON, exclude canvas.
+    // Rebuild shadow CSS to match current video/document dark mode state
     var includeVideo = !D2L.state.videoDarkModeEnabled;
     var includeCanvas = D2L.isEffectiveRoot || !D2L.state.documentDarkModeEnabled;
     D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(includeCanvas, includeVideo));
   };
 
-  /**
-   * Recursively scans a root (document or shadow root) for video iframes,
-   * descending into shadow roots to find iframes that querySelectorAll misses.
-   */
+  /** Recursively scans a root for video iframes, descending into shadow roots. */
   D2L._applyVideoModeIn = function (root) {
     var iframes = root.querySelectorAll ? root.querySelectorAll('iframe') : [];
     for (var i = 0; i < iframes.length; i++) {
       if (D2L.isVideoIframe(iframes[i])) {
         D2L.applyVideoModeToIframe(iframes[i]);
       } else if (iframes[i].style.filter === 'invert(1) hue-rotate(180deg)') {
-        // Clean up stale counter-inversion from iframes that were previously
-        // misidentified as video (e.g., web component added the class after
-        // iframe creation, or src changed).
+        // Clean up stale counter-inversion from previously misidentified iframes
         iframes[i].style.removeProperty('filter');
       }
     }
-    // Walk into shadow roots
     var elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
     for (var j = 0; j < elements.length; j++) {
       if (elements[j].shadowRoot) {
@@ -116,11 +86,7 @@
     }
   };
 
-  /**
-   * Recursively removes the extension's counter-inversion filter from all iframes,
-   * including those inside shadow roots. Used during disableDarkMode to ensure
-   * no stale filters remain.
-   */
+  /** Removes counter-inversion filters from all iframes (including shadow roots). */
   D2L._cleanupIframeFilters = function (root) {
     var iframes = root.querySelectorAll ? root.querySelectorAll('iframe') : [];
     for (var i = 0; i < iframes.length; i++) {
@@ -137,10 +103,8 @@
   };
 
   /* ---- Fullscreen handler ----
-   * When any element goes fullscreen, it enters the browser's top layer,
-   * escaping the html filter. The shadow CSS counter-inversion on <video>
-   * then inverts the video (making it dark). CSS :fullscreen in adopted
-   * stylesheets does not reliably fire in Chrome, so we use JS instead. */
+   * Fullscreen elements escape the html filter. JS handles this because
+   * CSS :fullscreen in adopted stylesheets is unreliable in Chrome. */
 
   D2L.startFullscreenHandler = function () {
     document.addEventListener('fullscreenchange', D2L._handleFullscreenChange);
@@ -155,24 +119,17 @@
 
     var fsElement = document.fullscreenElement;
     if (fsElement) {
-      // Entering fullscreen: the html filter no longer applies.
-      // Override the counter-inversion on videos inside the fullscreen element.
       var filterValue = D2L.state.videoDarkModeEnabled
         ? 'invert(1) hue-rotate(180deg)'
         : 'none';
       D2L._setFullscreenVideoFilter(fsElement, filterValue);
     } else {
-      // Exiting fullscreen: remove inline overrides so CSS rules take over.
       D2L._clearFullscreenVideoFilter(document);
     }
   };
 
-  /**
-   * Sets an inline !important filter on all <video> elements inside a root,
-   * walking into shadow roots.
-   */
+  /** Sets inline filter on all videos inside a root, walking into shadow roots. */
   D2L._setFullscreenVideoFilter = function (root, filterValue) {
-    // Handle the root itself if it's a video
     if (root.tagName === 'VIDEO') {
       root.style.setProperty('filter', filterValue, 'important');
       root._d2lFullscreenFixed = true;
@@ -193,9 +150,7 @@
     if (root.shadowRoot) walk(root.shadowRoot);
   };
 
-  /**
-   * Removes inline filter overrides from videos that were fixed during fullscreen.
-   */
+  /** Removes inline fullscreen filter overrides from videos. */
   D2L._clearFullscreenVideoFilter = function (root) {
     function walk(r) {
       var videos = r.querySelectorAll ? r.querySelectorAll('video') : [];
@@ -213,9 +168,7 @@
     walk(root);
   };
 
-  /**
-   * Apply or remove counter-inversion on a single video iframe.
-   */
+  /** Applies counter-inversion to a single video iframe. */
   D2L.applyVideoModeToIframe = function (iframe) {
     if (!iframe.classList.contains(CFG.CSS.VIDEO_IFRAME)) {
       iframe.classList.add(CFG.CSS.VIDEO_IFRAME);

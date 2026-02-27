@@ -1,7 +1,4 @@
-/**
- * D2L Dark Mode — Shadow DOM Observer
- * Injects counter-inversion styles into shadow roots and observes for new ones.
- */
+/** D2L Dark Mode — Shadow DOM Observer */
 
 (function () {
   'use strict';
@@ -9,20 +6,13 @@
   const D2L = window.D2L = window.D2L || {};
   const CFG = window.D2LConfig;
 
-  /* ---- Private state (IIFE closure) ---- */
   var shadowObserver = null;
   var shadowObservers = new Set();
   var rescanInterval = null;
 
-  /* ---- Shared stylesheet for shadow roots ---- */
   D2L.sharedShadowSheet = new CSSStyleSheet();
 
-  /**
-   * Builds shadow DOM CSS for counter-inverting media elements.
-   * @param {boolean} includeCanvas - whether to counter-invert canvas elements
-   * @param {boolean} [includeVideo=true] - whether to counter-invert video elements
-   * @returns {string}
-   */
+  /** Builds shadow DOM CSS for counter-inverting media elements. */
   D2L.buildShadowCSS = function (includeCanvas, includeVideo) {
     if (includeVideo === undefined) includeVideo = true;
     var parts = ['img', 'picture'];
@@ -53,23 +43,15 @@
       '    [style*="background-image"] :is(' + compensate + ') {\n' +
       '      filter: none !important;\n' +
       '    }\n' +
-      // In fullscreen the video enters the top layer where the page-level
-      // filter cannot reach. Flip the normal rule: cancel counter-inversion
-      // when it exists (video dark mode OFF), add inversion when it does
-      // not (video dark mode ON) so the video stays dark.
-      // :host(:fullscreen) covers the common case where a wrapper custom element
-      // (e.g. d2l-labs-media-player) goes fullscreen instead of the <video> itself.
+      // Fullscreen escapes the page-level filter; invert rules are flipped
       '    video:fullscreen, :host(:fullscreen) video, iframe.d2l-video-iframe:fullscreen {\n' +
       '      filter: ' + (includeVideo ? 'none' : 'invert(1) hue-rotate(180deg)') + ' !important;\n' +
       '    }\n';
   };
 
-  // Default: include canvas. applyDocDarkMode() will update this for child frames.
   D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(true));
 
-  /**
-   * Starts the MutationObserver on document.documentElement and periodic rescan.
-   */
+  /** Starts the MutationObserver and periodic rescan. */
   D2L.startShadowObserver = function () {
     D2L.injectAllShadowRoots(document.documentElement);
 
@@ -82,7 +64,7 @@
     });
     shadowObservers.add(shadowObserver);
 
-    // Safety net for lazy-loaded web components and late-arriving video iframes
+    // Periodic rescan for lazy-loaded web components
     if (!rescanInterval) {
       rescanInterval = setInterval(function () {
         D2L.injectAllShadowRoots(document.documentElement);
@@ -98,9 +80,7 @@
     }
   };
 
-  /**
-   * Processes added nodes: injects shadow styles and applies video mode to new iframes.
-   */
+  /** Handles mutations: injects shadow styles and applies video mode to new iframes. */
   D2L.handleMutations = function (mutations) {
     for (var m = 0; m < mutations.length; m++) {
       var addedNodes = mutations[m].addedNodes;
@@ -108,7 +88,6 @@
         var node = addedNodes[n];
         if (node.nodeType === 1) {
           D2L.injectAllShadowRoots(node);
-          // Apply video mode to newly added iframes (including in shadow roots)
           if (node.tagName === 'IFRAME' && D2L.isVideoIframe(node)) {
             D2L.applyVideoModeToIframe(node);
           }
@@ -127,9 +106,7 @@
     }
   };
 
-  /**
-   * Disconnects all observers and clears the rescan interval.
-   */
+  /** Disconnects all observers and clears the rescan interval. */
   D2L.stopShadowObserver = function () {
     shadowObservers.forEach(function (obs) { obs.disconnect(); });
     shadowObservers.clear();
@@ -140,9 +117,7 @@
     }
   };
 
-  /**
-   * Recursively walks the DOM tree injecting styles into all shadow roots.
-   */
+  /** Recursively injects styles into all shadow roots. */
   D2L.injectAllShadowRoots = function (root) {
     if (!root) return;
 
@@ -162,9 +137,7 @@
     }
   };
 
-  /**
-   * Observes a single shadow root for new children.
-   */
+  /** Observes a shadow root for new children. */
   D2L.observeShadowRoot = function (shadowRoot) {
     if (shadowRoot._d2lDarkModeObserved) return;
     shadowRoot._d2lDarkModeObserved = true;
@@ -174,9 +147,7 @@
     shadowObservers.add(obs);
   };
 
-  /**
-   * Adds the shared shadow stylesheet to a shadow root (if not already present).
-   */
+  /** Adopts the shared stylesheet into a shadow root. */
   D2L.injectShadowStyles = function (shadowRoot) {
     if (shadowRoot.adoptedStyleSheets.includes(D2L.sharedShadowSheet)) return;
     shadowRoot.adoptedStyleSheets = [
@@ -185,9 +156,7 @@
     ];
   };
 
-  /**
-   * Removes the shared shadow stylesheet from all shadow roots in the document.
-   */
+  /** Removes the shared stylesheet from all shadow roots. */
   D2L.removeShadowStyles = function () {
     function walk(root) {
       var elements = root.querySelectorAll ? root.querySelectorAll('*') : [];

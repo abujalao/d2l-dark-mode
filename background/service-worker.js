@@ -1,6 +1,4 @@
-/**
- * D2L Dark Mode — Background Service Worker
- */
+/** D2L Dark Mode — Background Service Worker */
 
 importScripts('../shared/config.js');
 
@@ -10,14 +8,11 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-// Tracks which tabs have been confirmed as Brightspace by gate.js
-// Maps tabId → hostname so we can distinguish full navigations from SPA navigations
+// Maps tabId → hostname for confirmed Brightspace tabs
 const d2lTabs = new Map();
 
-// Cache dark mode state so updateIcon() never hits storage.
-// Use a promise to ensure the cache is ready before processing messages,
-// preventing a race where the service worker wakes and handles injectScripts
-// before the storage read completes (which would default to active).
+// Cached dark mode state. Wrapped in a promise so early messages
+// wait for the storage read to complete before using the value.
 let cachedDarkMode = null;
 const cacheReady = new Promise((resolve) => {
   chrome.storage.sync.get(
@@ -29,8 +24,7 @@ const cacheReady = new Promise((resolve) => {
   );
 });
 
-// Handle injection requests from gate.js — injects heavy content scripts
-// only into frames confirmed as Brightspace pages.
+// Inject content scripts into frames confirmed as Brightspace by gate.js
 chrome.runtime.onMessage.addListener(function (msg, sender) {
   if (msg.type !== 'injectScripts' || !sender.tab) return;
   try {
@@ -47,10 +41,7 @@ chrome.runtime.onMessage.addListener(function (msg, sender) {
   }).catch(function () { /* frame may have been destroyed before injection */ });
 });
 
-/* ---- Dynamic toolbar icon ---- */
-// Note: no per-tab icon cache. Chrome resets per-tab icon overrides on every
-// navigation back to the manifest default, which would desync any cache and
-// cause stale (active) icons to stick.
+/* ---- Toolbar icon ---- */
 
 function updateIcon(tabId) {
   const active = cachedDarkMode && d2lTabs.has(tabId);
@@ -61,14 +52,12 @@ function updateIcon(tabId) {
       48:  active ? '/icons/icon48_active.png'  : '/icons/icon48.png',
       128: active ? '/icons/icon128_active.png' : '/icons/icon128.png',
     },
-  }, () => void chrome.runtime.lastError); // suppress stale-tab errors
+  }, () => void chrome.runtime.lastError);
 }
 
 /**
- * Re-detect a tab as Brightspace by checking the page's data-d2l-detected
- * attribute — the ground truth set by gate.js. This survives service worker
- * restarts because the attribute lives on the page, not in SW memory.
- * If detected, re-adds the tab to d2lTabs. Calls callback when done.
+ * Re-detect Brightspace by checking data-d2l-detected on the page.
+ * Survives service worker restarts since the attribute lives on the page.
  */
 function redetectTab(tabId, callback) {
   chrome.tabs.get(tabId, (tab) => {
@@ -86,18 +75,13 @@ function redetectTab(tabId, callback) {
   });
 }
 
-// Clean up when tabs close
+// Clean up closed tabs
 chrome.tabs.onRemoved.addListener((tabId) => {
   d2lTabs.delete(tabId);
 });
 
-// Handle navigations.
-// D2L uses SPA navigation between topics — the URL changes but the page
-// doesn't fully reload, so gate.js never re-runs. We keep the tab marked
-// as D2L for same-host navigations. Only reset when navigating to a
-// different host.
-// Chrome resets per-tab icon overrides on navigation, so we must re-apply
-// the icon at 'complete' (after Chrome's reset) rather than at 'loading'.
+// Keep tab marked as D2L for same-host SPA navigations; clear on host change.
+// Re-apply icon at 'complete' since Chrome resets per-tab icons on navigation.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   if (changeInfo.status === 'loading' && d2lTabs.has(tabId)) {
     var prevHost = d2lTabs.get(tabId);
@@ -118,8 +102,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Update icon when the user switches tabs.
-// Re-detect Brightspace tabs that were lost when the service worker slept.
+// Re-detect on tab switch (d2lTabs may be lost after SW sleep)
 chrome.tabs.onActivated.addListener((info) => {
   cacheReady.then(function () {
     if (d2lTabs.has(info.tabId)) {
@@ -130,12 +113,11 @@ chrome.tabs.onActivated.addListener((info) => {
   });
 });
 
-// Update cached state + icons when dark mode is toggled from the popup
+// Sync cached state when dark mode is toggled
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync') return;
   if (!changes[D2LConfig.STORAGE_KEYS.DARK_MODE]) return;
   cachedDarkMode = changes[D2LConfig.STORAGE_KEYS.DARK_MODE].newValue !== false;
-  // Update icon for all tracked D2L tabs + the active tab
   for (const tabId of d2lTabs.keys()) {
     updateIcon(tabId);
   }
@@ -144,8 +126,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   });
 });
 
-// Set the correct icon on startup (service worker wake).
-// Re-detect the active tab since d2lTabs is lost when the worker sleeps.
+// Re-detect active tab on startup (d2lTabs lost after SW sleep)
 cacheReady.then(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs[0]) return;
