@@ -91,16 +91,7 @@
           if (node.tagName === 'IFRAME' && D2L.isVideoIframe(node)) {
             D2L.applyVideoModeToIframe(node);
           }
-          if (D2L._applyVideoModeIn) {
-            D2L._applyVideoModeIn(node);
-          } else {
-            var iframes = node.querySelectorAll ? node.querySelectorAll('iframe') : [];
-            for (var i = 0; i < iframes.length; i++) {
-              if (D2L.isVideoIframe(iframes[i])) {
-                D2L.applyVideoModeToIframe(iframes[i]);
-              }
-            }
-          }
+          D2L._applyVideoModeIn(node);
         }
       }
     }
@@ -120,21 +111,11 @@
   /** Recursively injects styles into all shadow roots. */
   D2L.injectAllShadowRoots = function (root) {
     if (!root) return;
-
-    if (root.shadowRoot) {
-      D2L.injectShadowStyles(root.shadowRoot);
-      D2L.observeShadowRoot(root.shadowRoot);
-      D2L.injectAllShadowRoots(root.shadowRoot);
+    function process(sr) {
+      D2L.injectShadowStyles(sr);
+      D2L.observeShadowRoot(sr);
     }
-
-    var elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
-    for (var i = 0; i < elements.length; i++) {
-      if (elements[i].shadowRoot) {
-        D2L.injectShadowStyles(elements[i].shadowRoot);
-        D2L.observeShadowRoot(elements[i].shadowRoot);
-        D2L.injectAllShadowRoots(elements[i].shadowRoot);
-      }
-    }
+    D2L.walkShadowRoots(root, process);
   };
 
   /** Observes a shadow root for new children. */
@@ -158,24 +139,12 @@
 
   /** Removes the shared stylesheet from all shadow roots. */
   D2L.removeShadowStyles = function () {
-    function walk(root) {
-      var elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
-      if (root.shadowRoot) process(root.shadowRoot);
-      for (var i = 0; i < elements.length; i++) {
-        if (elements[i].shadowRoot) {
-          process(elements[i].shadowRoot);
-          walk(elements[i].shadowRoot);
-        }
-      }
-    }
-
     function process(shadowRoot) {
       shadowRoot.adoptedStyleSheets = shadowRoot.adoptedStyleSheets.filter(
         function (s) { return s !== D2L.sharedShadowSheet; }
       );
       shadowRoot._d2lDarkModeObserved = false;
     }
-
-    walk(document.documentElement);
+    D2L.walkShadowRoots(document.documentElement, process);
   };
 })();

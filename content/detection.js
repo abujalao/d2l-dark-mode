@@ -1,36 +1,23 @@
-/** D2L Dark Mode — Brightspace Detection Helpers */
+/** D2L Dark Mode — Detection Helpers */
 
 (function () {
   'use strict';
 
   var D2L = window.D2L = window.D2L || {};
-  var CFG = window.D2LConfig;
 
-  /** Fast synchronous Brightspace check. */
-  D2L.isBrightspace = function () {
-    var url = window.location.href;
-    if (CFG.PATTERNS.D2L_PATH.test(url)) return true;
-    var htmlEl = document.documentElement;
-    if (htmlEl.hasAttribute('data-app-version')
-      && (htmlEl.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1) return true;
-    var hostname = window.location.hostname;
-    if (CFG.KNOWN_HOSTS.some(function (h) { return hostname === h || hostname.endsWith('.' + h); })) return true;
-    return false;
-  };
-
-  /** Deferred DOM-based Brightspace check. */
-  D2L.isBrightspaceDeferred = function () {
-    return !!document.querySelector(CFG.BRIGHTSPACE_DEFERRED_SELECTOR);
-  };
-
-  /** Returns true for cross-origin child frames (should not run dark mode). */
-  D2L.isCrossOriginChild = function () {
-    if (window.self === window.top) return false;
-    try {
-      void window.parent.document;
-      return false;
-    } catch (e) {
-      return true;
+  /** Recursively walks all shadow roots under a root, calling callback on each. */
+  D2L.walkShadowRoots = function (root, callback) {
+    if (!root) return;
+    if (root.shadowRoot) {
+      callback(root.shadowRoot);
+      D2L.walkShadowRoots(root.shadowRoot, callback);
+    }
+    var elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
+    for (var i = 0; i < elements.length; i++) {
+      if (elements[i].shadowRoot) {
+        callback(elements[i].shadowRoot);
+        D2L.walkShadowRoots(elements[i].shadowRoot, callback);
+      }
     }
   };
 })();

@@ -104,6 +104,20 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  /* ---- Domain Managers ---- */
+  const customDomains = createDomainManager(CFG.STORAGE_KEYS.CUSTOM_DOMAINS, domainList, domainInput);
+  const excludedDomains = createDomainManager(CFG.STORAGE_KEYS.EXCLUDED_DOMAINS, excludedDomainList, excludedDomainInput);
+
+  addDomainBtn.addEventListener('click', customDomains.add);
+  domainInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') customDomains.add();
+  });
+
+  addExcludedDomainBtn.addEventListener('click', excludedDomains.add);
+  excludedDomainInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') excludedDomains.add();
+  });
+
   /* ---- Settings ---- */
   chrome.storage.sync.get(CFG.allReadKeys(), (result) => {
     darkModeOn = result[CFG.STORAGE_KEYS.DARK_MODE] !== false;
@@ -117,8 +131,8 @@ document.addEventListener('DOMContentLoaded', () => {
     updateToggleIcon(docIcon, documentDarkModeToggle.checked);
     updateToggleIcon(videoIcon, videoDarkModeToggle.checked);
 
-    renderDomainList(result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || []);
-    renderExcludedList(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
+    customDomains.render(result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || []);
+    excludedDomains.render(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
   });
 
   /* ---- Power Button ---- */
@@ -200,103 +214,52 @@ document.addEventListener('DOMContentLoaded', () => {
     return input;
   }
 
-  /* ---- Custom Domains ---- */
-  function renderDomainList(domains) {
-    domainList.innerHTML = '';
-    domains.forEach((domain, index) => {
-      const li = document.createElement('li');
-      li.textContent = domain;
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'domain-remove';
-      removeBtn.textContent = '\u00d7';
-      removeBtn.addEventListener('click', () => removeDomain(index));
-      li.appendChild(removeBtn);
-      domainList.appendChild(li);
-    });
-
-    if (domainsSection.classList.contains('is-open')) {
-      const content = domainsSection.querySelector('.collapsible-content');
-      content.style.maxHeight = content.scrollHeight + 'px';
+  /* ---- Domain Management Factory ---- */
+  function createDomainManager(storageKey, listEl, inputEl) {
+    function render(domains) {
+      listEl.innerHTML = '';
+      domains.forEach((domain, index) => {
+        const li = document.createElement('li');
+        li.textContent = domain;
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'domain-remove';
+        removeBtn.textContent = '\u00d7';
+        removeBtn.addEventListener('click', () => remove(index));
+        li.appendChild(removeBtn);
+        listEl.appendChild(li);
+      });
+      if (domainsSection.classList.contains('is-open')) {
+        const content = domainsSection.querySelector('.collapsible-content');
+        content.style.maxHeight = content.scrollHeight + 'px';
+      }
     }
-  }
 
-  function addDomain() {
-    const domain = extractHostname(domainInput.value);
-    if (!domain) return;
-    chrome.storage.sync.get([CFG.STORAGE_KEYS.CUSTOM_DOMAINS], (result) => {
-      const domains = result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
-      if (domains.includes(domain)) return;
-      domains.push(domain);
-      chrome.storage.sync.set({ [CFG.STORAGE_KEYS.CUSTOM_DOMAINS]: domains }, () => {
-        domainInput.value = '';
-        renderDomainList(domains);
+    function add() {
+      const domain = extractHostname(inputEl.value);
+      if (!domain) return;
+      chrome.storage.sync.get([storageKey], (result) => {
+        const domains = result[storageKey] || [];
+        if (domains.includes(domain)) return;
+        domains.push(domain);
+        chrome.storage.sync.set({ [storageKey]: domains }, () => {
+          inputEl.value = '';
+          render(domains);
+        });
       });
-    });
-  }
-
-  function removeDomain(index) {
-    chrome.storage.sync.get([CFG.STORAGE_KEYS.CUSTOM_DOMAINS], (result) => {
-      const domains = result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
-      domains.splice(index, 1);
-      chrome.storage.sync.set({ [CFG.STORAGE_KEYS.CUSTOM_DOMAINS]: domains }, () => {
-        renderDomainList(domains);
-      });
-    });
-  }
-
-  addDomainBtn.addEventListener('click', addDomain);
-  domainInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') addDomain();
-  });
-
-  /* ---- Excluded Domains ---- */
-  function renderExcludedList(domains) {
-    excludedDomainList.innerHTML = '';
-    domains.forEach((domain, index) => {
-      const li = document.createElement('li');
-      li.textContent = domain;
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'domain-remove';
-      removeBtn.textContent = '\u00d7';
-      removeBtn.addEventListener('click', () => removeExcludedDomain(index));
-      li.appendChild(removeBtn);
-      excludedDomainList.appendChild(li);
-    });
-
-    if (domainsSection.classList.contains('is-open')) {
-      const content = domainsSection.querySelector('.collapsible-content');
-      content.style.maxHeight = content.scrollHeight + 'px';
     }
-  }
 
-  function addExcludedDomain() {
-    const domain = extractHostname(excludedDomainInput.value);
-    if (!domain) return;
-    chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], (result) => {
-      const domains = result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [];
-      if (domains.includes(domain)) return;
-      domains.push(domain);
-      chrome.storage.sync.set({ [CFG.STORAGE_KEYS.EXCLUDED_DOMAINS]: domains }, () => {
-        excludedDomainInput.value = '';
-        renderExcludedList(domains);
+    function remove(index) {
+      chrome.storage.sync.get([storageKey], (result) => {
+        const domains = result[storageKey] || [];
+        domains.splice(index, 1);
+        chrome.storage.sync.set({ [storageKey]: domains }, () => {
+          render(domains);
+        });
       });
-    });
-  }
+    }
 
-  function removeExcludedDomain(index) {
-    chrome.storage.sync.get([CFG.STORAGE_KEYS.EXCLUDED_DOMAINS], (result) => {
-      const domains = result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [];
-      domains.splice(index, 1);
-      chrome.storage.sync.set({ [CFG.STORAGE_KEYS.EXCLUDED_DOMAINS]: domains }, () => {
-        renderExcludedList(domains);
-      });
-    });
+    return { render, add, remove };
   }
-
-  addExcludedDomainBtn.addEventListener('click', addExcludedDomain);
-  excludedDomainInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') addExcludedDomain();
-  });
 
   /* ---- Reset ---- */
   resetButton.addEventListener('click', () => {
@@ -307,8 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
       videoDarkModeToggle.checked = CFG.DEFAULTS.videoDarkModeEnabled;
       updateToggleIcon(docIcon, false);
       updateToggleIcon(videoIcon, false);
-      renderDomainList(CFG.DEFAULTS.customDomains);
-      renderExcludedList(CFG.DEFAULTS.excludedDomains);
+      customDomains.render(CFG.DEFAULTS.customDomains);
+      excludedDomains.render(CFG.DEFAULTS.excludedDomains);
 
       advancedSection.classList.remove('is-open');
       advancedSection.querySelector('.collapsible-content').style.maxHeight = '0';

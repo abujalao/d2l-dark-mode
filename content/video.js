@@ -69,37 +69,32 @@
 
   /** Recursively scans a root for video iframes, descending into shadow roots. */
   D2L._applyVideoModeIn = function (root) {
-    var iframes = root.querySelectorAll ? root.querySelectorAll('iframe') : [];
-    for (var i = 0; i < iframes.length; i++) {
-      if (D2L.isVideoIframe(iframes[i])) {
-        D2L.applyVideoModeToIframe(iframes[i]);
-      } else if (iframes[i].style.filter === 'invert(1) hue-rotate(180deg)') {
-        // Clean up stale counter-inversion from previously misidentified iframes
-        iframes[i].style.removeProperty('filter');
+    function processRoot(r) {
+      var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
+      for (var i = 0; i < iframes.length; i++) {
+        if (D2L.isVideoIframe(iframes[i])) {
+          D2L.applyVideoModeToIframe(iframes[i]);
+        } else if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
+          iframes[i].style.removeProperty('filter');
+        }
       }
     }
-    var elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
-    for (var j = 0; j < elements.length; j++) {
-      if (elements[j].shadowRoot) {
-        D2L._applyVideoModeIn(elements[j].shadowRoot);
-      }
-    }
+    processRoot(root);
+    D2L.walkShadowRoots(root, processRoot);
   };
 
   /** Removes counter-inversion filters from all iframes (including shadow roots). */
   D2L._cleanupIframeFilters = function (root) {
-    var iframes = root.querySelectorAll ? root.querySelectorAll('iframe') : [];
-    for (var i = 0; i < iframes.length; i++) {
-      if (iframes[i].style.filter === 'invert(1) hue-rotate(180deg)') {
-        iframes[i].style.removeProperty('filter');
+    function processRoot(r) {
+      var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
+      for (var i = 0; i < iframes.length; i++) {
+        if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
+          iframes[i].style.removeProperty('filter');
+        }
       }
     }
-    var elements = root.querySelectorAll ? root.querySelectorAll('*') : [];
-    for (var j = 0; j < elements.length; j++) {
-      if (elements[j].shadowRoot) {
-        D2L._cleanupIframeFilters(elements[j].shadowRoot);
-      }
-    }
+    processRoot(root);
+    D2L.walkShadowRoots(root, processRoot);
   };
 
   /* ---- Fullscreen handler ----
@@ -120,7 +115,7 @@
     var fsElement = document.fullscreenElement;
     if (fsElement) {
       var filterValue = D2L.state.videoDarkModeEnabled
-        ? 'invert(1) hue-rotate(180deg)'
+        ? CFG.CSS.INVERT_FILTER
         : 'none';
       D2L._setFullscreenVideoFilter(fsElement, filterValue);
     } else {
@@ -135,24 +130,20 @@
       root._d2lFullscreenFixed = true;
       return;
     }
-    function walk(r) {
+    function processRoot(r) {
       var videos = r.querySelectorAll ? r.querySelectorAll('video') : [];
       for (var i = 0; i < videos.length; i++) {
         videos[i].style.setProperty('filter', filterValue, 'important');
         videos[i]._d2lFullscreenFixed = true;
       }
-      var elems = r.querySelectorAll ? r.querySelectorAll('*') : [];
-      for (var j = 0; j < elems.length; j++) {
-        if (elems[j].shadowRoot) walk(elems[j].shadowRoot);
-      }
     }
-    walk(root);
-    if (root.shadowRoot) walk(root.shadowRoot);
+    processRoot(root);
+    D2L.walkShadowRoots(root, processRoot);
   };
 
   /** Removes inline fullscreen filter overrides from videos. */
   D2L._clearFullscreenVideoFilter = function (root) {
-    function walk(r) {
+    function processRoot(r) {
       var videos = r.querySelectorAll ? r.querySelectorAll('video') : [];
       for (var i = 0; i < videos.length; i++) {
         if (videos[i]._d2lFullscreenFixed) {
@@ -160,12 +151,9 @@
           delete videos[i]._d2lFullscreenFixed;
         }
       }
-      var elems = r.querySelectorAll ? r.querySelectorAll('*') : [];
-      for (var j = 0; j < elems.length; j++) {
-        if (elems[j].shadowRoot) walk(elems[j].shadowRoot);
-      }
     }
-    walk(root);
+    processRoot(root);
+    D2L.walkShadowRoots(root, processRoot);
   };
 
   /** Applies counter-inversion to a single video iframe. */
@@ -177,7 +165,7 @@
     if (D2L.state.videoDarkModeEnabled) {
       iframe.style.removeProperty('filter');
     } else {
-      iframe.style.filter = 'invert(1) hue-rotate(180deg)';
+      iframe.style.filter = CFG.CSS.INVERT_FILTER;
     }
   };
 })();

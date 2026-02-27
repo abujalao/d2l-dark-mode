@@ -33,6 +33,7 @@
       VIDEO_DARK: 'd2l-video-dark',
       VIDEO_IFRAME: 'd2l-video-iframe',
       STYLESHEET_ID: 'd2l-dark-mode-main-css',
+      INVERT_FILTER: 'invert(1) hue-rotate(180deg)',
     },
 
     /* ---- Timing ---- */
@@ -62,6 +63,20 @@
 
     /* ---- Known Brightspace Hosts ---- */
     KNOWN_HOSTS: [],
+
+    matchesHost: function (hostname, pattern) {
+      return hostname === pattern || hostname.endsWith('.' + pattern);
+    },
+
+    matchesAnyHost: function (hostname, hostList) {
+      var self = this;
+      return hostList.some(function (h) { return self.matchesHost(hostname, h); });
+    },
+
+    isBrightspaceElement: function (el) {
+      return el.hasAttribute('data-app-version')
+        && (el.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1;
+    },
 
     /** Resolve document dark mode, falling back to legacy pdfDarkModeEnabled key. */
     resolveDocumentDarkMode: function (result) {

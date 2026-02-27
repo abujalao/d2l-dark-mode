@@ -1,4 +1,4 @@
-/** D2L Dark Mode — Enable/Disable Engine */
+/** D2L Dark Mode - Enable/Disable Engine */
 
 (function () {
   'use strict';
@@ -34,11 +34,8 @@
       var parentHostname = window.parent.location.hostname;
       if (CFG.PATTERNS.D2L_PATH.test(parentHref)) return false;
       var parentHtml = parentDoc.documentElement;
-      if (parentHtml.hasAttribute('data-app-version')
-        && (parentHtml.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1) return false;
-      if (CFG.KNOWN_HOSTS.some(function (h) {
-        return parentHostname === h || parentHostname.endsWith('.' + h);
-      })) return false;
+      if (CFG.isBrightspaceElement(parentHtml)) return false;
+      if (CFG.matchesAnyHost(parentHostname, CFG.KNOWN_HOSTS)) return false;
 
       return true;
     } catch (e) {

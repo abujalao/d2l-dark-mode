@@ -24,28 +24,20 @@
   var hostname = location.hostname;
 
   // Skip excluded hosts
-  var isExcluded = CFG.EXCLUDED_HOSTS.some(function (h) {
-    return hostname === h || hostname.endsWith('.' + h);
-  });
-  if (isExcluded) return;
+  if (CFG.matchesAnyHost(hostname, CFG.EXCLUDED_HOSTS)) return;
 
-  var isKnownHost = CFG.KNOWN_HOSTS.some(function (h) {
-    return hostname === h || hostname.endsWith('.' + h);
-  });
+  var isKnownHost = CFG.matchesAnyHost(hostname, CFG.KNOWN_HOSTS);
 
   // Fast synchronous check: data-app-version + Brightspace CDN, or known host
   var htmlEl = document.documentElement;
-  var isFastMatch = (htmlEl.hasAttribute('data-app-version')
-      && (htmlEl.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1)
-    || isKnownHost;
+  var isFastMatch = CFG.isBrightspaceElement(htmlEl) || isKnownHost;
 
   // Same-origin child frames may lack data-app-version; check parent instead
   if (!isFastMatch && window.self !== window.top) {
     try {
       var parentHtml = window.parent.document.documentElement;
       if (parentHtml.classList.contains(CFG.CSS.ACTIVE)
-        || (parentHtml.hasAttribute('data-app-version')
-            && (parentHtml.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1)) {
+        || CFG.isBrightspaceElement(parentHtml)) {
         isFastMatch = true;
       }
     } catch (e) {}
@@ -61,9 +53,7 @@
   }
 
   function checkExcludedThenInject(excluded, source) {
-    if (excluded.some(function (d) {
-      return hostname === d || hostname.endsWith('.' + d);
-    })) {
+    if (CFG.matchesAnyHost(hostname, excluded)) {
       // Undo FOUC-prevention class for excluded domains
       document.documentElement.classList.remove(CFG.CSS.ACTIVE);
       document.documentElement.setAttribute('data-d2l-detected', 'true');
@@ -95,9 +85,7 @@
         [CFG.STORAGE_KEYS.CUSTOM_DOMAINS, CFG.STORAGE_KEYS.EXCLUDED_DOMAINS],
         function (result) {
           var customDomains = result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || [];
-          if (customDomains.some(function (d) {
-            return hostname === d || hostname.endsWith('.' + d);
-          })) {
+          if (CFG.matchesAnyHost(hostname, customDomains)) {
             checkExcludedThenInject(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || [], 'custom');
           }
         }
