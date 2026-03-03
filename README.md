@@ -27,7 +27,7 @@ A Chrome extension that brings dark mode to D2L Brightspace LMS. Automatically d
 
 ### From Chrome Web Store
 
-*(Review in process)*
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-blue?logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/nnljjelgffjlcgpikdklppgphodoliag)
 
 ## Usage
 
