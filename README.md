@@ -4,7 +4,7 @@
 
 # DarkSpace: D2L Brightspace Dark Mode
 
-A Chrome extension that brings dark mode to D2L Brightspace LMS. Automatically detects Brightspace pages, no setup needed.
+A browser extension that brings dark mode to D2L Brightspace LMS. Automatically detects Brightspace pages, no setup needed.
 
 ## Features
 
@@ -18,16 +18,19 @@ A Chrome extension that brings dark mode to D2L Brightspace LMS. Automatically d
 
 ## Installation
 
-### From Source
+### Install From Stores
+
+[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-blue?logo=chromewebstore&logoColor=white)](https://chromewebstore.google.com/detail/nnljjelgffjlcgpikdklppgphodoliag)
+[![Microsoft Edge](https://img.shields.io/badge/Microsoft%20Edge-Install-0078D7?logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/fpamjbhflncmjgpcmmmmhlaglaepneoh)
+
+### Install Manually
 
 1. Clone or download this repository
-2. Open `chrome://extensions` in Chrome
-3. Enable **Developer mode** (top-right toggle)
-4. Click **Load unpacked** and select the `d2l-dark-mode/` directory
-
-### From Chrome Web Store
-
-[![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-blue?logo=google-chrome&logoColor=white)](https://chromewebstore.google.com/detail/nnljjelgffjlcgpikdklppgphodoliag)
+2. Open the extensions page:
+* `chrome://extensions` in Chrome
+* `edge://extensions` in Edge
+4. Enable **Developer mode**
+5. Click **Load unpacked** and select the `d2l-dark-mode/` directory
 
 ## Usage
 
