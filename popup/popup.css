@@ -1,6 +1,4 @@
-/* ============================================================
-   D2L Dark Mode — Popup Styles (Redesigned)
-   ============================================================ */
+/* ---- D2L Dark Mode — Popup Styles ---- */
 
 :root {
   --bg-primary:     #0f0f14;
@@ -10,7 +8,6 @@
   --text-primary:   #e0e0e0;
   --text-secondary: #bbbbbb;
   --text-muted:     #888888;
-  --text-note:      #777777;
   --text-faint:     #555555;
   --text-white:     #ffffff;
   --gradient-start: #6366f1;
@@ -36,7 +33,7 @@
 }
 
 body {
-  width: 320px;
+  width: 340px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -44,7 +41,7 @@ body {
 }
 
 .popup-container {
-  padding: 16px;
+  padding: 16px 18px;
 }
 
 /* ---- Header ---- */
@@ -67,6 +64,12 @@ body {
   justify-content: center;
 }
 
+.header-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
 h1 {
   font-size: 16px;
   font-weight: 600;
@@ -81,6 +84,30 @@ h1 {
   flex-shrink: 0;
 }
 
+/* ---- Options Button ---- */
+.btn-options {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-input);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-options:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+  border-color: var(--text-faint);
+}
+
+.btn-options:active {
+  transform: scale(0.95);
+}
+
 /* ---- Detection Banner ---- */
 .detection-banner {
   display: flex;
@@ -89,7 +116,7 @@ h1 {
   padding: 10px 12px;
   background-color: var(--bg-secondary);
   border-radius: 10px;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
   border-left: 3px solid var(--status-red);
   transition: border-color 0.3s ease;
 }
@@ -139,8 +166,8 @@ h1 {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 20px 0 16px;
-  margin-bottom: 14px;
+  padding: 18px 0 14px;
+  margin-bottom: 12px;
 }
 
 .power-button {
@@ -193,18 +220,11 @@ h1 {
 .power-moon-svg {
   color: var(--text-muted);
   transition: color 0.4s ease, transform 0.4s ease;
-}
-
-.power-button.is-active .power-moon-svg {
-  color: var(--text-white);
-  transform: rotate(0deg);
-}
-
-.power-moon-svg {
   transform: rotate(-180deg);
 }
 
 .power-button.is-active .power-moon-svg {
+  color: var(--text-white);
   transform: rotate(0deg);
 }
 
@@ -220,57 +240,17 @@ h1 {
   color: var(--text-primary);
 }
 
-/* ---- Collapsible Sections ---- */
-.collapsible-section {
+/* ---- Settings Card ---- */
+.settings-card {
   background-color: var(--bg-secondary);
   border-radius: 12px;
-  margin-bottom: 10px;
-  overflow: hidden;
-}
-
-.collapsible-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  padding: 12px 14px;
-  background: none;
-  border: none;
-  color: var(--text-primary);
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  font-family: inherit;
-  transition: background-color 0.2s ease;
-}
-
-.collapsible-header:hover {
-  background-color: var(--bg-tertiary);
-}
-
-.collapsible-chevron {
-  color: var(--text-muted);
-  transition: transform 0.3s ease;
-  flex-shrink: 0;
-}
-
-.collapsible-section.is-open .collapsible-chevron {
-  transform: rotate(180deg);
-}
-
-.collapsible-content {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.35s ease;
-}
-
-.collapsible-inner {
-  padding: 0 14px 12px;
+  padding: 4px 14px;
+  margin-bottom: 12px;
 }
 
 /* ---- Setting Items ---- */
 .setting-item {
-  padding: 8px 0;
+  padding: 10px 0;
 }
 
 .setting-item + .setting-item {
@@ -306,7 +286,7 @@ h1 {
   color: var(--text-muted);
 }
 
-/* ---- Toggle Icons (animated) ---- */
+/* ---- Toggle Icons ---- */
 .toggle-icon {
   color: var(--text-muted);
   transition: color 0.3s ease, transform 0.3s ease;
@@ -368,114 +348,9 @@ h1 {
   outline-offset: 2px;
 }
 
-/* ---- Domain Sublabels ---- */
-.domain-sublabel {
-  display: block;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: var(--text-muted);
-  margin-bottom: 4px;
-}
-
-.domain-divider {
-  height: 1px;
-  background-color: var(--border);
-  margin: 4px 0;
-}
-
-/* ---- Custom Domains ---- */
-.domain-input-row {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.domain-input-row input {
-  flex: 1;
-  padding: 7px 10px;
-  font-size: 12px;
-  color: var(--text-primary);
-  background-color: var(--bg-input);
-  border: 1px solid var(--border-input);
-  border-radius: 8px;
-  outline: none;
-  font-family: inherit;
-  transition: border-color 0.2s ease;
-}
-
-.domain-input-row input::placeholder {
-  color: var(--text-faint);
-}
-
-.domain-input-row input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 2px var(--accent-glow);
-}
-
-.domain-input-row button {
-  padding: 7px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-white);
-  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.domain-input-row button:hover {
-  opacity: 0.9;
-  transform: translateY(-1px);
-}
-
-.domain-input-row button:active {
-  transform: translateY(0);
-}
-
-.domain-list {
-  list-style: none;
-  margin-top: 8px;
-}
-
-.domain-list:empty {
-  display: none;
-}
-
-.domain-list li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 12px;
-  color: var(--text-secondary);
-  border-top: 1px solid var(--border);
-}
-
-.domain-list li:first-child {
-  border-top: none;
-}
-
-.domain-remove {
-  background: none;
-  border: none;
-  color: var(--text-muted);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 0 4px;
-  line-height: 1;
-  transition: color 0.2s ease;
-}
-
-.domain-remove:hover {
-  color: var(--danger);
-}
-
-/* ---- Actions ---- */
-.actions {
-  margin-top: 4px;
+/* ---- Footer ---- */
+.popup-footer {
+  margin-top: 2px;
 }
 
 .btn-reset {
@@ -489,7 +364,8 @@ h1 {
   border: 1px solid var(--border);
   border-radius: 10px;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  font-family: inherit;
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 
 .btn-reset:hover {
@@ -500,4 +376,49 @@ h1 {
 
 .btn-reset:active {
   background-color: var(--bg-primary);
+}
+
+.btn-reset.is-confirming {
+  color: var(--danger);
+  border-color: var(--danger);
+  background-color: rgba(248, 113, 113, 0.08);
+}
+
+.btn-reset.is-confirming:hover {
+  background-color: rgba(248, 113, 113, 0.14);
+}
+
+.btn-reset.is-done {
+  color: var(--status-green);
+  border-color: var(--status-green);
+  background-color: rgba(34, 197, 94, 0.08);
+}
+
+/* ---- Toast ---- */
+.toast {
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  opacity: 0;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-input);
+  color: var(--text-primary);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 100;
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  white-space: nowrap;
+}
+
+.toast.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast.is-success {
+  border-color: rgba(34, 197, 94, 0.3);
 }

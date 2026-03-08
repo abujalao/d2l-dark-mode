@@ -15,9 +15,17 @@
         <div class="header-icon">
           <img id="popupLogo" width="28" height="28" style="border-radius:6px" src="">
         </div>
-        <h1>DarkSpace</h1>
+        <div class="header-brand">
+          <h1>DarkSpace</h1>
+          <span class="version" id="versionLabel"></span>
+        </div>
       </div>
-      <span class="version" id="versionLabel"></span>
+      <button id="optionsBtn" class="btn-options" title="All Settings" aria-label="All Settings">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </div>
 
     <!-- Detection Banner -->
@@ -41,104 +49,60 @@
       <span class="power-status" id="powerStatus">Dark Mode: ON</span>
     </div>
 
-    <!-- Advanced Settings (Collapsible) -->
-    <div class="collapsible-section" id="advancedSection">
-      <button class="collapsible-header" id="advancedHeader">
-        <span class="collapsible-title">Advanced Settings</span>
-        <svg class="collapsible-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <div class="collapsible-content">
-        <div class="collapsible-inner">
-
-          <div class="setting-item">
-            <div class="setting-row">
-              <div class="setting-info">
-                <div class="setting-label-row">
-                  <svg class="toggle-icon" id="docIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <path d="M4 1h5l4 4v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                    <path d="M9 1v4h4" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                    <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1"/>
-                    <line x1="5" y1="10.5" x2="9" y2="10.5" stroke="currentColor" stroke-width="1"/>
-                  </svg>
-                  <span class="setting-label">Document Dark Mode</span>
-                </div>
-                <span class="setting-hint">Darken embedded PDFs, slides, and documents</span>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="documentDarkModeToggle">
-                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              </label>
+    <!-- Settings -->
+    <div class="settings-card">
+      <div class="setting-item">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label-row">
+              <svg class="toggle-icon" id="docIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M4 1h5l4 4v9a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                <path d="M9 1v4h4" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1"/>
+                <line x1="5" y1="10.5" x2="9" y2="10.5" stroke="currentColor" stroke-width="1"/>
+              </svg>
+              <span class="setting-label">Document Dark Mode</span>
             </div>
+            <span class="setting-hint">Darken embedded PDFs, slides, and documents</span>
           </div>
+          <label class="toggle">
+            <input type="checkbox" id="documentDarkModeToggle">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+        </div>
+      </div>
 
-          <div class="setting-item">
-            <div class="setting-row">
-              <div class="setting-info">
-                <div class="setting-label-row">
-                  <svg class="toggle-icon" id="videoIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                    <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                    <path d="M6.5 5v6l5-3-5-3z" fill="currentColor"/>
-                  </svg>
-                  <span class="setting-label">Video Dark Mode</span>
-                </div>
-                <span class="setting-hint">Apply dark mode to embedded video players</span>
-              </div>
-              <label class="toggle">
-                <input type="checkbox" id="videoDarkModeToggle">
-                <span class="toggle-track"><span class="toggle-thumb"></span></span>
-              </label>
+      <div class="setting-item">
+        <div class="setting-row">
+          <div class="setting-info">
+            <div class="setting-label-row">
+              <svg class="toggle-icon" id="videoIcon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.2" fill="none"/>
+                <path d="M6.5 5v6l5-3-5-3z" fill="currentColor"/>
+              </svg>
+              <span class="setting-label">Video Dark Mode</span>
             </div>
+            <span class="setting-hint">Apply dark mode to embedded video players</span>
           </div>
-
+          <label class="toggle">
+            <input type="checkbox" id="videoDarkModeToggle">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
         </div>
       </div>
     </div>
 
-    <!-- Custom Domains (Collapsible) -->
-    <div class="collapsible-section" id="domainsSection">
-      <button class="collapsible-header" id="domainsHeader">
-        <span class="collapsible-title">Custom Domains</span>
-        <svg class="collapsible-chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+    <!-- Footer -->
+    <div class="popup-footer">
+      <button id="resetButton" class="btn-reset">
+        <span class="btn-reset-label">Reset to Defaults</span>
       </button>
-      <div class="collapsible-content">
-        <div class="collapsible-inner">
-          <div class="setting-item">
-            <span class="domain-sublabel">Include</span>
-            <div class="setting-info">
-              <span class="setting-hint">Enable dark mode on additional Brightspace domains</span>
-            </div>
-            <div class="domain-input-row">
-              <input type="text" id="domainInput" placeholder="e.g. example.brightspace.com">
-              <button id="addDomainBtn">Add</button>
-            </div>
-            <ul id="domainList" class="domain-list"></ul>
-          </div>
-          <div class="domain-divider"></div>
-          <div class="setting-item">
-            <span class="domain-sublabel">Exclude</span>
-            <div class="setting-info">
-              <span class="setting-hint">Disable dark mode on specific domains</span>
-            </div>
-            <div class="domain-input-row">
-              <input type="text" id="excludedDomainInput" placeholder="e.g. example.brightspace.com">
-              <button id="addExcludedDomainBtn">Add</button>
-            </div>
-            <ul id="excludedDomainList" class="domain-list"></ul>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Reset -->
-    <div class="actions">
-      <button id="resetButton" class="btn-reset">Reset to Defaults</button>
     </div>
 
   </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
 
   <script src="../shared/config.js"></script>
   <script src="popup.js"></script>

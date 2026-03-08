@@ -116,14 +116,97 @@ chrome.tabs.onActivated.addListener((info) => {
 // Sync cached state when dark mode is toggled
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'sync') return;
-  if (!changes[D2LConfig.STORAGE_KEYS.DARK_MODE]) return;
-  cachedDarkMode = changes[D2LConfig.STORAGE_KEYS.DARK_MODE].newValue !== false;
-  for (const tabId of d2lTabs.keys()) {
-    updateIcon(tabId);
+
+  if (changes[D2LConfig.STORAGE_KEYS.DARK_MODE]) {
+    cachedDarkMode = changes[D2LConfig.STORAGE_KEYS.DARK_MODE].newValue !== false;
+    for (const tabId of d2lTabs.keys()) {
+      updateIcon(tabId);
+    }
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) updateIcon(tabs[0].id);
+    });
   }
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    if (tabs[0]) updateIcon(tabs[0].id);
+
+  /* ---- Auto Dark Mode scheduling changes ---- */
+  if (changes[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE]) {
+    scheduleEnabled = changes[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE].newValue === true;
+    if (scheduleEnabled) {
+      setupScheduleAlarm();
+      applySchedule();
+    } else {
+      teardownScheduleAlarm();
+    }
+  }
+  if (changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME]) {
+    scheduleStart = changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME].newValue || '18:00';
+    if (scheduleEnabled) applySchedule();
+  }
+  if (changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME]) {
+    scheduleEnd = changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME].newValue || '06:00';
+    if (scheduleEnabled) applySchedule();
+  }
+});
+
+/* ---- Auto Dark Mode Scheduling ---- */
+
+let scheduleEnabled = false;
+let scheduleStart = '18:00';
+let scheduleEnd = '06:00';
+
+const scheduleReady = new Promise((resolve) => {
+  chrome.storage.sync.get([
+    D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE,
+    D2LConfig.STORAGE_KEYS.DARK_START_TIME,
+    D2LConfig.STORAGE_KEYS.DARK_END_TIME,
+  ], (result) => {
+    scheduleEnabled = result[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE] === true;
+    scheduleStart = result[D2LConfig.STORAGE_KEYS.DARK_START_TIME] || '18:00';
+    scheduleEnd = result[D2LConfig.STORAGE_KEYS.DARK_END_TIME] || '06:00';
+    resolve();
   });
+});
+
+function parseHHMM(str) {
+  var parts = (str || '00:00').split(':');
+  return Number(parts[0]) * 60 + (Number(parts[1]) || 0);
+}
+
+function isInScheduleWindow(startStr, endStr) {
+  var now = new Date();
+  var cur = now.getHours() * 60 + now.getMinutes();
+  var s = parseHHMM(startStr);
+  var e = parseHHMM(endStr);
+  return s <= e ? (cur >= s && cur < e) : (cur >= s || cur < e);
+}
+
+function applySchedule() {
+  if (!scheduleEnabled) return;
+  var shouldBeDark = isInScheduleWindow(scheduleStart, scheduleEnd);
+  chrome.storage.sync.get([D2LConfig.STORAGE_KEYS.DARK_MODE], (result) => {
+    var currentlyDark = result[D2LConfig.STORAGE_KEYS.DARK_MODE] !== false;
+    if (shouldBeDark !== currentlyDark) {
+      chrome.storage.sync.set({ [D2LConfig.STORAGE_KEYS.DARK_MODE]: shouldBeDark });
+    }
+  });
+}
+
+function setupScheduleAlarm() {
+  chrome.alarms.get('darkModeSchedule', (alarm) => {
+    if (!alarm) {
+      chrome.alarms.create('darkModeSchedule', { periodInMinutes: 1 });
+    }
+  });
+}
+
+function teardownScheduleAlarm() {
+  chrome.alarms.clear('darkModeSchedule');
+}
+
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'darkModeSchedule') {
+    // Always wait for schedule state to load — the SW may have woken cold from sleep
+    scheduleReady.then(() => applySchedule());
+  }
 });
 
 // Re-detect active tab on startup (d2lTabs lost after SW sleep)
@@ -137,4 +220,12 @@ cacheReady.then(() => {
       redetectTab(tab.id, function () { updateIcon(tab.id); });
     }
   });
+});
+
+// Start schedule alarm if enabled
+scheduleReady.then(() => {
+  if (scheduleEnabled) {
+    setupScheduleAlarm();
+    applySchedule();
+  }
 });

@@ -10,6 +10,10 @@
     darkModeEnabled: true,
     documentDarkModeEnabled: false,
     videoDarkModeEnabled: false,
+    fontSize: 100,
+    fontFamily: 'default',
+    fullWidthEnabled: false,
+    preserveDisplay: false,
     initialized: false,
   };
 
@@ -68,6 +72,9 @@
   /** Enables dark mode. */
   D2L.enableDarkMode = function () {
     D2L.injectDarkModeStylesheet();
+    D2L.applyFontSize(D2L.state.fontSize);
+    D2L.applyFontFamily(D2L.state.fontFamily);
+    D2L.applyFullWidth(D2L.state.fullWidthEnabled);
 
     document.documentElement.classList.add(CFG.CSS.ACTIVE);
 
@@ -92,6 +99,11 @@
   /** Disables dark mode. */
   D2L.disableDarkMode = function () {
     D2L.removeDarkModeStylesheet();
+    if (!D2L.state.preserveDisplay) {
+      D2L.removeFontSize();
+      D2L.removeFontFamily();
+      D2L.removeFullWidth();
+    }
     document.documentElement.classList.remove(CFG.CSS.ACTIVE, CFG.CSS.TOP, CFG.CSS.NESTED, CFG.CSS.DOC_DARK, CFG.CSS.VIDEO_DARK);
     if (document.body) {
       document.body.classList.remove(CFG.CSS.ACTIVE);
