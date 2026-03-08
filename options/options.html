@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DarkSpace Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <div class="options-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <img id="optionsLogo" width="32" height="32" style="border-radius:8px" src="">
+        <div class="sidebar-brand">
+          <h1>DarkSpace</h1>
+          <span class="sidebar-version" id="optionsVersion"></span>
+        </div>
+      </div>
+      <nav class="sidebar-nav">
+        <button class="nav-item is-active" data-tab="display">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="9" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="5" y1="14" x2="11" y2="14" stroke="currentColor" stroke-width="1.2"/></svg>
+          Display
+        </button>
+        <button class="nav-item" data-tab="schedule">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2" fill="none"/><path d="M8 4v4l3 2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          Schedule
+        </button>
+        <button class="nav-item" data-tab="domains">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2" fill="none"/><ellipse cx="8" cy="8" rx="3" ry="6" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="2" y1="8" x2="14" y2="8" stroke="currentColor" stroke-width="1.2"/></svg>
+          Domains
+        </button>
+        <button class="nav-item" data-tab="about">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.2" fill="none"/><line x1="8" y1="7" x2="8" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="5" r="0.8" fill="currentColor"/></svg>
+          About
+        </button>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+
+      <!-- Display Tab -->
+      <div class="tab-panel is-active" id="tab-display">
+        <h2>Display</h2>
+        <p class="tab-hint">Customize fonts and layout for your reading experience.</p>
+
+        <div class="card">
+          <div class="card-row">
+            <div class="card-info">
+              <span class="card-label">Font Scale</span>
+              <span class="card-hint">Adjust text size across all pages</span>
+            </div>
+            <div class="slider-row">
+              <input type="range" id="fontSizeSlider" min="80" max="150" step="5" value="100">
+              <span class="slider-value" id="fontSizeValue">100%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-row">
+            <div class="card-info">
+              <span class="card-label">Font Family</span>
+              <span class="card-hint">Includes accessibility-focused fonts</span>
+            </div>
+            <div class="cs-wrap cs-wrap--wide" id="fontFamilySelect"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-row">
+            <div class="card-info">
+              <span class="card-label">Full-Width Layout</span>
+              <span class="card-hint">Remove content width limits</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="fullWidthToggle">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-row">
+            <div class="card-info">
+              <span class="card-label">Keep settings when dark mode is off</span>
+              <span class="card-hint">Font scale, font family, and full-width stay active even when dark mode is disabled</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="preserveDisplayToggle">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Schedule Tab -->
+      <div class="tab-panel" id="tab-schedule">
+        <h2>Schedule</h2>
+        <p class="tab-hint">Automatically toggle dark mode based on the time of day.</p>
+
+        <div class="card">
+          <div class="card-row">
+            <div class="card-info">
+              <span class="card-label">Auto Dark Mode</span>
+              <span class="card-hint">Enable time-based scheduling</span>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="autoDarkToggle">
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="schedule-block" id="scheduleTimesCard">
+          <!-- 24-hour timeline -->
+          <div class="schedule-timeline">
+            <div class="timeline-track">
+              <div class="timeline-fill" id="timelineFill"></div>
+              <div class="timeline-marker" id="timelineMarkerStart"></div>
+              <div class="timeline-marker timeline-marker--end" id="timelineMarkerEnd"></div>
+            </div>
+            <div class="timeline-ticks">
+              <span>12a</span><span>6a</span><span>12p</span><span>6p</span><span>12a</span>
+            </div>
+          </div>
+
+          <!-- Turn ON -->
+          <div class="sched-row">
+            <div class="sched-icon sched-icon--moon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </div>
+            <div class="sched-info">
+              <span class="sched-label">Turn on</span>
+              <span class="sched-hint">Dark mode activates</span>
+            </div>
+            <div class="time-picker">
+              <div class="cs-wrap" id="darkStartHour"></div>
+              <span class="time-colon">:</span>
+              <div class="cs-wrap" id="darkStartMinute"></div>
+              <div class="cs-wrap is-moon" id="darkStartPeriod"></div>
+            </div>
+          </div>
+
+          <div class="sched-divider"></div>
+
+          <!-- Turn OFF -->
+          <div class="sched-row">
+            <div class="sched-icon sched-icon--sun">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <circle cx="12" cy="12" r="5"/>
+                <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+              </svg>
+            </div>
+            <div class="sched-info">
+              <span class="sched-label">Turn off</span>
+              <span class="sched-hint">Dark mode deactivates</span>
+            </div>
+            <div class="time-picker">
+              <div class="cs-wrap" id="darkEndHour"></div>
+              <span class="time-colon">:</span>
+              <div class="cs-wrap" id="darkEndMinute"></div>
+              <div class="cs-wrap is-sun" id="darkEndPeriod"></div>
+            </div>
+          </div>
+
+          <!-- Duration footer -->
+          <div class="sched-footer">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            <span id="scheduleDuration">Active for —</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Domains Tab -->
+      <div class="tab-panel" id="tab-domains">
+        <h2>Domains</h2>
+        <p class="tab-hint">Control which Brightspace domains use dark mode.</p>
+
+        <div class="card">
+          <span class="card-sublabel">Include</span>
+          <span class="card-hint">Enable dark mode on additional Brightspace domains</span>
+          <div class="domain-input-row">
+            <input type="text" id="optDomainInput" placeholder="e.g. example.brightspace.com">
+            <button id="optAddDomainBtn" class="btn-accent">Add</button>
+          </div>
+          <ul id="optDomainList" class="domain-list"></ul>
+        </div>
+
+        <div class="card">
+          <span class="card-sublabel">Exclude</span>
+          <span class="card-hint">Disable dark mode on specific domains</span>
+          <div class="domain-input-row">
+            <input type="text" id="optExcludedDomainInput" placeholder="e.g. example.brightspace.com">
+            <button id="optAddExcludedDomainBtn" class="btn-accent">Add</button>
+          </div>
+          <ul id="optExcludedDomainList" class="domain-list"></ul>
+        </div>
+      </div>
+
+      <!-- About Tab -->
+      <div class="tab-panel" id="tab-about">
+        <h2>About</h2>
+        <p class="tab-hint">Extension information and reset options.</p>
+
+        <div class="card about-card">
+          <div class="about-header">
+            <img id="aboutLogo" width="40" height="40" style="border-radius:10px" src="">
+            <div>
+              <p class="about-name">DarkSpace</p>
+              <p class="about-version" id="aboutVersion"></p>
+            </div>
+          </div>
+          <p class="about-desc">Dark mode for D2L Brightspace. Automatically detected, no setup needed. Built with a filter inversion and CSS variable overrides for full coverage.</p>
+        </div>
+
+        <div class="card">
+          <span class="card-sublabel">Links</span>
+          <div class="about-links">
+            <a class="about-link" href="https://github.com/abujalao/d2l-dark-mode" target="_blank">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.418 2.865 8.167 6.839 9.49.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.603-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0 1 12 6.836a9.59 9.59 0 0 1 2.504.337c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.138 20.163 22 16.418 22 12c0-5.523-4.477-10-10-10z"/></svg>
+              GitHub Repository
+            </a>
+            <a class="about-link" href="https://github.com/abujalao/d2l-dark-mode/blob/main/PRIVACY.md" target="_blank">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Privacy Policy
+            </a>
+            <a class="about-link" href="https://github.com/abujalao/d2l-dark-mode/issues" target="_blank">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Report an Issue
+            </a>
+            <a class="about-link" href="https://chromewebstore.google.com/detail/nnljjelgffjlcgpikdklppgphodoliag" target="_blank">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/></svg>
+              Chrome Web Store
+            </a>
+          </div>
+        </div>
+
+        <div class="card">
+          <span class="card-sublabel">What's included</span>
+          <div class="about-features">
+            <div class="about-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+              <span>Full dark mode via filter inversion</span>
+            </div>
+            <div class="about-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="8" cy="8" r="6"/><ellipse cx="8" cy="8" rx="2.5" ry="6" stroke-width="1.5"/><line x1="2" y1="8" x2="14" y2="8"/></svg>
+              <span>Automatic Brightspace domain detection</span>
+            </div>
+            <div class="about-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Scheduled auto dark mode</span>
+            </div>
+            <div class="about-feature">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>
+              <span>Font scale, font family, and full-width layout controls</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card danger-card">
+          <span class="card-label danger-label">Danger Zone</span>
+          <span class="card-hint danger-hint">This will restore all settings to their default values and clear custom domains.</span>
+          <button id="optResetButton" class="btn-reset-options">Reset All Settings to Defaults</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- Reset Confirmation Modal -->
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal-card">
+      <div class="modal-icon">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="12" y1="8" x2="12" y2="13" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="12" cy="16.5" r="1" fill="currentColor"/>
+        </svg>
+      </div>
+      <h3 class="modal-title">Reset all settings?</h3>
+      <p class="modal-desc">This will restore every setting to its default value. Custom domains and excluded domains will be cleared. This cannot be undone.</p>
+      <div class="modal-actions">
+        <button class="btn-modal-cancel" id="resetCancel">Cancel</button>
+        <button class="btn-modal-danger" id="resetConfirm">Reset Everything</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script src="../shared/config.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
