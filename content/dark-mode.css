@@ -1,5 +1,99 @@
 /* D2L Brightspace Dark Mode */
 
+/* ---- D2L color variable overrides ----
+   Override D2L color tokens so all web components (including Shadow DOM)
+   receive clean dark-mode-friendly values before the filter is applied.
+   D2L defaults carry subtle blue tints (#f9fbff, #f1f5fb) that produce
+   warm/brownish artifacts after inversion. Pure grays eliminate this. */
+
+html.d2l-dark-mode-active {
+
+  /* ---- Neutral scale (pure grays — no blue tint → clean inversion output) ---- */
+  --d2l-color-regolith: #f5f5f5 !important;
+  --d2l-color-sylvite: #ebebeb !important;
+  --d2l-color-gypsum: #e0e0e0 !important;
+  --d2l-color-mica: #cccccc !important;
+  --d2l-color-galena: #999999 !important;
+  --d2l-color-tungsten: #777777 !important;
+  --d2l-color-ferrite: #333333 !important;
+  --d2l-color-corundum: #2d2d2d !important;
+  --d2l-color-chromite: #000000 !important;
+
+  /* ---- Fluorite (white surfaces) ---- */
+  --d2l-color-fluorite: #ffffff !important;
+  --d2l-color-fluorite-minus-1: #f0f0f0 !important;
+  --d2l-color-fluorite-plus-1: #fafafa !important;
+  --d2l-color-fluorite-plus-2: #f5f5f5 !important;
+
+  /* ---- Celestine (primary blue / actions) ---- */
+  --d2l-color-celestine: #0066cc !important;
+  --d2l-color-celestine-minus-1: #004d99 !important;
+  --d2l-color-celestine-plus-1: #d6eaff !important;
+  --d2l-color-celestine-plus-2: #eaf5ff !important;
+
+  /* ---- Carnelian (red / errors / destructive) ---- */
+  --d2l-color-carnelian: #cc0000 !important;
+  --d2l-color-carnelian-minus-1: #990000 !important;
+  --d2l-color-carnelian-minus-2: #660000 !important;
+  --d2l-color-carnelian-plus-1: #ffcccc !important;
+
+  /* ---- Olivine (green / success) ---- */
+  --d2l-color-olivine: #009933 !important;
+  --d2l-color-olivine-minus-1: #007a29 !important;
+  --d2l-color-olivine-minus-2: #005c1f !important;
+  --d2l-color-olivine-plus-1: #ccffdd !important;
+
+  /* ---- Citrine (yellow-orange / warning) ---- */
+  --d2l-color-citrine: #cc8800 !important;
+  --d2l-color-citrine-minus-1: #996600 !important;
+  --d2l-color-citrine-minus-2: #664400 !important;
+  --d2l-color-citrine-plus-1: #fff0cc !important;
+
+  /* ---- Amethyst (purple) ---- */
+  --d2l-color-amethyst: #8800cc !important;
+  --d2l-color-amethyst-minus-1: #660099 !important;
+  --d2l-color-amethyst-plus-1: #eeccff !important;
+  --d2l-color-amethyst-plus-2: #f5e6ff !important;
+
+  /* ---- Tourmaline (teal) ---- */
+  --d2l-color-tourmaline: #007a7a !important;
+  --d2l-color-tourmaline-minus-1: #005c5c !important;
+  --d2l-color-tourmaline-plus-1: #ccffff !important;
+  --d2l-color-tourmaline-plus-2: #e6ffff !important;
+
+  /* ---- Zircon (blue-purple) ---- */
+  --d2l-color-zircon: #3344cc !important;
+  --d2l-color-zircon-minus-1: #262f99 !important;
+  --d2l-color-zircon-plus-1: #ccddff !important;
+  --d2l-color-zircon-plus-2: #e6eeff !important;
+
+  /* ---- Malachite (green variant) ---- */
+  --d2l-color-malachite: #008833 !important;
+  --d2l-color-malachite-minus-1: #006622 !important;
+  --d2l-color-malachite-minus-2: #004411 !important;
+  --d2l-color-malachite-plus-1: #ccffdd !important;
+
+  /* ---- Peridot (yellow-green) ---- */
+  --d2l-color-peridot: #668800 !important;
+  --d2l-color-peridot-minus-1: #4d6600 !important;
+  --d2l-color-peridot-minus-2: #334400 !important;
+  --d2l-color-peridot-plus-1: #eeffcc !important;
+
+  /* ---- Cinnabar (orange-red) ---- */
+  --d2l-color-cinnabar: #cc4400 !important;
+  --d2l-color-cinnabar-minus-1: #993300 !important;
+  --d2l-color-cinnabar-plus-1: #ffdccc !important;
+  --d2l-color-cinnabar-plus-2: #ffefe6 !important;
+
+  /* ---- Feedback / semantic colors ---- */
+  --d2l-color-feedback-error: #cc0000 !important;
+  --d2l-color-feedback-success: #009933 !important;
+  --d2l-color-feedback-warning: #cc8800 !important;
+  --d2l-color-feedback-action: #0066cc !important;
+  --d2l-color-primary-accent-action: #0066cc !important;
+  --d2l-color-primary-accent-indicator: #0066cc !important;
+}
+
 /* ---- Top-frame filter ---- */
 html.d2l-dark-mode-top {
   filter: invert(1) hue-rotate(180deg);
@@ -38,7 +132,6 @@ html.d2l-dark-mode-active:not(.d2l-video-dark) video:fullscreen,
 html.d2l-dark-mode-active:not(.d2l-video-dark) iframe.d2l-video-iframe:fullscreen {
   filter: none !important;
 }
-
 
 html.d2l-dark-mode-active.d2l-video-dark video:fullscreen,
 html.d2l-dark-mode-active.d2l-video-dark iframe.d2l-video-iframe:fullscreen {
@@ -98,10 +191,21 @@ html.d2l-dark-mode-active ::-webkit-scrollbar-track {
 }
 
 html.d2l-dark-mode-active ::-webkit-scrollbar-thumb {
-  background: #555555;
+  background: #444444;
   border-radius: 5px;
+  border: 2px solid #1a1a1a;
 }
 
 html.d2l-dark-mode-active ::-webkit-scrollbar-thumb:hover {
-  background: #777777;
+  background: #666666;
+}
+
+html.d2l-dark-mode-active ::-webkit-scrollbar-corner {
+  background: #1a1a1a;
+}
+
+/* Firefox scrollbar */
+html.d2l-dark-mode-active * {
+  scrollbar-color: #444444 #1a1a1a;
+  scrollbar-width: thin;
 }
