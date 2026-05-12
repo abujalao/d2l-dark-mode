@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "DarkSpace - D2L Brightspace Dark Mode",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Dark mode for D2L Brightspace. Automatically detected, no setup needed.",
   "permissions": [
     "storage",
@@ -28,10 +28,21 @@
         "<all_urls>"
       ],
       "js": [
+        "content/shadow-injector.js"
+      ],
+      "world": "MAIN",
+      "all_frames": true,
+      "match_about_blank": true,
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
         "shared/config.js",
         "content/gate.js"
       ],
-      "css": [],
       "all_frames": true,
       "match_about_blank": true,
       "run_at": "document_start"
