@@ -49,6 +49,7 @@ function updateIcon(tabId) {
     tabId,
     path: {
       16:  active ? '/icons/icon16_active.png'  : '/icons/icon16.png',
+      32:  active ? '/icons/icon32_active.png'  : '/icons/icon32.png',
       48:  active ? '/icons/icon48_active.png'  : '/icons/icon48.png',
       128: active ? '/icons/icon128_active.png' : '/icons/icon128.png',
     },
