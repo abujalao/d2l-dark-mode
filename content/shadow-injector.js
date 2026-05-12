@@ -1,6 +1,13 @@
 /** D2L Dark Mode - Shadow DOM Injector (MAIN world, document_start) */
 
 (function () {
+  // Bail on every non-Brightspace page. Mirrors gate.js's fast-match check so
+  // this script is independent of inter-world injection order.
+  var html = document.documentElement;
+  var isBrightspace = html.hasAttribute('data-app-version')
+    && (html.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1;
+  if (!isBrightspace) return;
+
   if (window.__d2lShadowOverrideApplied) return;
   window.__d2lShadowOverrideApplied = true;
 
