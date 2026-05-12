@@ -18,6 +18,7 @@
     "default_popup": "popup/popup.html",
     "default_icon": {
       "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
       "48": "icons/icon48.png",
       "128": "icons/icon128.png"
     }
@@ -51,19 +52,12 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "content/dark-mode.css",
-        "icons/icon16.png",
-        "icons/icon48.png",
-        "icons/icon128.png",
-        "icons/icon16_active.png",
-        "icons/icon48_active.png",
-        "icons/icon128_active.png",
-        "icons/popupLogo_active.png",
-        "icons/popupLogo_notactive.png"
+        "content/dark-mode.css"
       ],
       "matches": [
         "<all_urls>"
-      ]
+      ],
+      "use_dynamic_url": true
     }
   ],
   "background": {
@@ -71,6 +65,7 @@
   },
   "icons": {
     "16": "icons/icon16_active.png",
+    "32": "icons/icon32_active.png",
     "48": "icons/icon48_active.png",
     "128": "icons/icon128_active.png"
   }
