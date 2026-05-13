@@ -1,6 +1,6 @@
 # Privacy Policy - DarkSpace (D2L Brightspace Dark Mode)
 
-**Last updated:** February 25, 2026
+**Last updated:** May 12, 2026
 
 ## Data Collection
 
@@ -14,6 +14,7 @@ The extension requests the following permissions solely to provide its core func
 - **Scripting**: Apply dark mode to Brightspace pages by injecting stylesheets and supporting scripts (for handling embedded content, video players, and dynamically loaded elements), and detect whether the current page is a Brightspace site.
 - **ActiveTab / Tabs**: Access the current tab to determine whether it is a Brightspace page.
 - **Host permissions (`<all_urls>`)**: Brightspace is hosted across numerous institutional domains. The extension runs a lightweight detection check on every page; on non-Brightspace pages, no modifications are made and no data is read or stored.
+- **Alarms**: Enable the dark mode schedule, allowing you to set specific times for dark mode to turn on or off automatically.
 
 ## Limited Use
 
