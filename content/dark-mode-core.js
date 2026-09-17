@@ -71,7 +71,6 @@
 
   /** Enables dark mode. */
   D2L.enableDarkMode = function () {
-    D2L.injectDarkModeStylesheet();
     D2L.applyFontSize(D2L.state.fontSize);
     D2L.applyFontFamily(D2L.state.fontFamily);
     D2L.applyFullWidth(D2L.state.fullWidthEnabled);
@@ -91,14 +90,14 @@
       }, { once: true });
     }
 
+    // Set video state first so the observer's initial pass applies it in one traversal
+    D2L.updateVideoState();
     D2L.startShadowObserver();
     D2L.startFullscreenHandler();
-    D2L.applyVideoMode();
   };
 
   /** Disables dark mode. */
   D2L.disableDarkMode = function () {
-    D2L.removeDarkModeStylesheet();
     if (!D2L.state.preserveDisplay) {
       D2L.removeFontSize();
       D2L.removeFontFamily();
@@ -110,28 +109,9 @@
     }
     D2L.stopShadowObserver();
     D2L.stopFullscreenHandler();
-    D2L.removeShadowStyles();
 
-    // Clean up iframe filters and fullscreen overrides
-    D2L._cleanupIframeFilters(document);
-    D2L._clearFullscreenVideoFilter(document);
+    // Shadow sheet, iframe filters and fullscreen overrides in one traversal
+    D2L.teardownRoots();
   };
 
-  /** Injects the main dark-mode CSS stylesheet. */
-  D2L.injectDarkModeStylesheet = function () {
-    if (document.getElementById(CFG.CSS.STYLESHEET_ID)) return;
-
-    var link = document.createElement('link');
-    link.id = CFG.CSS.STYLESHEET_ID;
-    link.rel = 'stylesheet';
-    link.href = chrome.runtime.getURL('content/dark-mode.css');
-
-    (document.head || document.documentElement).appendChild(link);
-  };
-
-  /** Removes the main dark-mode CSS stylesheet. */
-  D2L.removeDarkModeStylesheet = function () {
-    var link = document.getElementById(CFG.CSS.STYLESHEET_ID);
-    if (link) link.remove();
-  };
 })();

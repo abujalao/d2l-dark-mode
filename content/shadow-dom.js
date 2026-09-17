@@ -4,11 +4,12 @@
   'use strict';
 
   const D2L = window.D2L = window.D2L || {};
-  const CFG = window.D2LConfig;
 
   var shadowObserver = null;
   var shadowObservers = new Set();
-  var rescanInterval = null;
+
+  // Dispatched by shadow-injector.js (MAIN world)
+  var SHADOW_EVENT = 'd2l-shadow-root';
 
   D2L.sharedShadowSheet = new CSSStyleSheet();
 
@@ -51,9 +52,24 @@
 
   D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(true));
 
-  /** Starts the MutationObserver and periodic rescan. */
+  /** Re-processes a root the MAIN world announced: late attachShadow or replaced sheets. */
+  function onShadowAnnounced(e) {
+    // e.target is retargeted across shadow boundaries; composedPath()[0] is the host
+    var path = e.composedPath ? e.composedPath() : null;
+    var target = (path && path[0]) || e.target;
+    if (!target || target.nodeType !== 1 || !target.shadowRoot) return;
+    // Only this root; its own observer handles anything added inside it
+    D2L.injectShadowStyles(target.shadowRoot);
+    D2L.observeShadowRoot(target.shadowRoot);
+  }
+
+  function rescanDocument() {
+    D2L.processSubtree(document.documentElement);
+  }
+
+  /** Starts the MutationObserver and shadow-root discovery. */
   D2L.startShadowObserver = function () {
-    D2L.injectAllShadowRoots(document.documentElement);
+    rescanDocument();
 
     if (shadowObserver) return;
 
@@ -64,20 +80,24 @@
     });
     shadowObservers.add(shadowObserver);
 
-    // Periodic rescan for lazy-loaded web components
-    if (!rescanInterval) {
-      rescanInterval = setInterval(function () {
-        D2L.injectAllShadowRoots(document.documentElement);
-        D2L.applyVideoMode();
-      }, CFG.TIMING.RESCAN_INTERVAL_MS);
+    document.addEventListener(SHADOW_EVENT, onShadowAnnounced, true);
 
-      setTimeout(function () {
-        if (rescanInterval) {
-          clearInterval(rescanInterval);
-          rescanInterval = null;
-        }
-      }, CFG.TIMING.RESCAN_TIMEOUT_MS);
+    // Declarative shadow DOM raises no mutation or announcement; rescan once after parsing
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', rescanDocument, { once: true });
     }
+  };
+
+  /** Applies every per-root job (shadow styles, video iframes) in a single traversal. */
+  D2L.processSubtree = function (node) {
+    if (!node) return;
+    D2L.forEachRoot(node, function (ctx) {
+      if (D2L.isShadowRoot(ctx)) {
+        D2L.injectShadowStyles(ctx);
+        D2L.observeShadowRoot(ctx);
+      }
+      D2L._applyVideoModeToRoot(ctx);
+    });
   };
 
   /** Handles mutations: injects shadow styles and applies video mode to new iframes. */
@@ -87,35 +107,21 @@
       for (var n = 0; n < addedNodes.length; n++) {
         var node = addedNodes[n];
         if (node.nodeType === 1) {
-          D2L.injectAllShadowRoots(node);
           if (node.tagName === 'IFRAME' && D2L.isVideoIframe(node)) {
             D2L.applyVideoModeToIframe(node);
           }
-          D2L._applyVideoModeIn(node);
+          D2L.processSubtree(node);
         }
       }
     }
   };
 
-  /** Disconnects all observers and clears the rescan interval. */
+  /** Disconnects all observers. */
   D2L.stopShadowObserver = function () {
     shadowObservers.forEach(function (obs) { obs.disconnect(); });
     shadowObservers.clear();
     shadowObserver = null;
-    if (rescanInterval) {
-      clearInterval(rescanInterval);
-      rescanInterval = null;
-    }
-  };
-
-  /** Recursively injects styles into all shadow roots. */
-  D2L.injectAllShadowRoots = function (root) {
-    if (!root) return;
-    function process(sr) {
-      D2L.injectShadowStyles(sr);
-      D2L.observeShadowRoot(sr);
-    }
-    D2L.walkShadowRoots(root, process);
+    document.removeEventListener(SHADOW_EVENT, onShadowAnnounced, true);
   };
 
   /** Observes a shadow root for new children. */
@@ -137,14 +143,17 @@
     ];
   };
 
-  /** Removes the shared stylesheet from all shadow roots. */
-  D2L.removeShadowStyles = function () {
-    function process(shadowRoot) {
-      shadowRoot.adoptedStyleSheets = shadowRoot.adoptedStyleSheets.filter(
-        function (s) { return s !== D2L.sharedShadowSheet; }
-      );
-      shadowRoot._d2lDarkModeObserved = false;
-    }
-    D2L.walkShadowRoots(document.documentElement, process);
+  /** Undoes every per-root change in a single traversal (mirror of processSubtree). */
+  D2L.teardownRoots = function () {
+    D2L.forEachRoot(document.documentElement, function (ctx) {
+      if (D2L.isShadowRoot(ctx)) {
+        ctx.adoptedStyleSheets = ctx.adoptedStyleSheets.filter(
+          function (s) { return s !== D2L.sharedShadowSheet; }
+        );
+        ctx._d2lDarkModeObserved = false;
+      }
+      D2L._cleanupIframeFiltersInRoot(ctx);
+      D2L._clearFullscreenVideoInRoot(ctx);
+    });
   };
 })();

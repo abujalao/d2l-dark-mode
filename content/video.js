@@ -51,10 +51,8 @@
     return false;
   };
 
-  /** Applies video mode to all iframes, including those in shadow roots. */
-  D2L.applyVideoMode = function () {
-    D2L._applyVideoModeIn(document);
-
+  /** Updates the video-mode class and shadow CSS without touching any iframes. */
+  D2L.updateVideoState = function () {
     if (D2L.state.videoDarkModeEnabled) {
       document.documentElement.classList.add(CFG.CSS.VIDEO_DARK);
     } else {
@@ -67,34 +65,37 @@
     D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(includeCanvas, includeVideo));
   };
 
-  /** Recursively scans a root for video iframes, descending into shadow roots. */
-  D2L._applyVideoModeIn = function (root) {
-    function processRoot(r) {
-      var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
-      for (var i = 0; i < iframes.length; i++) {
-        if (D2L.isVideoIframe(iframes[i])) {
-          D2L.applyVideoModeToIframe(iframes[i]);
-        } else if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
-          iframes[i].style.removeProperty('filter');
-        }
-      }
-    }
-    processRoot(root);
-    D2L.walkShadowRoots(root, processRoot);
+  /** Applies video mode to all iframes, including those in shadow roots. */
+  D2L.applyVideoMode = function () {
+    D2L.updateVideoState();
+    D2L._applyVideoModeIn(document);
   };
 
-  /** Removes counter-inversion filters from all iframes (including shadow roots). */
-  D2L._cleanupIframeFilters = function (root) {
-    function processRoot(r) {
-      var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
-      for (var i = 0; i < iframes.length; i++) {
-        if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
-          iframes[i].style.removeProperty('filter');
-        }
+  /** Applies video mode to the iframes directly inside one root (no shadow descent). */
+  D2L._applyVideoModeToRoot = function (r) {
+    var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
+    for (var i = 0; i < iframes.length; i++) {
+      if (D2L.isVideoIframe(iframes[i])) {
+        D2L.applyVideoModeToIframe(iframes[i]);
+      } else if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
+        iframes[i].style.removeProperty('filter');
       }
     }
-    processRoot(root);
-    D2L.walkShadowRoots(root, processRoot);
+  };
+
+  /** Recursively scans a root for video iframes, descending into shadow roots. */
+  D2L._applyVideoModeIn = function (root) {
+    D2L.forEachRoot(root, D2L._applyVideoModeToRoot);
+  };
+
+  /** Removes counter-inversion filters from the iframes directly inside one root. */
+  D2L._cleanupIframeFiltersInRoot = function (r) {
+    var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
+    for (var i = 0; i < iframes.length; i++) {
+      if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
+        iframes[i].style.removeProperty('filter');
+      }
+    }
   };
 
   /* ---- Fullscreen handler ----
@@ -141,19 +142,20 @@
     D2L.walkShadowRoots(root, processRoot);
   };
 
-  /** Removes inline fullscreen filter overrides from videos. */
-  D2L._clearFullscreenVideoFilter = function (root) {
-    function processRoot(r) {
-      var videos = r.querySelectorAll ? r.querySelectorAll('video') : [];
-      for (var i = 0; i < videos.length; i++) {
-        if (videos[i]._d2lFullscreenFixed) {
-          videos[i].style.removeProperty('filter');
-          delete videos[i]._d2lFullscreenFixed;
-        }
+  /** Removes inline fullscreen filter overrides from the videos in one root. */
+  D2L._clearFullscreenVideoInRoot = function (r) {
+    var videos = r.querySelectorAll ? r.querySelectorAll('video') : [];
+    for (var i = 0; i < videos.length; i++) {
+      if (videos[i]._d2lFullscreenFixed) {
+        videos[i].style.removeProperty('filter');
+        delete videos[i]._d2lFullscreenFixed;
       }
     }
-    processRoot(root);
-    D2L.walkShadowRoots(root, processRoot);
+  };
+
+  /** Removes inline fullscreen filter overrides from videos. */
+  D2L._clearFullscreenVideoFilter = function (root) {
+    D2L.forEachRoot(root, D2L._clearFullscreenVideoInRoot);
   };
 
   /** Applies counter-inversion to a single video iframe. */

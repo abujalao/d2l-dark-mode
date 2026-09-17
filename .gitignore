@@ -1,6 +1,8 @@
 /node_modules
 /tests
+/test-results
+/Tempd2l-test-profile
 package-lock.json
 package.json
-playwright.config.js
+playwright.config.*
 vitest.config.js
