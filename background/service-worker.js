@@ -35,8 +35,12 @@ chrome.runtime.onMessage.addListener(function (msg, sender) {
   cacheReady.then(function () {
     updateIcon(sender.tab.id);
   });
+  // A frameId survives navigations; a documentId (Chrome 106+) does not
+  var target = sender.documentId
+    ? { tabId: sender.tab.id, documentIds: [sender.documentId] }
+    : { tabId: sender.tab.id, frameIds: [sender.frameId] };
   chrome.scripting.executeScript({
-    target: { tabId: sender.tab.id, frameIds: [sender.frameId] },
+    target: target,
     files: D2LConfig.CONTENT_SCRIPTS,
     // Default (document_idle) delays activation until the page finishes loading
     injectImmediately: true,
