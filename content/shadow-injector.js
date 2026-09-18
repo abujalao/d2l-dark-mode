@@ -47,10 +47,16 @@
     return document.documentElement.classList.contains('d2l-dark-mode-top');
   }
 
+  // ACTIVE is set in every Brightspace frame, TOP only in the filtered one.
+  // Announcements follow ACTIVE so nested frames still report late roots.
+  function isActive() {
+    return document.documentElement.classList.contains('d2l-dark-mode-active');
+  }
+
   var trackedRoots = new Set();
 
   var ANNOUNCE = 'd2l-shadow-root';
-  var announcing = false; // re-entrancy guard: the listener writes back through the setter
+  var announcing = false; // set during the bulk toggle loop to suppress N announcements
 
   /** Announces a root the isolated world cannot see: late attachShadow or replaced sheets. */
   function announce(host) {
@@ -100,13 +106,15 @@
       enumerable: adDesc.enumerable,
       get: function () { return origAdGet.call(this); },
       set: function (sheets) {
-        // Fast path: non-Brightspace tabs pay only this check per write.
-        if (!isDarkOn()) { origAdSet.call(this, sheets); return; }
-        var s = getSheet();
-        if (!s) { origAdSet.call(this, sheets); return; }
-        var arr = sheets ? Array.prototype.slice.call(sheets) : [];
-        if (arr.indexOf(s) === -1) arr.push(s);
-        origAdSet.call(this, arr);
+        // Fast path: dark mode off costs only this check per write.
+        if (!isActive()) { origAdSet.call(this, sheets); return; }
+        var s = isDarkOn() ? getSheet() : null;
+        if (s) {
+          var arr = sheets ? Array.prototype.slice.call(sheets) : [];
+          if (arr.indexOf(s) === -1) arr.push(s);
+          sheets = arr;
+        }
+        origAdSet.call(this, sheets);
         announce(this.host);
       }
     });
@@ -116,11 +124,9 @@
   Element.prototype.attachShadow = function (init) {
     var root = originalAttachShadow.call(this, init);
     trackedRoots.add(root);
-    if (isDarkOn()) {
-      inject(root);
-      // No-op while detached; inserting the host raises a mutation record instead
-      announce(this);
-    }
+    if (isDarkOn()) inject(root);
+    // No-op while detached; inserting the host raises a mutation record instead
+    if (isActive()) announce(this);
     return root;
   };
 

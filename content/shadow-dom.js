@@ -122,6 +122,7 @@
     shadowObservers.clear();
     shadowObserver = null;
     document.removeEventListener(SHADOW_EVENT, onShadowAnnounced, true);
+    document.removeEventListener('DOMContentLoaded', rescanDocument);
   };
 
   /** Observes a shadow root for new children. */
