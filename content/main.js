@@ -25,7 +25,7 @@
     if (D2L.state.darkModeEnabled) {
       D2L.enableDarkMode();
     } else {
-      // Clean up the ACTIVE class that gate.js added at document_start
+      // Undo the dark classes gate.js applied optimistically at document_start
       D2L.disableDarkMode();
     }
   });

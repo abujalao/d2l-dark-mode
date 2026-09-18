@@ -1,7 +1,8 @@
 /**
  * D2L Dark Mode — Gatekeeper Script
  * Runs on every page at document_start. Determines if this is a Brightspace
- * page and triggers content script injection via the service worker.
+ * page, applies the dark classes before first paint, and triggers content script
+ * injection via the service worker.
  */
 
 (function () {
