@@ -38,6 +38,8 @@ chrome.runtime.onMessage.addListener(function (msg, sender) {
   chrome.scripting.executeScript({
     target: { tabId: sender.tab.id, frameIds: [sender.frameId] },
     files: D2LConfig.CONTENT_SCRIPTS,
+    // Default (document_idle) delays activation until the page finishes loading
+    injectImmediately: true,
   }).catch(function () { /* frame may have been destroyed before injection */ });
 });
 

@@ -46,7 +46,6 @@
       DOC_DARK: 'd2l-doc-dark',
       VIDEO_DARK: 'd2l-video-dark',
       VIDEO_IFRAME: 'd2l-video-iframe',
-      STYLESHEET_ID: 'd2l-dark-mode-main-css',
       INVERT_FILTER: 'invert(1) hue-rotate(180deg)',
       FONT_SIZE_STYLE_ID: 'd2l-font-size',
       FONT_FAMILY_LINK_ID: 'd2l-font-family-link',
@@ -75,12 +74,6 @@
       lexend:       { label: 'Lexend',                 url: 'https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600&display=swap',                        family: "'Lexend', sans-serif" },
       atkinson:     { label: 'Atkinson Hyperlegible',  url: 'https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap',            family: "'Atkinson Hyperlegible', sans-serif" },
       opendyslexic: { label: 'OpenDyslexic',           url: 'https://fonts.googleapis.com/css2?family=OpenDyslexic:wght@400;700&display=swap',                     family: "'OpenDyslexic', sans-serif" },
-    },
-
-    /* ---- Timing ---- */
-    TIMING: {
-      RESCAN_INTERVAL_MS: 2000,
-      RESCAN_TIMEOUT_MS: 30000,
     },
 
     /* ---- URL / DOM Patterns ---- */

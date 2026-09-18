@@ -1,6 +1,8 @@
 /** D2L Dark Mode - Shadow DOM Injector (MAIN world, document_start) */
 
 (function () {
+  'use strict';
+
   // Bail on every non-Brightspace page. Mirrors gate.js's fast-match check so
   // this script is independent of inter-world injection order.
   var html = document.documentElement;
@@ -45,7 +47,29 @@
     return document.documentElement.classList.contains('d2l-dark-mode-top');
   }
 
+  // ACTIVE is set in every Brightspace frame, TOP only in the filtered one.
+  // Announcements follow ACTIVE so nested frames still report late roots.
+  function isActive() {
+    return document.documentElement.classList.contains('d2l-dark-mode-active');
+  }
+
   var trackedRoots = new Set();
+
+  var ANNOUNCE = 'd2l-shadow-root';
+  var announcing = false; // set during the bulk toggle loop to suppress N announcements
+
+  /** Announces a root the isolated world cannot see: late attachShadow or replaced sheets. */
+  function announce(host) {
+    if (announcing || !host || !host.isConnected) return;
+    announcing = true;
+    try {
+      host.dispatchEvent(new CustomEvent(ANNOUNCE, { bubbles: true, composed: true }));
+    } catch (e) {
+      /* the page may have replaced CustomEvent */
+    } finally {
+      announcing = false;
+    }
+  }
 
   /** Appends the counter-invert sheet to a shadow root if not already present. */
   function inject(root) {
@@ -82,13 +106,16 @@
       enumerable: adDesc.enumerable,
       get: function () { return origAdGet.call(this); },
       set: function (sheets) {
-        // Fast path: non-Brightspace tabs pay only this check per write.
-        if (!isDarkOn()) { origAdSet.call(this, sheets); return; }
-        var s = getSheet();
-        if (!s) { origAdSet.call(this, sheets); return; }
-        var arr = sheets ? Array.prototype.slice.call(sheets) : [];
-        if (arr.indexOf(s) === -1) arr.push(s);
-        origAdSet.call(this, arr);
+        // Fast path: dark mode off costs only this check per write.
+        if (!isActive()) { origAdSet.call(this, sheets); return; }
+        var s = isDarkOn() ? getSheet() : null;
+        if (s) {
+          var arr = sheets ? Array.prototype.slice.call(sheets) : [];
+          if (arr.indexOf(s) === -1) arr.push(s);
+          sheets = arr;
+        }
+        origAdSet.call(this, sheets);
+        announce(this.host);
       }
     });
   }
@@ -98,6 +125,8 @@
     var root = originalAttachShadow.call(this, init);
     trackedRoots.add(root);
     if (isDarkOn()) inject(root);
+    // No-op while detached; inserting the host raises a mutation record instead
+    if (isActive()) announce(this);
     return root;
   };
 
@@ -110,13 +139,19 @@
     var on = isDarkOn();
     if (on === wasOn) return;
     wasOn = on;
-    trackedRoots.forEach(function (root) {
-      if (!root.host.isConnected) {
-        trackedRoots.delete(root);
-        return;
-      }
-      if (on) inject(root); else uninject(root);
-    });
+    // No announcements here; the isolated world does its own pass on a transition
+    announcing = true;
+    try {
+      trackedRoots.forEach(function (root) {
+        if (!root.host.isConnected) {
+          trackedRoots.delete(root);
+          return;
+        }
+        if (on) inject(root); else uninject(root);
+      });
+    } finally {
+      announcing = false;
+    }
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 
   /** Walks the DOM and tracks every open shadow root reachable from <html>. */
