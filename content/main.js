@@ -9,6 +9,9 @@
   var D2L = window.D2L;
   var CFG = window.D2LConfig;
 
+  // Stale injection: the frame navigated before config.js ran here. Let gate.js retry.
+  if (!CFG) return;
+
   if (D2L.state.initialized) return;
   D2L.state.initialized = true;
 
