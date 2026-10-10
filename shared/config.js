@@ -46,6 +46,12 @@
       DOC_DARK: 'd2l-doc-dark',
       VIDEO_DARK: 'd2l-video-dark',
       VIDEO_IFRAME: 'd2l-video-iframe',
+      // Embedded frame dominated by a video player: the whole frame is un-inverted
+      PLAYER: 'd2l-dark-mode-player',
+      // Video iframe whose document can't run our scripts: counter-inverted from outside
+      IFRAME_FALLBACK: 'd2l-iframe-fallback',
+      ROLE_ATTR: 'data-d2l-role',
+      ROLE_EMBEDDED: 'embedded',
       INVERT_FILTER: 'invert(1) hue-rotate(180deg)',
       FONT_SIZE_STYLE_ID: 'd2l-font-size',
       FONT_FAMILY_LINK_ID: 'd2l-font-family-link',
@@ -85,6 +91,19 @@
       VIDEO_AUTOPLAY: /autoplay/,
       VIDEO_PATH: /\/embed\/|\/player\/|\/video\/|\/watch|\/stream\/|\/lecture\/|\/media\//,
       VIDEO_CLASS_ID: /video|player/,
+    },
+
+    /* ---- Frame link (parent <-> child frame handshake) ---- */
+    FRAME_LINK: {
+      // postMessage envelope key; values: 'ctx?' (child asks), 'ctx' (parent answers), 'ping'
+      KEY: '__darkspace',
+      // Unanswered pings after this long mean the child runs none of our scripts
+      FALLBACK_DELAY_MS: 1500,
+      // A video covering this share of the frame's viewport makes it a player frame
+      PLAYER_MIN_COVERAGE: 0.4,
+      // storage.local list of origins detected as Brightspace, used by cross-origin children
+      ORIGINS_KEY: 'knownBrightspaceOrigins',
+      MAX_ORIGINS: 50,
     },
 
     /* ---- Brightspace Deferred Detection Selector ---- */
@@ -127,8 +146,18 @@
       'content/shadow-dom.js',
       'content/font-engine.js',
       'content/layout-engine.js',
+      'content/frame-link.js',
       'content/dark-mode-core.js',
       'content/main.js',
+    ],
+
+    /* Non-Brightspace frames rendered inside an inverted Brightspace page */
+    EMBEDDED_SCRIPTS: [
+      'content/detection.js',
+      'content/video.js',
+      'content/shadow-dom.js',
+      'content/frame-link.js',
+      'content/embedded.js',
     ],
 
     /** All storage keys to fetch (includes legacy key for migration). */

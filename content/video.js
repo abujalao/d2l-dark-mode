@@ -63,6 +63,9 @@
     var includeVideo = !D2L.state.videoDarkModeEnabled;
     var includeCanvas = D2L.isEffectiveRoot || !D2L.state.documentDarkModeEnabled;
     D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(includeCanvas, includeVideo));
+
+    // Fallback counter-inversion depends on the video toggle
+    if (D2L.refreshFrameLinks) D2L.refreshFrameLinks();
   };
 
   /** Applies video mode to all iframes, including those in shadow roots. */
@@ -77,8 +80,6 @@
     for (var i = 0; i < iframes.length; i++) {
       if (D2L.isVideoIframe(iframes[i])) {
         D2L.applyVideoModeToIframe(iframes[i]);
-      } else if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
-        iframes[i].style.removeProperty('filter');
       }
     }
   };
@@ -95,6 +96,7 @@
       if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
         iframes[i].style.removeProperty('filter');
       }
+      iframes[i].classList.remove(CFG.CSS.IFRAME_FALLBACK);
     }
   };
 
@@ -158,16 +160,15 @@
     D2L.forEachRoot(root, D2L._clearFullscreenVideoInRoot);
   };
 
-  /** Applies counter-inversion to a single video iframe. */
+  /**
+   * Marks a video iframe. Its document corrects its own media (frame-link.js);
+   * the iframe is counter-inverted from outside only if that document runs none
+   * of our scripts. Doing it from here as well stacked inversions in nested frames.
+   */
   D2L.applyVideoModeToIframe = function (iframe) {
     if (!iframe.classList.contains(CFG.CSS.VIDEO_IFRAME)) {
       iframe.classList.add(CFG.CSS.VIDEO_IFRAME);
     }
-    if (!D2L.state.darkModeEnabled) return;
-    if (D2L.state.videoDarkModeEnabled) {
-      iframe.style.removeProperty('filter');
-    } else {
-      iframe.style.filter = CFG.CSS.INVERT_FILTER;
-    }
+    if (D2L.watchIframe) D2L.watchIframe(iframe);
   };
 })();

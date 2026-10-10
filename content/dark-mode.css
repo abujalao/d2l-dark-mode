@@ -107,6 +107,14 @@ html.d2l-dark-mode-active:not(.d2l-dark-mode-top) {
   color-scheme: normal !important;
 }
 
+/* ---- Embedded player frame ----
+   A frame mostly filled by a video player (Kaltura, YouTube, ...) cancels the
+   page inversion for itself, so the player renders exactly as designed. */
+html.d2l-dark-mode-player {
+  filter: invert(1) hue-rotate(180deg) !important;
+  color-scheme: normal !important;
+}
+
 /* ---- Top layer (popovers, dialogs, fullscreen) ---- */
 html.d2l-dark-mode-active :popover-open,
 html.d2l-dark-mode-active dialog:modal,
@@ -127,14 +135,14 @@ html.d2l-dark-mode-active:not(.d2l-video-dark) :fullscreen:not(video):not(iframe
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
-/* Fullscreen video escapes the html filter — handle both dark mode states */
+/* Fullscreen video escapes the html filter — handle both dark mode states.
+   Only fallback iframes (no scripts inside) carry a filter of their own. */
 html.d2l-dark-mode-active:not(.d2l-video-dark) video:fullscreen,
-html.d2l-dark-mode-active:not(.d2l-video-dark) iframe.d2l-video-iframe:fullscreen {
+html.d2l-dark-mode-active:not(.d2l-video-dark) iframe.d2l-iframe-fallback:fullscreen {
   filter: none !important;
 }
 
-html.d2l-dark-mode-active.d2l-video-dark video:fullscreen,
-html.d2l-dark-mode-active.d2l-video-dark iframe.d2l-video-iframe:fullscreen {
+html.d2l-dark-mode-active.d2l-video-dark video:fullscreen {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 

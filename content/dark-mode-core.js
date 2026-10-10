@@ -94,6 +94,7 @@
     D2L.updateVideoState();
     D2L.startShadowObserver();
     D2L.startFullscreenHandler();
+    if (D2L.refreshFrameLinks) D2L.refreshFrameLinks();
   };
 
   /** Disables dark mode. */
@@ -112,6 +113,7 @@
 
     // Shadow sheet, iframe filters and fullscreen overrides in one traversal
     D2L.teardownRoots();
+    if (D2L.refreshFrameLinks) D2L.refreshFrameLinks();
   };
 
 })();

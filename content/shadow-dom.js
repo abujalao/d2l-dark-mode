@@ -45,7 +45,7 @@
       '      filter: none !important;\n' +
       '    }\n' +
       // Fullscreen escapes the page-level filter; invert rules are flipped
-      '    video:fullscreen, :host(:fullscreen) video, iframe.d2l-video-iframe:fullscreen {\n' +
+      '    video:fullscreen, :host(:fullscreen) video, iframe.d2l-iframe-fallback:fullscreen {\n' +
       '      filter: ' + (includeVideo ? 'none' : 'invert(1) hue-rotate(180deg)') + ' !important;\n' +
       '    }\n';
   };

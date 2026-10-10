@@ -8,7 +8,9 @@
   var html = document.documentElement;
   var isBrightspace = html.hasAttribute('data-app-version')
     && (html.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1;
-  if (!isBrightspace) return;
+  // Embedded frames (players inside a Brightspace page) get this injected later by the service worker
+  var isEmbedded = html.getAttribute('data-d2l-role') === 'embedded';
+  if (!isBrightspace && !isEmbedded) return;
 
   if (window.__d2lShadowOverrideApplied) return;
   window.__d2lShadowOverrideApplied = true;

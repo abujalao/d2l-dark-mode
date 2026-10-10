@@ -39,12 +39,23 @@ chrome.runtime.onMessage.addListener(function (msg, sender) {
   var target = sender.documentId
     ? { tabId: sender.tab.id, documentIds: [sender.documentId] }
     : { tabId: sender.tab.id, frameIds: [sender.frameId] };
+  var embedded = msg.role === D2LConfig.CSS.ROLE_EMBEDDED;
   chrome.scripting.executeScript({
     target: target,
-    files: D2LConfig.CONTENT_SCRIPTS,
+    files: embedded ? D2LConfig.EMBEDDED_SCRIPTS : D2LConfig.CONTENT_SCRIPTS,
     // Default (document_idle) delays activation until the page finishes loading
     injectImmediately: true,
   }).catch(function () { /* frame may have been destroyed before injection */ });
+  if (embedded) {
+    // The manifest copy bailed at document_start (not a Brightspace page);
+    // without it, frameworks that replace adoptedStyleSheets drop our sheet
+    chrome.scripting.executeScript({
+      target: target,
+      files: ['content/shadow-injector.js'],
+      world: 'MAIN',
+      injectImmediately: true,
+    }).catch(function () {});
+  }
 });
 
 /* ---- Toolbar icon ---- */
