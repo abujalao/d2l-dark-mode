@@ -20,6 +20,8 @@
       AUTO_DARK_MODE: 'autoDarkModeEnabled',
       DARK_START_TIME: 'darkStartTime',
       DARK_END_TIME: 'darkEndTime',
+      // When dark mode was last switched by hand; wins over the schedule until its next switch
+      SCHEDULE_OVERRIDE_AT: 'scheduleOverrideAt',
     },
 
     /* ---- Defaults (used on install and reset) ---- */
@@ -181,6 +183,7 @@
         this.STORAGE_KEYS.AUTO_DARK_MODE,
         this.STORAGE_KEYS.DARK_START_TIME,
         this.STORAGE_KEYS.DARK_END_TIME,
+        this.STORAGE_KEYS.SCHEDULE_OVERRIDE_AT,
       ];
     },
   };

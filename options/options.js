@@ -205,11 +205,6 @@ document.addEventListener('DOMContentLoaded', function () {
   var darkEndPeriod   = makeCustomSelect(document.getElementById('darkEndPeriod'),   periodOpts, function () { onEndTimeChange(); });
 
   /* ---- Schedule UI Update ---- */
-  function timeToMins(hhmm) {
-    var p = (hhmm || '00:00').split(':');
-    return parseInt(p[0], 10) * 60 + parseInt(p[1], 10);
-  }
-
   function formatDuration(mins) {
     if (mins <= 0) return '—';
     var h = Math.floor(mins / 60);
@@ -220,12 +215,12 @@ document.addEventListener('DOMContentLoaded', function () {
   function updateScheduleUI() {
     var startHHMM = getHHMM(darkStartHour, darkStartMinute, darkStartPeriod);
     var endHHMM   = getHHMM(darkEndHour, darkEndMinute, darkEndPeriod);
-    var s = timeToMins(startHHMM);
-    var e = timeToMins(endHHMM);
+    var s = D2LSchedule.minutesOf(startHHMM);
+    var e = D2LSchedule.minutesOf(endHHMM);
     var total = 24 * 60;
 
-    // Duration
-    var duration = e > s ? e - s : total - s + e;
+    // Duration: the same rule the service worker applies (shared/schedule.js)
+    var duration = D2LSchedule.durationMinutes({ start: startHHMM, end: endHHMM });
     document.getElementById('scheduleDuration').textContent = 'Active for ' + formatDuration(duration);
 
     // Timeline positions (%)

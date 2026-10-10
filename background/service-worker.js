@@ -1,6 +1,6 @@
 /** D2L Dark Mode — Background Service Worker */
 
-importScripts('../shared/config.js', '../shared/tab-status.js');
+importScripts('../shared/config.js', '../shared/tab-status.js', '../shared/schedule.js');
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
@@ -181,23 +181,22 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 
   /* ---- Auto Dark Mode scheduling changes ---- */
-  if (changes[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE]) {
-    scheduleEnabled = changes[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE].newValue === true;
-    if (scheduleEnabled) {
-      setupScheduleAlarm();
-      applySchedule();
-    } else {
-      teardownScheduleAlarm();
-    }
+  // Take every changed value first, then apply once: one write can carry
+  // the toggle and both times together
+  var autoChange = changes[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE];
+  var startChange = changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME];
+  var endChange = changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME];
+  if (!autoChange && !startChange && !endChange) return;
+  if (autoChange) scheduleEnabled = autoChange.newValue === true;
+  if (startChange) scheduleStart = startChange.newValue || '18:00';
+  if (endChange) scheduleEnd = endChange.newValue || '06:00';
+  if (autoChange && !scheduleEnabled) {
+    teardownScheduleAlarm();
+    return;
   }
-  if (changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME]) {
-    scheduleStart = changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME].newValue || '18:00';
-    if (scheduleEnabled) applySchedule();
-  }
-  if (changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME]) {
-    scheduleEnd = changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME].newValue || '06:00';
-    if (scheduleEnabled) applySchedule();
-  }
+  if (autoChange) setupScheduleAlarm();
+  // Editing the schedule is a deliberate "follow it now", even after a manual press
+  if (scheduleEnabled) applySchedule({ force: true });
 });
 
 /* ---- Auto Dark Mode Scheduling ---- */
@@ -219,23 +218,16 @@ const scheduleReady = new Promise((resolve) => {
   });
 });
 
-function parseHHMM(str) {
-  var parts = (str || '00:00').split(':');
-  return Number(parts[0]) * 60 + (Number(parts[1]) || 0);
-}
-
-function isInScheduleWindow(startStr, endStr) {
-  var now = new Date();
-  var cur = now.getHours() * 60 + now.getMinutes();
-  var s = parseHHMM(startStr);
-  var e = parseHHMM(endStr);
-  return s <= e ? (cur >= s && cur < e) : (cur >= s || cur < e);
-}
-
-function applySchedule() {
+function applySchedule(opts) {
   if (!scheduleEnabled) return;
-  var shouldBeDark = isInScheduleWindow(scheduleStart, scheduleEnd);
-  chrome.storage.sync.get([D2LConfig.STORAGE_KEYS.DARK_MODE], (result) => {
+  var force = !!(opts && opts.force);
+  var schedule = { start: scheduleStart, end: scheduleEnd };
+  var now = new Date();
+  var shouldBeDark = D2LSchedule.isDarkAt(schedule, now);
+  chrome.storage.sync.get([D2LConfig.STORAGE_KEYS.DARK_MODE, D2LConfig.STORAGE_KEYS.SCHEDULE_OVERRIDE_AT], (result) => {
+    // A press of the power button since the last switch wins until the next one
+    var overrideAt = result[D2LConfig.STORAGE_KEYS.SCHEDULE_OVERRIDE_AT] || 0;
+    if (!force && overrideAt >= D2LSchedule.lastSwitchBefore(schedule, now)) return;
     var currentlyDark = result[D2LConfig.STORAGE_KEYS.DARK_MODE] !== false;
     if (shouldBeDark !== currentlyDark) {
       chrome.storage.sync.set({ [D2LConfig.STORAGE_KEYS.DARK_MODE]: shouldBeDark });

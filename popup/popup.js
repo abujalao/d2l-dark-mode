@@ -131,7 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePowerButton(darkModeOn);
     logoState.darkOn = darkModeOn;
     updatePopupLogo();
-    chrome.storage.sync.set({ [CFG.STORAGE_KEYS.DARK_MODE]: darkModeOn });
+    chrome.storage.sync.set({
+      [CFG.STORAGE_KEYS.DARK_MODE]: darkModeOn,
+      // A press by hand wins over the auto schedule until its next switch
+      [CFG.STORAGE_KEYS.SCHEDULE_OVERRIDE_AT]: Date.now(),
+    });
   });
 
   /* ---- Toggle Icons ---- */
