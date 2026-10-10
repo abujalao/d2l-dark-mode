@@ -1,6 +1,6 @@
 /** D2L Dark Mode — Background Service Worker */
 
-importScripts('../shared/config.js');
+importScripts('../shared/config.js', '../shared/tab-status.js');
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
@@ -8,8 +8,44 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
-// Maps tabId → hostname for confirmed Brightspace tabs
+// Maps tabId → { host, page } for confirmed Brightspace tabs. `page` holds the
+// tab's detection marks ({ detected, source }), the same facts the popup reads.
 const d2lTabs = new Map();
+
+function hostOf(url) {
+  try { return new URL(url).hostname; } catch (e) { return ''; }
+}
+
+// The Map is lost when the worker sleeps; storage.session keeps it for the
+// browser session, so background tabs still get icon updates after a wake-up
+const TABS_KEY = 'd2lTabs';
+
+// Saving before the restore would overwrite the stored list with only the new entries
+function saveTabs() {
+  tabsReady.then(() => {
+    chrome.storage.session.set({ [TABS_KEY]: Object.fromEntries(d2lTabs) });
+  });
+}
+
+const tabsReady = new Promise((resolve) => {
+  chrome.storage.session.get([TABS_KEY], (result) => {
+    const saved = (result && result[TABS_KEY]) || {};
+    for (const id of Object.keys(saved)) {
+      // Fresher entries recorded since the wake-up win
+      if (!d2lTabs.has(Number(id))) d2lTabs.set(Number(id), saved[id]);
+    }
+    resolve();
+  });
+});
+
+function track(tab, page) {
+  d2lTabs.set(tab.id, { host: hostOf(tab.url), page: page });
+  saveTabs();
+}
+
+function forget(tabId) {
+  if (d2lTabs.delete(tabId)) saveTabs();
+}
 
 // Cached dark mode state. Wrapped in a promise so early messages
 // wait for the storage read to complete before using the value.
@@ -24,14 +60,14 @@ const cacheReady = new Promise((resolve) => {
   );
 });
 
+// Icon decisions read d2lTabs, which an event that woke the worker sees before the restore
+const iconReady = Promise.all([cacheReady, tabsReady]);
+
 // Inject content scripts into frames confirmed as Brightspace by gate.js
 chrome.runtime.onMessage.addListener(function (msg, sender) {
   if (msg.type !== 'injectScripts' || !sender.tab) return;
-  try {
-    d2lTabs.set(sender.tab.id, new URL(sender.tab.url).hostname);
-  } catch (e) {
-    d2lTabs.set(sender.tab.id, '');
-  }
+  // gate.js only asks for scripts on pages that aren't excluded
+  track(sender.tab, { detected: true, source: 'auto' });
   cacheReady.then(function () {
     updateIcon(sender.tab.id);
   });
@@ -61,7 +97,8 @@ chrome.runtime.onMessage.addListener(function (msg, sender) {
 /* ---- Toolbar icon ---- */
 
 function updateIcon(tabId) {
-  const active = cachedDarkMode && d2lTabs.has(tabId);
+  const tracked = d2lTabs.get(tabId);
+  const active = D2LTabStatus.isActive(tracked && tracked.page, cachedDarkMode);
   chrome.action.setIcon({
     tabId,
     path: {
@@ -74,43 +111,41 @@ function updateIcon(tabId) {
 }
 
 /**
- * Re-detect Brightspace by checking data-d2l-detected on the page.
- * Survives service worker restarts since the attribute lives on the page.
+ * Re-detect Brightspace from the marks gate.js left on the page.
+ * Survives service worker restarts since the marks live on the page.
  */
 function redetectTab(tabId, callback) {
   chrome.tabs.get(tabId, (tab) => {
-    if (chrome.runtime.lastError || !tab || !tab.url) return callback();
-    if (/^(chrome|chrome-extension|about|edge):/.test(tab.url)) return callback();
+    if (chrome.runtime.lastError || !tab || !D2LTabStatus.canReadPage(tab.url)) return callback();
     chrome.scripting.executeScript({
       target: { tabId: tabId },
-      func: () => document.documentElement.hasAttribute('data-d2l-detected'),
+      func: D2LTabStatus.readPageMarks,
     }, (results) => {
-      if (!chrome.runtime.lastError && results && results[0] && results[0].result === true) {
-        try { d2lTabs.set(tabId, new URL(tab.url).hostname); } catch (e) {}
-      }
+      const page = !chrome.runtime.lastError && results && results[0] && results[0].result;
+      if (page && page.detected) track(tab, page);
       callback();
     });
   });
 }
 
-// Clean up closed tabs
+// Clean up closed tabs (after the restore, or it would bring them back)
 chrome.tabs.onRemoved.addListener((tabId) => {
-  d2lTabs.delete(tabId);
+  tabsReady.then(() => forget(tabId));
 });
 
 // Keep tab marked as D2L for same-host SPA navigations; clear on host change.
 // Re-apply icon at 'complete' since Chrome resets per-tab icons on navigation.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'loading' && d2lTabs.has(tabId)) {
-    var prevHost = d2lTabs.get(tabId);
-    var newHost = '';
-    try { newHost = new URL(tab.url).hostname; } catch (e) {}
-    if (newHost !== prevHost) {
-      d2lTabs.delete(tabId);
-    }
+  if (changeInfo.status === 'loading') {
+    var newHost = hostOf(tab.url);
+    tabsReady.then(function () {
+      if (d2lTabs.has(tabId) && d2lTabs.get(tabId).host !== newHost) {
+        forget(tabId);
+      }
+    });
   }
   if (changeInfo.status === 'complete') {
-    cacheReady.then(function () {
+    iconReady.then(function () {
       if (d2lTabs.has(tabId)) {
         updateIcon(tabId);
       } else {
@@ -122,7 +157,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 // Re-detect on tab switch (d2lTabs may be lost after SW sleep)
 chrome.tabs.onActivated.addListener((info) => {
-  cacheReady.then(function () {
+  iconReady.then(function () {
     if (d2lTabs.has(info.tabId)) {
       updateIcon(info.tabId);
     } else {
@@ -137,9 +172,9 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
   if (changes[D2LConfig.STORAGE_KEYS.DARK_MODE]) {
     cachedDarkMode = changes[D2LConfig.STORAGE_KEYS.DARK_MODE].newValue !== false;
-    for (const tabId of d2lTabs.keys()) {
-      updateIcon(tabId);
-    }
+    tabsReady.then(() => {
+      for (const tabId of d2lTabs.keys()) updateIcon(tabId);
+    });
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) updateIcon(tabs[0].id);
     });
@@ -228,7 +263,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 // Re-detect active tab on startup (d2lTabs lost after SW sleep)
-cacheReady.then(() => {
+iconReady.then(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs[0]) return;
     var tab = tabs[0];
