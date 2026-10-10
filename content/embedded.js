@@ -33,7 +33,9 @@
     initialized: true,
   };
 
-  var mode = 'off';
+  // 'wait' until settings load: keeps gate.js's optimistic class, and makes the
+  // first real decision always apply in full (even "off")
+  var mode = 'wait';
   var storageReady = false;
 
   /* ---- Player detection: judged by content, not by iframe attributes ---- */
@@ -74,7 +76,8 @@
   /* ---- Mode switching ---- */
 
   function resolveMode() {
-    if (!link.inverted || !storageReady) return 'off';
+    if (!storageReady) return 'wait';
+    if (!link.inverted) return 'off';
     // Video dark mode wants the video inverted, which page mode already does
     if (!D2L.state.videoDarkModeEnabled && D2L.isPlayerFrame()) return 'player';
     return 'page';
@@ -102,6 +105,7 @@
 
   function apply() {
     var next = resolveMode();
+    if (next === 'wait') return;
     if (next === mode) {
       // Toggles that don't change the mode still change the counter-invert set
       if (mode === 'page') { applyDocDark(); D2L.updateVideoState(); }

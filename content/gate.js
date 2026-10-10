@@ -20,7 +20,7 @@
    */
   function linkToParent() {
     if (self.D2LEmbedded) return;
-    var link = self.D2LEmbedded = { inverted: false, requested: false, onChange: null };
+    var link = self.D2LEmbedded = { inverted: false, requested: false, answered: false, onChange: null };
     // Marks the handshake as underway so same-origin children link too
     document.documentElement.setAttribute(CFG.CSS.ROLE_ATTR, 'linking');
 
@@ -28,6 +28,19 @@
       var msg = {};
       msg[FL.KEY] = 'ctx?';
       try { window.parent.postMessage(msg, '*'); } catch (e) {}
+    }
+
+    // The first question can arrive before the parent's scripts listen, and the
+    // parent's broadcast can land on the placeholder document this one replaced.
+    // Keep asking on a short backoff until the parent answers.
+    var retries = 0;
+    function askAgainLater() {
+      if (link.answered || retries >= FL.ASK_RETRY_MS.length) return;
+      setTimeout(function () {
+        if (link.answered) return;
+        ask();
+        askAgainLater();
+      }, FL.ASK_RETRY_MS[retries++]);
     }
 
     window.addEventListener('message', function (e) {
@@ -38,6 +51,7 @@
       if (kind === 'ping') { ask(); return; }
       if (kind !== 'ctx') return;
 
+      link.answered = true;
       link.inverted = d.inverted === true;
       facts.parentInverted = link.inverted;
       if (!link.requested && FrameRole.resolve(facts).role === CFG.CSS.ROLE_EMBEDDED) {
@@ -52,6 +66,7 @@
       else if (!link.inverted) document.documentElement.classList.remove(CFG.CSS.ACTIVE);
     });
     ask();
+    askAgainLater();
   }
 
   /** Records this Brightspace origin so its cross-origin children can find it. */
@@ -125,13 +140,30 @@
     origins: function (done) {
       var anc = location.ancestorOrigins;
       if (!anc || !anc.length) return done('knownAncestor', false);
+      function hasKnownAncestor(known) {
+        for (var i = 0; i < anc.length; i++) {
+          if (anc[i] === 'null' || known.indexOf(anc[i]) !== -1) return true;
+        }
+        return false;
+      }
       chrome.storage.local.get([FL.ORIGINS_KEY], function (result) {
         if (chrome.runtime.lastError) return done('knownAncestor', false);
-        var known = (result && result[FL.ORIGINS_KEY]) || [];
-        for (var i = 0; i < anc.length; i++) {
-          if (anc[i] === 'null' || known.indexOf(anc[i]) !== -1) return done('knownAncestor', true);
-        }
+        if (hasKnownAncestor((result && result[FL.ORIGINS_KEY]) || [])) return done('knownAncestor', true);
         done('knownAncestor', false);
+        // First visit after install: the Brightspace page above may record its
+        // origin a moment after this frame looked. Watch briefly for it.
+        function onChanged(changes, area) {
+          if (area !== 'local' || !changes[FL.ORIGINS_KEY]) return;
+          if (!hasKnownAncestor(changes[FL.ORIGINS_KEY].newValue || [])) return;
+          stop();
+          done('knownAncestor', true);
+        }
+        function stop() {
+          clearTimeout(timer);
+          chrome.storage.onChanged.removeListener(onChanged);
+        }
+        chrome.storage.onChanged.addListener(onChanged);
+        var timer = setTimeout(stop, FL.ORIGIN_WAIT_MS);
       });
     },
     dom: function (done) {

@@ -12,6 +12,11 @@
   // Stale injection: the frame navigated before config.js ran here. Let gate.js retry.
   if (!CFG) return;
 
+  // Stale injection into a different document: a placeholder about:blank asked,
+  // then a player page replaced it. That page runs embedded.js instead.
+  var role = document.documentElement.getAttribute(CFG.CSS.ROLE_ATTR);
+  if (role === CFG.CSS.ROLE_EMBEDDED || role === 'linking') return;
+
   if (D2L.state.initialized) return;
   D2L.state.initialized = true;
 

@@ -14,6 +14,9 @@
 
   const D2L = window.D2L = window.D2L || {};
   const CFG = window.D2LConfig;
+
+  // Stale injection: the frame navigated before config.js ran here
+  if (!CFG) return;
   const FL = CFG.FRAME_LINK;
 
   // A second injection into the same document would double the listener

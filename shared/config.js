@@ -103,6 +103,10 @@
       // storage.local list of origins detected as Brightspace, used by cross-origin children
       ORIGINS_KEY: 'knownBrightspaceOrigins',
       MAX_ORIGINS: 50,
+      // How long a frame with no known Brightspace ancestor watches for one to be recorded
+      ORIGIN_WAIT_MS: 15000,
+      // Gaps between repeated 'ctx?' questions until the parent answers (~8s total)
+      ASK_RETRY_MS: [100, 250, 500, 1000, 2000, 4000],
     },
 
     /* ---- Brightspace Deferred Detection Selector ---- */
