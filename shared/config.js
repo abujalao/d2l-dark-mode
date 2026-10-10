@@ -42,7 +42,6 @@
     CSS: {
       ACTIVE: 'd2l-dark-mode-active',
       TOP: 'd2l-dark-mode-top',
-      NESTED: 'd2l-dark-mode-nested',
       DOC_DARK: 'd2l-doc-dark',
       VIDEO_DARK: 'd2l-video-dark',
       VIDEO_IFRAME: 'd2l-video-iframe',

@@ -42,6 +42,7 @@
       ],
       "js": [
         "shared/config.js",
+        "shared/frame-role.js",
         "content/gate.js"
       ],
       "css": [
