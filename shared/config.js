@@ -146,6 +146,7 @@
     CONTENT_SCRIPTS: [
       'content/detection.js',
       'content/video.js',
+      'shared/media-rules.js',
       'content/shadow-dom.js',
       'content/font-engine.js',
       'content/layout-engine.js',
@@ -158,6 +159,7 @@
     EMBEDDED_SCRIPTS: [
       'content/detection.js',
       'content/video.js',
+      'shared/media-rules.js',
       'content/shadow-dom.js',
       'content/frame-link.js',
       'content/embedded.js',

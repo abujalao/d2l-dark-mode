@@ -59,10 +59,7 @@
       document.documentElement.classList.remove(CFG.CSS.VIDEO_DARK);
     }
 
-    // Rebuild shadow CSS to match current video/document dark mode state
-    var includeVideo = !D2L.state.videoDarkModeEnabled;
-    var includeCanvas = D2L.isEffectiveRoot || !D2L.state.documentDarkModeEnabled;
-    D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(includeCanvas, includeVideo));
+    D2L.refreshShadowSheet();
 
     // Fallback counter-inversion depends on the video toggle
     if (D2L.refreshFrameLinks) D2L.refreshFrameLinks();

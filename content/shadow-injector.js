@@ -19,28 +19,43 @@
   if (!originalAttachShadow) return;
 
   var sheet;
+  var sheetVideoDark;
+
+  function isVideoDark() {
+    return document.documentElement.classList.contains('d2l-video-dark');
+  }
+
+  /**
+   * Counter-invert rules for the top frame, before the isolated world's
+   * toggle-aware sheet arrives. A hand-kept subset of shared/media-rules.js
+   * (this world can't share it without a page-visible global); a unit test
+   * pins the two together.
+   */
+  function sheetCSS(videoDark) {
+    var media = videoDark ? 'img, picture, canvas' : 'img, picture, canvas, video';
+    return media + ' { filter: invert(1) hue-rotate(180deg) !important; }\n' +
+      '[style*="background-image"] { filter: invert(1) hue-rotate(180deg) !important; }\n' +
+      '[style*="background-image"] :is(' + media + ') { filter: none !important; }\n';
+  }
 
   /** Builds the counter-invert sheet lazily so non-Brightspace tabs never pay. */
   function getSheet() {
     if (sheet !== undefined) return sheet;
     try {
       sheet = new CSSStyleSheet();
-      sheet.replaceSync(
-        'img, picture, canvas, video {' +
-        '  filter: invert(1) hue-rotate(180deg) !important;' +
-        '}' +
-        '[style*="background-image"] {' +
-        '  filter: invert(1) hue-rotate(180deg) !important;' +
-        '}' +
-        '[style*="background-image"] img,' +
-        '[style*="background-image"] picture,' +
-        '[style*="background-image"] canvas,' +
-        '[style*="background-image"] video {' +
-        '  filter: none !important;' +
-        '}'
-      );
+      sheetVideoDark = isVideoDark();
+      sheet.replaceSync(sheetCSS(sheetVideoDark));
     } catch (e) { sheet = null; }
     return sheet;
+  }
+
+  /** Follows the video toggle; every root shares the one sheet, so all update at once. */
+  function syncVideoToggle() {
+    if (!sheet) return;
+    var videoDark = isVideoDark();
+    if (videoDark === sheetVideoDark) return;
+    sheetVideoDark = videoDark;
+    try { sheet.replaceSync(sheetCSS(videoDark)); } catch (e) {}
   }
 
   // Gate on TOP, not ACTIVE: TOP marks "page-level invert is committed".
@@ -138,6 +153,7 @@
   // removed component subtrees.
   var wasOn = isDarkOn();
   new MutationObserver(function () {
+    syncVideoToggle();
     var on = isDarkOn();
     if (on === wasOn) return;
     wasOn = on;

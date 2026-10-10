@@ -13,44 +13,17 @@
 
   D2L.sharedShadowSheet = new CSSStyleSheet();
 
-  /** Builds shadow DOM CSS for counter-inverting media elements. */
-  D2L.buildShadowCSS = function (includeCanvas, includeVideo) {
-    if (includeVideo === undefined) includeVideo = true;
-    var parts = ['img', 'picture'];
-    if (includeVideo) parts.push('video');
-    if (includeCanvas) parts.push('canvas');
-    var media = parts.join(', ');
-    // Compensating selector: media nested inside a background-image element
-    // would be triple-inverted (page + parent + own). Cancel their own filter.
-    var compensate = 'img, picture';
-    if (includeCanvas) compensate += ', canvas';
-    if (includeVideo) compensate += ', video';
-    return '\n' +
-      '    ' + media + ' {\n' +
-      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
-      '    }\n' +
-      '    :popover-open {\n' +
-      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
-      '    }\n' +
-      '    :host(:popover-open) {\n' +
-      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
-      '    }\n' +
-      '    :popover-open :is(' + media + ') {\n' +
-      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
-      '    }\n' +
-      '    [style*="background-image"] {\n' +
-      '      filter: invert(1) hue-rotate(180deg) !important;\n' +
-      '    }\n' +
-      '    [style*="background-image"] :is(' + compensate + ') {\n' +
-      '      filter: none !important;\n' +
-      '    }\n' +
-      // Fullscreen escapes the page-level filter; invert rules are flipped
-      '    video:fullscreen, :host(:fullscreen) video, iframe.d2l-iframe-fallback:fullscreen {\n' +
-      '      filter: ' + (includeVideo ? 'none' : 'invert(1) hue-rotate(180deg)') + ' !important;\n' +
-      '    }\n';
+  /** Rebuilds the shadow-root sheet for the current toggles (rules: shared/media-rules.js). */
+  D2L.refreshShadowSheet = function () {
+    var state = D2L.state || {};
+    D2L.sharedShadowSheet.replaceSync(self.D2LMediaRules.shadowCSS({
+      videoDark: state.videoDarkModeEnabled === true,
+      // The root frame keeps documents original: the page filter would invert them
+      docDark: !D2L.isEffectiveRoot && state.documentDarkModeEnabled === true,
+    }));
   };
 
-  D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(true));
+  D2L.sharedShadowSheet.replaceSync(self.D2LMediaRules.shadowCSS());
 
   /** Re-processes a root the MAIN world announced: late attachShadow or replaced sheets. */
   function onShadowAnnounced(e) {

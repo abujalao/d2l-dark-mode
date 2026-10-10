@@ -37,10 +37,7 @@
       document.documentElement.classList.remove(CFG.CSS.DOC_DARK);
     }
 
-    // Update shadow CSS for child frames
-    if (!D2L.isEffectiveRoot) {
-      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled, !D2L.state.videoDarkModeEnabled));
-    }
+    D2L.refreshShadowSheet();
   };
 
   /** Enables dark mode. */
