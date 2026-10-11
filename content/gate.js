@@ -53,17 +53,21 @@
 
       link.answered = true;
       link.inverted = d.inverted === true;
+      // The parent's iframe looks like a video player: players build their
+      // <video> late, so show the frame's own look now instead of waiting for it.
+      // Not when the frame already reads like a page (an LTI launcher, not a player).
+      link.player = d.player === true && !CFG.readsLikePage(document);
       facts.parentInverted = link.inverted;
       if (!link.requested && FrameRole.resolve(facts).role === CFG.CSS.ROLE_EMBEDDED) {
         link.requested = true;
         var html = document.documentElement;
         html.setAttribute(CFG.CSS.ROLE_ATTR, CFG.CSS.ROLE_EMBEDDED);
-        // dark-mode.css is already loaded here: this counter-inverts media at once
-        html.classList.add(CFG.CSS.ACTIVE);
+        // dark-mode.css is already loaded here, so either class takes effect at once
+        html.classList.add(link.player ? CFG.CSS.PLAYER : CFG.CSS.ACTIVE);
         chrome.runtime.sendMessage({ type: 'injectScripts', role: CFG.CSS.ROLE_EMBEDDED });
       }
       if (link.onChange) link.onChange();
-      else if (!link.inverted) document.documentElement.classList.remove(CFG.CSS.ACTIVE);
+      else if (!link.inverted) document.documentElement.classList.remove(CFG.CSS.ACTIVE, CFG.CSS.PLAYER);
     });
     ask();
     askAgainLater();

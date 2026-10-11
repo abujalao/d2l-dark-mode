@@ -103,6 +103,15 @@
       FALLBACK_DELAY_MS: 1500,
       // A video covering this share of the frame's viewport makes it a player frame
       PLAYER_MIN_COVERAGE: 0.4,
+      // How long after load a frame trusts its parent's "looks like a player" hint
+      // while no <video> has appeared yet (players build theirs late)
+      PLAYER_HINT_GRACE_MS: 3000,
+      // ...unless it already shows this much readable text: a page. Measured live:
+      // players under 150 chars (Kaltura <50, YouTube/Vimeo ~120 with control
+      // labels); pages above 550 (library reserves 595, Echo360 lecture list 2000+).
+      // Checked this often meanwhile.
+      PAGE_TEXT_MIN_CHARS: 400,
+      PAGE_TEXT_CHECK_MS: 100,
       // storage.local list of origins detected as Brightspace, used by cross-origin children
       ORIGINS_KEY: 'knownBrightspaceOrigins',
       MAX_ORIGINS: 50,
@@ -130,6 +139,16 @@
     matchesAnyHost: function (hostname, hostList) {
       var self = this;
       return hostList.some(function (h) { return self.matchesHost(hostname, h); });
+    },
+
+    /**
+     * Whether a document already shows a page's worth of readable text. The
+     * parent's "looks like a player" hint comes from iframe attributes, which LTI
+     * launchers share with real players (Echo360's lecture list).
+     */
+    readsLikePage: function (doc) {
+      var body = doc.body;
+      return !!body && (body.innerText || '').length >= this.FRAME_LINK.PAGE_TEXT_MIN_CHARS;
     },
 
     isBrightspaceElement: function (el) {

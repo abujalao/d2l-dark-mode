@@ -44,14 +44,45 @@
     return false;
   }
 
-  function contextPayload() {
-    return { inverted: D2L.contentInverted() };
+  /** The <iframe> element showing `win`: video iframes first, then light DOM, then shadow roots. */
+  function iframeFor(win) {
+    var found = null;
+    watched.forEach(function (f) { if (!found && f.contentWindow === win) found = f; });
+    if (found) return found;
+    var light = document.querySelectorAll('iframe');
+    for (var i = 0; i < light.length; i++) if (light[i].contentWindow === win) return light[i];
+    D2L.walkShadowRoots(document.documentElement, function (root) {
+      if (found) return;
+      var list = root.querySelectorAll('iframe');
+      for (var j = 0; j < list.length; j++) if (list[j].contentWindow === win) { found = list[j]; return; }
+    });
+    return found;
+  }
+
+  /**
+   * What a child frame needs to know. `player` is the cheap hint the old code
+   * acted on: the iframe looks like a video player, so the child can show its
+   * original look at once instead of waiting for its <video> to be built.
+   */
+  function contextPayload(iframe) {
+    var inverted = D2L.contentInverted();
+    var videoDark = !!(D2L.state && D2L.state.videoDarkModeEnabled);
+    return { inverted: inverted, player: inverted && !videoDark && !!iframe && D2L.isVideoIframe(iframe) };
   }
 
   /** Tells every child frame whether its content is rendered inverted. */
   D2L.broadcastContext = function () {
-    var payload = contextPayload();
-    for (var i = 0; i < window.frames.length; i++) post(window.frames[i], 'ctx', payload);
+    var sent = new Set();
+    function send(iframe, win) {
+      if (!win || sent.has(win)) return;
+      sent.add(win);
+      post(win, 'ctx', contextPayload(iframe));
+    }
+    watched.forEach(function (f) { send(f, f.contentWindow); });
+    var light = document.querySelectorAll('iframe');
+    for (var i = 0; i < light.length; i++) send(light[i], light[i].contentWindow);
+    // Frames in shadow roots that aren't video iframes: no hint needed
+    for (var k = 0; k < window.frames.length; k++) send(null, window.frames[k]);
   };
 
   /* ---- Fallback counter-inversion for script-less video iframes ---- */
@@ -140,7 +171,7 @@
     var d = e.data;
     if (!d || typeof d !== 'object' || d[FL.KEY] !== 'ctx?') return;
     if (!e.source || !isChildWindow(e.source)) return;
-    post(e.source, 'ctx', contextPayload());
+    post(e.source, 'ctx', contextPayload(iframeFor(e.source)));
     watched.forEach(function (iframe) {
       if (iframe.contentWindow !== e.source) return;
       clearTimeout(iframe._d2lFallbackTimer);
