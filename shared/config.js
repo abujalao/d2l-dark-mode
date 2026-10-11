@@ -3,6 +3,16 @@
 (function () {
   'use strict';
 
+  // Scripts every frame we correct runs, Brightspace or embedded, in load order
+  const FRAME_SCRIPTS = [
+    'content/detection.js',
+    'content/video.js',
+    'shared/media-rules.js',
+    'content/shadow-dom.js',
+    'content/frame-link.js',
+    'shared/settings.js',
+  ];
+
   const config = {
 
     /* ---- Storage Keys ---- */
@@ -157,29 +167,17 @@
     },
 
     /* ---- Content Scripts ---- */
-    CONTENT_SCRIPTS: [
-      'content/detection.js',
-      'content/video.js',
-      'shared/media-rules.js',
-      'content/shadow-dom.js',
+    CONTENT_SCRIPTS: FRAME_SCRIPTS.concat([
       'content/font-engine.js',
       'content/layout-engine.js',
-      'content/frame-link.js',
       'content/dark-mode-core.js',
-      'shared/settings.js',
       'content/main.js',
-    ],
+    ]),
 
     /* Non-Brightspace frames rendered inside an inverted Brightspace page */
-    EMBEDDED_SCRIPTS: [
-      'content/detection.js',
-      'content/video.js',
-      'shared/media-rules.js',
-      'content/shadow-dom.js',
-      'content/frame-link.js',
-      'shared/settings.js',
+    EMBEDDED_SCRIPTS: FRAME_SCRIPTS.concat([
       'content/embedded.js',
-    ],
+    ]),
   };
 
   self.D2LConfig = config;
