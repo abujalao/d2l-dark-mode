@@ -189,16 +189,20 @@ chrome.storage.onChanged.addListener((changes, area) => {
   var startChange = changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME];
   var endChange = changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME];
   if (!autoChange && !startChange && !endChange) return;
-  if (autoChange) scheduleEnabled = autoChange.newValue === true;
-  if (startChange) scheduleStart = startChange.newValue || D2LConfig.DEFAULTS.darkStartTime;
-  if (endChange) scheduleEnd = endChange.newValue || D2LConfig.DEFAULTS.darkEndTime;
-  if (autoChange && !scheduleEnabled) {
-    teardownScheduleAlarm();
-    return;
-  }
-  if (autoChange) setupScheduleAlarm();
-  // Editing the schedule is a deliberate "follow it now", even after a manual press
-  if (scheduleEnabled) applySchedule({ force: true });
+  // A worker woken by this change hasn't loaded the schedule yet, and a time
+  // edit alone doesn't say whether auto mode is on
+  scheduleReady.then(() => {
+    if (autoChange) scheduleEnabled = autoChange.newValue === true;
+    if (startChange) scheduleStart = startChange.newValue || D2LConfig.DEFAULTS.darkStartTime;
+    if (endChange) scheduleEnd = endChange.newValue || D2LConfig.DEFAULTS.darkEndTime;
+    if (autoChange && !scheduleEnabled) {
+      teardownScheduleAlarm();
+      return;
+    }
+    if (autoChange) setupScheduleAlarm();
+    // Editing the schedule is a deliberate "follow it now", even after a manual press
+    if (scheduleEnabled) applySchedule({ force: true });
+  });
 });
 
 /* ---- Auto Dark Mode Scheduling ---- */
