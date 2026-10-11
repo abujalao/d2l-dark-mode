@@ -3,6 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
   const CFG = window.D2LConfig;
   const TabStatus = window.D2LTabStatus;
+  const Settings = window.D2LSettings;
 
   const powerButton = document.getElementById('powerButton');
   const powerStatus = document.getElementById('powerStatus');
@@ -102,18 +103,27 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   /* ---- Settings ---- */
-  chrome.storage.sync.get(CFG.allReadKeys(), (result) => {
-    darkModeOn = result[CFG.STORAGE_KEYS.DARK_MODE] !== false;
-    updatePowerButton(darkModeOn);
-    logoState.darkOn = darkModeOn;
-    updatePopupLogo();
+  /** Shows the given settings; a partial set (from watch) updates only those controls. */
+  function showSettings(s) {
+    if ('darkModeEnabled' in s) {
+      darkModeOn = s.darkModeEnabled !== false;
+      updatePowerButton(darkModeOn);
+      logoState.darkOn = darkModeOn;
+      updatePopupLogo();
+    }
+    if ('documentDarkModeEnabled' in s) {
+      documentDarkModeToggle.checked = s.documentDarkModeEnabled === true;
+      updateToggleIcon(docIcon, documentDarkModeToggle.checked);
+    }
+    if ('videoDarkModeEnabled' in s) {
+      videoDarkModeToggle.checked = s.videoDarkModeEnabled === true;
+      updateToggleIcon(videoIcon, videoDarkModeToggle.checked);
+    }
+  }
 
-    documentDarkModeToggle.checked = CFG.resolveDocumentDarkMode(result);
-    videoDarkModeToggle.checked = result[CFG.STORAGE_KEYS.VIDEO_DARK_MODE] === true;
-
-    updateToggleIcon(docIcon, documentDarkModeToggle.checked);
-    updateToggleIcon(videoIcon, videoDarkModeToggle.checked);
-  });
+  Settings.read(showSettings);
+  // The schedule or the options page can change these while the popup is open
+  Settings.watch(showSettings);
 
   /* ---- Power Button ---- */
   function updatePowerButton(isOn) {

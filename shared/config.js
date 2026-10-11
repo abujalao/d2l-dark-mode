@@ -38,6 +38,7 @@
       autoDarkModeEnabled: false,
       darkStartTime: '18:00',
       darkEndTime: '06:00',
+      scheduleOverrideAt: 0,
     },
 
     /* ---- CSS Class Names & IDs ---- */
@@ -136,14 +137,6 @@
         && (el.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1;
     },
 
-    /** Resolve document dark mode, falling back to legacy pdfDarkModeEnabled key. */
-    resolveDocumentDarkMode: function (result) {
-      if (result.documentDarkModeEnabled !== undefined) {
-        return result.documentDarkModeEnabled === true;
-      }
-      return result.pdfDarkModeEnabled === true;
-    },
-
     /* ---- Content Scripts ---- */
     CONTENT_SCRIPTS: [
       'content/detection.js',
@@ -154,6 +147,7 @@
       'content/layout-engine.js',
       'content/frame-link.js',
       'content/dark-mode-core.js',
+      'shared/settings.js',
       'content/main.js',
     ],
 
@@ -164,28 +158,9 @@
       'shared/media-rules.js',
       'content/shadow-dom.js',
       'content/frame-link.js',
+      'shared/settings.js',
       'content/embedded.js',
     ],
-
-    /** All storage keys to fetch (includes legacy key for migration). */
-    allReadKeys: function () {
-      return [
-        this.STORAGE_KEYS.DARK_MODE,
-        this.STORAGE_KEYS.DOCUMENT_DARK_MODE,
-        this.STORAGE_KEYS.PDF_DARK_MODE,
-        this.STORAGE_KEYS.VIDEO_DARK_MODE,
-        this.STORAGE_KEYS.CUSTOM_DOMAINS,
-        this.STORAGE_KEYS.EXCLUDED_DOMAINS,
-        this.STORAGE_KEYS.FONT_SIZE,
-        this.STORAGE_KEYS.FONT_FAMILY,
-        this.STORAGE_KEYS.FULL_WIDTH,
-        this.STORAGE_KEYS.PRESERVE_DISPLAY,
-        this.STORAGE_KEYS.AUTO_DARK_MODE,
-        this.STORAGE_KEYS.DARK_START_TIME,
-        this.STORAGE_KEYS.DARK_END_TIME,
-        this.STORAGE_KEYS.SCHEDULE_OVERRIDE_AT,
-      ];
-    },
   };
 
   self.D2LConfig = config;

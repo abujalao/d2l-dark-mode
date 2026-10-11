@@ -136,9 +136,9 @@
     document.addEventListener(type, schedule, true);
   });
 
-  chrome.storage.sync.get(CFG.allReadKeys(), function (result) {
-    D2L.state.documentDarkModeEnabled = CFG.resolveDocumentDarkMode(result);
-    D2L.state.videoDarkModeEnabled = result[CFG.STORAGE_KEYS.VIDEO_DARK_MODE] === true;
+  self.D2LSettings.read(function (s) {
+    D2L.state.documentDarkModeEnabled = s.documentDarkModeEnabled === true;
+    D2L.state.videoDarkModeEnabled = s.videoDarkModeEnabled === true;
     storageReady = true;
     apply();
   });

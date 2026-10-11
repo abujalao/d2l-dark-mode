@@ -2,6 +2,7 @@
 
 document.addEventListener('DOMContentLoaded', function () {
   var CFG = window.D2LConfig;
+  var Settings = window.D2LSettings;
 
   /* ---- Version & Logo ---- */
   var version = 'v' + chrome.runtime.getManifest().version;
@@ -330,27 +331,35 @@ document.addEventListener('DOMContentLoaded', function () {
     if (e.key === 'Enter') excludedDomains.add();
   });
 
-  /* ---- Load All Settings ---- */
-  chrome.storage.sync.get(CFG.allReadKeys(), function (result) {
+  /* ---- Settings ---- */
+  /** Shows the given settings; a partial set (from watch) updates only those controls. */
+  function showSettings(s) {
     /* Display */
-    var fontSize = result[CFG.STORAGE_KEYS.FONT_SIZE] !== undefined ? result[CFG.STORAGE_KEYS.FONT_SIZE] : 100;
-    fontSizeSlider.value = fontSize;
-    fontSizeValue.textContent = fontSize + '%';
-    fontFamilySelect.setValue(result[CFG.STORAGE_KEYS.FONT_FAMILY] || 'default');
-    fullWidthToggle.checked = result[CFG.STORAGE_KEYS.FULL_WIDTH] === true;
-    preserveDisplayToggle.checked = result[CFG.STORAGE_KEYS.PRESERVE_DISPLAY] === true;
+    if ('fontSize' in s) {
+      fontSizeSlider.value = s.fontSize;
+      fontSizeValue.textContent = s.fontSize + '%';
+    }
+    if ('fontFamily' in s) fontFamilySelect.setValue(s.fontFamily);
+    if ('fullWidthEnabled' in s) fullWidthToggle.checked = s.fullWidthEnabled === true;
+    if ('preserveDisplay' in s) preserveDisplayToggle.checked = s.preserveDisplay === true;
 
     /* Schedule */
-    autoDarkToggle.checked = result[CFG.STORAGE_KEYS.AUTO_DARK_MODE] === true;
-    setTimePicker(darkStartHour, darkStartMinute, darkStartPeriod, result[CFG.STORAGE_KEYS.DARK_START_TIME] || '18:00');
-    setTimePicker(darkEndHour, darkEndMinute, darkEndPeriod, result[CFG.STORAGE_KEYS.DARK_END_TIME] || '06:00');
-    if (autoDarkToggle.checked) scheduleTimesCard.classList.add('is-active');
-    updateScheduleUI();
+    if ('autoDarkModeEnabled' in s) {
+      autoDarkToggle.checked = s.autoDarkModeEnabled === true;
+      scheduleTimesCard.classList.toggle('is-active', autoDarkToggle.checked);
+    }
+    if ('darkStartTime' in s) setTimePicker(darkStartHour, darkStartMinute, darkStartPeriod, s.darkStartTime);
+    if ('darkEndTime' in s) setTimePicker(darkEndHour, darkEndMinute, darkEndPeriod, s.darkEndTime);
+    if ('autoDarkModeEnabled' in s || 'darkStartTime' in s || 'darkEndTime' in s) updateScheduleUI();
 
     /* Domains */
-    customDomains.render(result[CFG.STORAGE_KEYS.CUSTOM_DOMAINS] || []);
-    excludedDomains.render(result[CFG.STORAGE_KEYS.EXCLUDED_DOMAINS] || []);
-  });
+    if ('customDomains' in s) customDomains.render(s.customDomains);
+    if ('excludedDomains' in s) excludedDomains.render(s.excludedDomains);
+  }
+
+  Settings.read(showSettings);
+  // The popup or another options tab can change these while this page is open
+  Settings.watch(showSettings);
 
   /* ---- Event Listeners ---- */
 
@@ -426,19 +435,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   resetConfirm.addEventListener('click', function () {
     chrome.storage.sync.set({ ...CFG.DEFAULTS }, function () {
-      /* Refresh UI */
-      fontSizeSlider.value = CFG.DEFAULTS.fontSize;
-      fontSizeValue.textContent = CFG.DEFAULTS.fontSize + '%';
-      fontFamilySelect.setValue(CFG.DEFAULTS.fontFamily);
-      fullWidthToggle.checked = CFG.DEFAULTS.fullWidthEnabled;
-      preserveDisplayToggle.checked = CFG.DEFAULTS.preserveDisplay;
-      autoDarkToggle.checked = CFG.DEFAULTS.autoDarkModeEnabled;
-      setTimePicker(darkStartHour, darkStartMinute, darkStartPeriod, CFG.DEFAULTS.darkStartTime);
-      setTimePicker(darkEndHour, darkEndMinute, darkEndPeriod, CFG.DEFAULTS.darkEndTime);
-      scheduleTimesCard.classList.remove('is-active');
-      updateScheduleUI();
-      customDomains.render(CFG.DEFAULTS.customDomains);
-      excludedDomains.render(CFG.DEFAULTS.excludedDomains);
+      showSettings(CFG.DEFAULTS);
 
       hideModal();
       showToast('All settings restored to defaults', 'success');

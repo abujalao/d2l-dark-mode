@@ -1,10 +1,12 @@
 /** D2L Dark Mode — Background Service Worker */
 
-importScripts('../shared/config.js', '../shared/tab-status.js', '../shared/schedule.js');
+importScripts('../shared/config.js', '../shared/tab-status.js', '../shared/schedule.js', '../shared/settings.js');
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     chrome.storage.sync.set({ ...D2LConfig.DEFAULTS });
+  } else if (details.reason === 'update') {
+    D2LSettings.migrate();
   }
 });
 
@@ -188,8 +190,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
   var endChange = changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME];
   if (!autoChange && !startChange && !endChange) return;
   if (autoChange) scheduleEnabled = autoChange.newValue === true;
-  if (startChange) scheduleStart = startChange.newValue || '18:00';
-  if (endChange) scheduleEnd = endChange.newValue || '06:00';
+  if (startChange) scheduleStart = startChange.newValue || D2LConfig.DEFAULTS.darkStartTime;
+  if (endChange) scheduleEnd = endChange.newValue || D2LConfig.DEFAULTS.darkEndTime;
   if (autoChange && !scheduleEnabled) {
     teardownScheduleAlarm();
     return;
@@ -202,18 +204,14 @@ chrome.storage.onChanged.addListener((changes, area) => {
 /* ---- Auto Dark Mode Scheduling ---- */
 
 let scheduleEnabled = false;
-let scheduleStart = '18:00';
-let scheduleEnd = '06:00';
+let scheduleStart = D2LConfig.DEFAULTS.darkStartTime;
+let scheduleEnd = D2LConfig.DEFAULTS.darkEndTime;
 
 const scheduleReady = new Promise((resolve) => {
-  chrome.storage.sync.get([
-    D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE,
-    D2LConfig.STORAGE_KEYS.DARK_START_TIME,
-    D2LConfig.STORAGE_KEYS.DARK_END_TIME,
-  ], (result) => {
-    scheduleEnabled = result[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE] === true;
-    scheduleStart = result[D2LConfig.STORAGE_KEYS.DARK_START_TIME] || '18:00';
-    scheduleEnd = result[D2LConfig.STORAGE_KEYS.DARK_END_TIME] || '06:00';
+  D2LSettings.read((s) => {
+    scheduleEnabled = s.autoDarkModeEnabled === true;
+    scheduleStart = s.darkStartTime;
+    scheduleEnd = s.darkEndTime;
     resolve();
   });
 });
