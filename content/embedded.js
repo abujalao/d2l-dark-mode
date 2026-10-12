@@ -4,11 +4,8 @@
  * inside an inverted Brightspace page. gate.js has already learnt from the
  * parent frame, through self.D2LEmbedded, whether this frame is shown inverted.
  *
- * Modes:
- *  - page:   stay inverted like the page around it; counter-invert own media.
- *  - player: a video fills most of the frame, so un-invert the whole frame and
- *            the player looks exactly as designed (controls included).
- *  - off:    the parent says this frame isn't rendered inverted.
+ * This file measures the frame and applies a mode (page, player or off); which
+ * mode is decided in shared/player-mode.js.
  */
 
 (function () {
@@ -16,10 +13,11 @@
 
   var D2L = window.D2L;
   var CFG = window.D2LConfig;
+  var PlayerMode = self.D2LPlayerMode;
   var link = self.D2LEmbedded;
 
   // Stale injection, or gate.js never linked this frame
-  if (!CFG || !link) return;
+  if (!CFG || !PlayerMode || !link) return;
   if (D2L.state && D2L.state.initialized) return;
 
   var html = document.documentElement;
@@ -38,7 +36,7 @@
   var mode = 'wait';
   var storageReady = false;
 
-  /* ---- Player detection: judged by content, not by iframe attributes ---- */
+  /* ---- What the frame shows: measured here, judged in shared/player-mode.js ---- */
 
   var lastShadowScan = 0;
   // Until the page loads plus a short grace, trust the parent's "looks like a player"
@@ -47,29 +45,29 @@
   // Shadow roots that can hold a player's <video> (archive.org, media-chrome, ...)
   var shadowRoots = new Set();
 
-  /** Adds each video's visible area, own size and whether its real size is known to `m`. */
-  function measureVideos(videos, vw, vh, m) {
-    for (var i = 0; i < videos.length; i++) {
-      var r = videos[i].getBoundingClientRect();
+  /** Adds each box's visible area, own size and whether a video's real size is known to `m`. */
+  function measureBoxes(boxes, vw, vh, m) {
+    for (var i = 0; i < boxes.length; i++) {
+      var r = boxes[i].getBoundingClientRect();
       var w = Math.min(r.right, vw) - Math.max(r.left, 0);
       var h = Math.min(r.bottom, vh) - Math.max(r.top, 0);
       if (w > 0 && h > 0) m.visible = Math.max(m.visible, w * h);
       m.size = Math.max(m.size, r.width * r.height);
       // A <video> only has its real size once metadata loaded (before that it can be
       // a 300x150 default box), unless the page sized it with CSS: only then trust "small"
-      if (videos[i].readyState >= 1) m.sized = true;
+      if (boxes[i].readyState >= 1) m.sized = true;
     }
   }
 
   /** 'large' (fills the frame), 'small' (sized and small) or 'none' (no video judged yet). */
-  D2L.videoVerdict = function () {
+  function videoVerdict() {
     var vw = window.innerWidth;
     var vh = window.innerHeight;
     if (!vw || !vh) return 'none';
     var m = { visible: 0, size: 0, sized: false };
-    measureVideos(document.querySelectorAll('video'), vw, vh, m);
+    measureBoxes(document.querySelectorAll('video'), vw, vh, m);
     shadowRoots.forEach(function (root) {
-      if (root.host && root.host.isConnected) measureVideos(root.querySelectorAll('video'), vw, vh, m);
+      if (root.host && root.host.isConnected) measureBoxes(root.querySelectorAll('video'), vw, vh, m);
       else shadowRoots.delete(root);
     });
     // Roots nobody announced (attached while this frame showed its own look): walking
@@ -78,7 +76,7 @@
       lastShadowScan = Date.now();
       D2L.walkShadowRoots(document.documentElement, function (root) {
         watchRoot(root);
-        measureVideos(root.querySelectorAll('video'), vw, vh, m);
+        measureBoxes(root.querySelectorAll('video'), vw, vh, m);
       });
     }
     var frame = vw * vh;
@@ -87,7 +85,7 @@
     // in a frame that isn't an article with a video further down
     if (m.size / frame >= FL.PLAYER_MIN_COVERAGE && !CFG.readsLikePage(document)) return 'large';
     return m.visible > 0 && (m.sized || graceOver) ? 'small' : 'none';
-  };
+  }
 
   /** A child frame fills this one: a video site's embed page around its player frame. */
   function wrapsFrame() {
@@ -95,25 +93,31 @@
     var vh = window.innerHeight;
     if (!vw || !vh) return false;
     var m = { visible: 0, size: 0, sized: false };
-    measureVideos(document.getElementsByTagName('iframe'), vw, vh, m);
+    measureBoxes(document.getElementsByTagName('iframe'), vw, vh, m);
     return m.visible / (vw * vh) >= FL.PLAYER_MIN_COVERAGE;
   }
 
   /* ---- Mode switching ---- */
 
+  var measure = {
+    verdict: videoVerdict,
+    wrapsFrame: wrapsFrame,
+    readsLikePage: function () { return CFG.readsLikePage(document); },
+  };
+
   function resolveMode() {
-    if (!storageReady) return 'wait';
-    if (!link.inverted) return 'off';
-    // Video dark mode wants the video inverted, which page mode already does
-    if (D2L.state.videoDarkModeEnabled) return 'page';
-    var verdict = D2L.videoVerdict();
-    if (verdict === 'large') return 'player';
-    if (verdict === 'small') return 'page';
-    // Only a frame around the player's own frame: let that frame pick its look now, not
-    // both flip together when the grace ends (its video would show as a negative between)
-    if (wrapsFrame()) return 'page';
-    // No video yet: players build theirs late, so keep the parent's hint until the grace ends
-    return link.player && !graceOver && !CFG.readsLikePage(document) ? 'player' : 'page';
+    var facts = {
+      storageReady: storageReady,
+      inverted: link.inverted,
+      videoDark: D2L.state.videoDarkModeEnabled,
+      hint: link.player === true,
+      graceOver: graceOver,
+    };
+    for (;;) {
+      var r = PlayerMode.resolve(facts);
+      if (!r.wait) return r.mode;
+      facts[r.wait] = measure[r.wait]();
+    }
   }
 
   function applyDocDark() {

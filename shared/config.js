@@ -180,6 +180,7 @@
 
     /* Non-Brightspace frames rendered inside an inverted Brightspace page */
     EMBEDDED_SCRIPTS: FRAME_SCRIPTS.concat([
+      'shared/player-mode.js',
       'content/embedded.js',
     ]),
   };
