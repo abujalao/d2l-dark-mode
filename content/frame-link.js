@@ -23,6 +23,37 @@
   if (D2L.watchIframe) return;
 
   var watched = new Set();
+  // Every iframe the shadow-root scan has met. Browsers leave iframes inside
+  // shadow roots out of window.frames (LTI tool frames often sit in one), so
+  // this is how their children are recognised and reached.
+  var known = new Set();
+
+  /** Drops iframes that left the page. Runs whenever a new one is recorded, so neither set outgrows the page. */
+  function forgetDetached() {
+    watched.forEach(function (iframe) {
+      if (iframe.isConnected) return;
+      clearTimeout(iframe._d2lFallbackTimer);
+      iframe.removeEventListener('load', onProbeLoad);
+      watched.delete(iframe);
+    });
+    known.forEach(function (iframe) {
+      if (!iframe.isConnected) known.delete(iframe);
+    });
+  }
+
+  /** Records an iframe met by the page scan (light DOM or any shadow root). */
+  D2L.noteIframe = function (iframe) {
+    if (known.has(iframe)) return;
+    forgetDetached();
+    known.add(iframe);
+  };
+
+  /** How many iframes this frame is keeping track of (diagnostics and tests). */
+  D2L.trackedIframeCount = function () {
+    var all = new Set(known);
+    watched.forEach(function (iframe) { all.add(iframe); });
+    return all.size;
+  };
 
   /** True when this frame's content currently renders inverted. */
   D2L.contentInverted = function () {
@@ -41,13 +72,14 @@
     for (var i = 0; i < window.frames.length; i++) {
       if (window.frames[i] === win) return true;
     }
-    return false;
+    return !!iframeFor(win);
   }
 
   /** The <iframe> element showing `win`: video iframes first, then light DOM, then shadow roots. */
   function iframeFor(win) {
     var found = null;
     watched.forEach(function (f) { if (!found && f.contentWindow === win) found = f; });
+    known.forEach(function (f) { if (!found && f.contentWindow === win) found = f; });
     if (found) return found;
     var light = document.querySelectorAll('iframe');
     for (var i = 0; i < light.length; i++) if (light[i].contentWindow === win) return light[i];
@@ -79,9 +111,9 @@
       post(win, 'ctx', contextPayload(iframe));
     }
     watched.forEach(function (f) { send(f, f.contentWindow); });
+    known.forEach(function (f) { if (f.isConnected) send(f, f.contentWindow); });
     var light = document.querySelectorAll('iframe');
     for (var i = 0; i < light.length; i++) send(light[i], light[i].contentWindow);
-    // Frames in shadow roots that aren't video iframes: no hint needed
     for (var k = 0; k < window.frames.length; k++) send(null, window.frames[k]);
   };
 
@@ -147,6 +179,7 @@
   /** Tracks a video iframe; it is counter-inverted only if its document stays silent. */
   D2L.watchIframe = function (iframe) {
     if (!watched.has(iframe)) {
+      forgetDetached();
       watched.add(iframe);
       iframe.addEventListener('load', onProbeLoad);
       probe(iframe);
@@ -155,15 +188,8 @@
 
   /** Re-applies fallbacks after a state change and tells children the new context. */
   D2L.refreshFrameLinks = function () {
-    watched.forEach(function (iframe) {
-      if (!iframe.isConnected) {
-        clearTimeout(iframe._d2lFallbackTimer);
-        iframe.removeEventListener('load', onProbeLoad);
-        watched.delete(iframe);
-        return;
-      }
-      applyFallback(iframe);
-    });
+    forgetDetached();
+    watched.forEach(applyFallback);
     D2L.broadcastContext();
   };
 

@@ -75,6 +75,7 @@
   D2L._applyVideoModeToRoot = function (r) {
     var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
     for (var i = 0; i < iframes.length; i++) {
+      if (D2L.noteIframe) D2L.noteIframe(iframes[i]);
       if (D2L.isVideoIframe(iframes[i])) {
         D2L.applyVideoModeToIframe(iframes[i]);
       }

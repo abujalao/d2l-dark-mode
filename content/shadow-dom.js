@@ -80,8 +80,10 @@
       for (var n = 0; n < addedNodes.length; n++) {
         var node = addedNodes[n];
         if (node.nodeType === 1) {
-          if (node.tagName === 'IFRAME' && D2L.isVideoIframe(node)) {
-            D2L.applyVideoModeToIframe(node);
+          if (node.tagName === 'IFRAME') {
+            // The subtree scan below only queries descendants, so note the iframe itself
+            if (D2L.noteIframe) D2L.noteIframe(node);
+            if (D2L.isVideoIframe(node)) D2L.applyVideoModeToIframe(node);
           }
           D2L.processSubtree(node);
         }
