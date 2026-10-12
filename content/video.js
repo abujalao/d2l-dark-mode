@@ -115,7 +115,11 @@
 
     var fsElement = document.fullscreenElement;
     if (fsElement) {
-      var filterValue = D2L.state.videoDarkModeEnabled
+      // Fullscreen escapes every filter above the element. dark-mode.css inverts a
+      // fullscreen player box, and its videos come along; a fullscreen <video> has none.
+      var boxInverted = fsElement.tagName !== 'VIDEO'
+        && getComputedStyle(fsElement).filter.indexOf('invert') !== -1;
+      var filterValue = D2L.state.videoDarkModeEnabled !== boxInverted
         ? CFG.CSS.INVERT_FILTER
         : 'none';
       D2L._setFullscreenVideoFilter(fsElement, filterValue);

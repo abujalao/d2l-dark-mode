@@ -135,17 +135,17 @@
   }
 
   function applyFallback(iframe) {
-    var need = iframe._d2lUnscripted === true
+    var unscripted = iframe._d2lUnscripted === true
       && iframe.isConnected
-      && D2L.contentInverted()
-      && !(D2L.state && D2L.state.videoDarkModeEnabled);
-    if (need) {
+      && D2L.contentInverted();
+    var videoDark = !!(D2L.state && D2L.state.videoDarkModeEnabled);
+    if (unscripted && !videoDark) {
       iframe.style.filter = CFG.CSS.INVERT_FILTER;
-      iframe.classList.add(CFG.CSS.IFRAME_FALLBACK);
     } else if (iframe.classList.contains(CFG.CSS.IFRAME_FALLBACK)) {
       iframe.style.removeProperty('filter');
-      iframe.classList.remove(CFG.CSS.IFRAME_FALLBACK);
     }
+    // Marked with video dark on too: in fullscreen it escapes the page filter and CSS re-inverts it
+    iframe.classList.toggle(CFG.CSS.IFRAME_FALLBACK, unscripted);
   }
 
   /** Works out, for the document currently in `iframe`, whether it runs our scripts. */

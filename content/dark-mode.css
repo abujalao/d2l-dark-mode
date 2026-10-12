@@ -136,22 +136,14 @@ html.d2l-dark-mode-active:not(.d2l-video-dark) :fullscreen:not(video):not(iframe
 }
 
 /* Fullscreen video escapes the html filter — handle both dark mode states.
-   Only fallback iframes (no scripts inside) carry a filter of their own. */
+   Only fallback iframes (no scripts inside) are filtered from outside. */
 html.d2l-dark-mode-active:not(.d2l-video-dark) video:fullscreen,
 html.d2l-dark-mode-active:not(.d2l-video-dark) iframe.d2l-iframe-fallback:fullscreen {
   filter: none !important;
 }
 
-html.d2l-dark-mode-active.d2l-video-dark video:fullscreen {
-  filter: invert(1) hue-rotate(180deg) !important;
-}
-
-/* Child frame fullscreen: parent filter no longer applies */
-html.d2l-dark-mode-active:not(.d2l-dark-mode-top):not(.d2l-video-dark) :fullscreen video {
-  filter: none !important;
-}
-
-html.d2l-dark-mode-active:not(.d2l-dark-mode-top).d2l-video-dark :fullscreen video {
+html.d2l-dark-mode-active.d2l-video-dark video:fullscreen,
+html.d2l-dark-mode-active.d2l-video-dark iframe.d2l-iframe-fallback:fullscreen {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 

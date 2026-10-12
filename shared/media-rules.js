@@ -53,8 +53,9 @@
       // (page + parent + own); the parent's filter already covers it
       rule('[style*="background-image"] :is(' + media + ')', 'none') +
       // Fullscreen escapes the page-level filter, so the video rule is flipped
-      rule('video:fullscreen, :host(:fullscreen) video, iframe.d2l-iframe-fallback:fullscreen',
-        opts.videoDark ? INVERT : 'none');
+      rule('video:fullscreen, iframe.d2l-iframe-fallback:fullscreen', opts.videoDark ? INVERT : 'none') +
+      // ...except inside a fullscreen host, which dark-mode.css inverts: its videos come along
+      rule(':host(:fullscreen) video', opts.videoDark ? 'none' : INVERT);
   }
 
   self.D2LMediaRules = {
