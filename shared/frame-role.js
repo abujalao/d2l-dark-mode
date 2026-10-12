@@ -2,8 +2,8 @@
  * D2L Dark Mode — Frame Role
  *
  * Decides what a document is relative to Brightspace, from facts that
- * gate.js collects. Pure: no DOM, no chrome.*, so every case is a plain
- * input/output test.
+ * gate.js collects. Pure: no DOM, no chrome.*, so the answer depends only
+ * on the facts passed in.
  *
  * Roles:
  *  - root:     Brightspace frame that applies the page inversion

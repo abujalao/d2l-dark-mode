@@ -19,7 +19,6 @@
     STORAGE_KEYS: {
       DARK_MODE: 'darkModeEnabled',
       DOCUMENT_DARK_MODE: 'documentDarkModeEnabled',
-      PDF_DARK_MODE: 'pdfDarkModeEnabled',           // legacy key
       VIDEO_DARK_MODE: 'videoDarkModeEnabled',
       CUSTOM_DOMAINS: 'customDomains',
       EXCLUDED_DOMAINS: 'excludedDomains',

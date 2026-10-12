@@ -48,13 +48,6 @@
     known.add(iframe);
   };
 
-  /** How many iframes this frame is keeping track of (diagnostics and tests). */
-  D2L.trackedIframeCount = function () {
-    var all = new Set(known);
-    watched.forEach(function (iframe) { all.add(iframe); });
-    return all.size;
-  };
-
   /** True when this frame's content currently renders inverted. */
   D2L.contentInverted = function () {
     var cl = document.documentElement.classList;

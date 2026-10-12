@@ -28,8 +28,7 @@
   /**
    * Counter-invert rules for the top frame, before the isolated world's
    * toggle-aware sheet arrives. A hand-kept subset of shared/media-rules.js
-   * (this world can't share it without a page-visible global); a unit test
-   * pins the two together.
+   * (this world can't share it without a page-visible global): change both together.
    */
   function sheetCSS(videoDark) {
     var media = videoDark ? 'img, picture, canvas' : 'img, picture, canvas, video';

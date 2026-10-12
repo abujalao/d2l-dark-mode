@@ -4,7 +4,7 @@
  * The one list of what gets counter-inverted (flipped back to its real
  * colours) inside an inverted frame, and the generator for shadow-DOM CSS.
  *
- * Two copies can't be generated from here and are pinned to it by tests:
+ * Two copies can't be generated from here; keep them in step with this list:
  *  - content/dark-mode.css: must exist at first paint (manifest, document_start)
  *  - content/shadow-injector.js: MAIN world, where a shared global would be page-visible
  */
@@ -19,13 +19,12 @@
    *  - videoDark: "Video dark mode" is on
    *  - docDark:   "Document dark mode" is on in a non-root frame (document
    *               viewers draw pages on <canvas>)
-   * `lightGate` is the <html> class the static stylesheet uses for that toggle.
    */
   var MEDIA = [
     { sel: 'img' },
     { sel: 'picture' },
-    { sel: 'video', unless: 'videoDark', lightGate: 'd2l-video-dark' },
-    { sel: 'canvas', unless: 'docDark', lightGate: 'd2l-doc-dark' },
+    { sel: 'video', unless: 'videoDark' },
+    { sel: 'canvas', unless: 'docDark' },
   ];
 
   /** Media selectors that are counter-inverted for the given toggles. */
@@ -59,9 +58,6 @@
   }
 
   self.D2LMediaRules = {
-    INVERT: INVERT,
-    MEDIA: MEDIA,
-    mediaFor: mediaFor,
     shadowCSS: shadowCSS,
   };
 })();
