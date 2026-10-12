@@ -15,7 +15,7 @@
   // Stale injection into a different document: a placeholder about:blank asked,
   // then a player page replaced it. That page runs embedded.js instead.
   var role = document.documentElement.getAttribute(CFG.CSS.ROLE_ATTR);
-  if (role === CFG.CSS.ROLE_EMBEDDED || role === 'linking') return;
+  if (role === CFG.CSS.ROLE_EMBEDDED || role === CFG.CSS.ROLE_LINKING) return;
 
   if (D2L.state.initialized) return;
   D2L.state.initialized = true;

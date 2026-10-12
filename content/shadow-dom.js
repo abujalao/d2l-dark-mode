@@ -82,7 +82,7 @@
         if (node.nodeType === 1) {
           if (node.tagName === 'IFRAME') {
             // The subtree scan below only queries descendants, so note the iframe itself
-            if (D2L.noteIframe) D2L.noteIframe(node);
+            D2L.noteIframe(node);
             if (D2L.isVideoIframe(node)) D2L.applyVideoModeToIframe(node);
           }
           D2L.processSubtree(node);

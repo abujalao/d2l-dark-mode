@@ -61,8 +61,13 @@
       PLAYER: 'd2l-dark-mode-player',
       // Video iframe whose document can't run our scripts: counter-inverted from outside
       IFRAME_FALLBACK: 'd2l-iframe-fallback',
+      // <html data-d2l-role>: what gate.js decided this document is (shared/frame-role.js)
       ROLE_ATTR: 'data-d2l-role',
+      ROLE_ROOT: 'root',
+      ROLE_NESTED: 'nested',
       ROLE_EMBEDDED: 'embedded',
+      // Asked the parent frame, no answer yet
+      ROLE_LINKING: 'linking',
       INVERT_FILTER: 'invert(1) hue-rotate(180deg)',
       FONT_SIZE_STYLE_ID: 'd2l-font-size',
       FONT_FAMILY_LINK_ID: 'd2l-font-family-link',

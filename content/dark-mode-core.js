@@ -22,7 +22,7 @@
    * (shared/frame-role.js); without one, only the top frame is a root.
    */
   var role = CFG ? document.documentElement.getAttribute(CFG.CSS.ROLE_ATTR) : null;
-  D2L.isEffectiveRoot = role ? role === 'root' : window.self === window.top;
+  D2L.isEffectiveRoot = role ? role === CFG.CSS.ROLE_ROOT : window.self === window.top;
 
   /** Checks if the current page is a document viewer. */
   D2L.isDocumentViewer = function () {
@@ -64,7 +64,7 @@
     D2L.updateVideoState();
     D2L.startShadowObserver();
     D2L.startFullscreenHandler();
-    if (D2L.refreshFrameLinks) D2L.refreshFrameLinks();
+    D2L.refreshFrameLinks();
   };
 
   /** Disables dark mode. */
@@ -83,7 +83,7 @@
 
     // Shadow sheet, iframe filters and fullscreen overrides in one traversal
     D2L.teardownRoots();
-    if (D2L.refreshFrameLinks) D2L.refreshFrameLinks();
+    D2L.refreshFrameLinks();
   };
 
 })();

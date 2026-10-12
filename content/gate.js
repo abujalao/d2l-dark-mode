@@ -22,7 +22,7 @@
     if (self.D2LEmbedded) return;
     var link = self.D2LEmbedded = { inverted: false, requested: false, answered: false, onChange: null };
     // Marks the handshake as underway so same-origin children link too
-    document.documentElement.setAttribute(CFG.CSS.ROLE_ATTR, 'linking');
+    document.documentElement.setAttribute(CFG.CSS.ROLE_ATTR, CFG.CSS.ROLE_LINKING);
 
     function ask() {
       var msg = {};
@@ -195,7 +195,7 @@
   function applyInstantDark(role) {
     html.classList.add(CFG.CSS.ACTIVE);
     // TOP carries the filter; frames below inherit it
-    if (role === 'root') html.classList.add(CFG.CSS.TOP);
+    if (role === CFG.CSS.ROLE_ROOT) html.classList.add(CFG.CSS.TOP);
   }
 
   function undoInstantDark() {
@@ -237,7 +237,7 @@
 
   function step() {
     var result = FrameRole.resolve(facts);
-    if (result.role === 'root' || result.role === 'nested') return activate(result.role);
+    if (result.role === CFG.CSS.ROLE_ROOT || result.role === CFG.CSS.ROLE_NESTED) return activate(result.role);
     if (result.role !== 'pending') return;
     fetchFact[result.wait](function (name, value) {
       facts[name] = value;

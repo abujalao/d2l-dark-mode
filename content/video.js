@@ -62,7 +62,7 @@
     D2L.refreshShadowSheet();
 
     // Fallback counter-inversion depends on the video toggle
-    if (D2L.refreshFrameLinks) D2L.refreshFrameLinks();
+    D2L.refreshFrameLinks();
   };
 
   /** Applies video mode to all iframes, including those in shadow roots. */
@@ -75,7 +75,7 @@
   D2L._applyVideoModeToRoot = function (r) {
     var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
     for (var i = 0; i < iframes.length; i++) {
-      if (D2L.noteIframe) D2L.noteIframe(iframes[i]);
+      D2L.noteIframe(iframes[i]);
       if (D2L.isVideoIframe(iframes[i])) {
         D2L.applyVideoModeToIframe(iframes[i]);
       }
@@ -171,6 +171,6 @@
     if (!iframe.classList.contains(CFG.CSS.VIDEO_IFRAME)) {
       iframe.classList.add(CFG.CSS.VIDEO_IFRAME);
     }
-    if (D2L.watchIframe) D2L.watchIframe(iframe);
+    D2L.watchIframe(iframe);
   };
 })();

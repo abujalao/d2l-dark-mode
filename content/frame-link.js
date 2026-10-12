@@ -28,11 +28,19 @@
   // this is how their children are recognised and reached.
   var known = new Set();
 
+  // Per watched iframe: { timer, acked, unscripted } for the document now in it
+  var probes = new WeakMap();
+  function probeOf(iframe) {
+    var p = probes.get(iframe);
+    if (!p) probes.set(iframe, p = { timer: 0, acked: false, unscripted: false });
+    return p;
+  }
+
   /** Drops iframes that left the page. Runs whenever a new one is recorded, so neither set outgrows the page. */
   function forgetDetached() {
     watched.forEach(function (iframe) {
       if (iframe.isConnected) return;
-      clearTimeout(iframe._d2lFallbackTimer);
+      clearTimeout(probeOf(iframe).timer);
       iframe.removeEventListener('load', onProbeLoad);
       watched.delete(iframe);
     });
@@ -128,7 +136,7 @@
   }
 
   function applyFallback(iframe) {
-    var unscripted = iframe._d2lUnscripted === true
+    var unscripted = probeOf(iframe).unscripted
       && iframe.isConnected
       && D2L.contentInverted();
     var videoDark = !!(D2L.state && D2L.state.videoDarkModeEnabled);
@@ -143,24 +151,25 @@
 
   /** Works out, for the document currently in `iframe`, whether it runs our scripts. */
   function probe(iframe) {
-    clearTimeout(iframe._d2lFallbackTimer);
+    var p = probeOf(iframe);
+    clearTimeout(p.timer);
     if (isUnscriptable(iframe)) {
-      iframe._d2lUnscripted = true;
+      p.unscripted = true;
       applyFallback(iframe);
       return;
     }
     // Same-origin documents always get our scripts through gate.js
     if (isSameOrigin(iframe)) {
-      iframe._d2lUnscripted = false;
+      p.unscripted = false;
       applyFallback(iframe);
       return;
     }
     // Keep the current state until the new document answers or the wait runs out
-    iframe._d2lAcked = false;
+    p.acked = false;
     post(iframe.contentWindow, 'ping');
-    iframe._d2lFallbackTimer = setTimeout(function () {
-      if (iframe._d2lAcked) return;
-      iframe._d2lUnscripted = true;
+    p.timer = setTimeout(function () {
+      if (p.acked) return;
+      p.unscripted = true;
       applyFallback(iframe);
     }, FL.FALLBACK_DELAY_MS);
   }
@@ -193,9 +202,10 @@
     post(e.source, 'ctx', contextPayload(iframeFor(e.source)));
     watched.forEach(function (iframe) {
       if (iframe.contentWindow !== e.source) return;
-      clearTimeout(iframe._d2lFallbackTimer);
-      iframe._d2lAcked = true;
-      iframe._d2lUnscripted = false;
+      var p = probeOf(iframe);
+      clearTimeout(p.timer);
+      p.acked = true;
+      p.unscripted = false;
       applyFallback(iframe);
     });
   });
