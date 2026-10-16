@@ -59,10 +59,10 @@
       document.documentElement.classList.remove(CFG.CSS.VIDEO_DARK);
     }
 
-    // Rebuild shadow CSS to match current video/document dark mode state
-    var includeVideo = !D2L.state.videoDarkModeEnabled;
-    var includeCanvas = D2L.isEffectiveRoot || !D2L.state.documentDarkModeEnabled;
-    D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(includeCanvas, includeVideo));
+    D2L.refreshShadowSheet();
+
+    // Fallback counter-inversion depends on the video toggle
+    D2L.refreshFrameLinks();
   };
 
   /** Applies video mode to all iframes, including those in shadow roots. */
@@ -75,10 +75,9 @@
   D2L._applyVideoModeToRoot = function (r) {
     var iframes = r.querySelectorAll ? r.querySelectorAll('iframe') : [];
     for (var i = 0; i < iframes.length; i++) {
+      D2L.noteIframe(iframes[i]);
       if (D2L.isVideoIframe(iframes[i])) {
         D2L.applyVideoModeToIframe(iframes[i]);
-      } else if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
-        iframes[i].style.removeProperty('filter');
       }
     }
   };
@@ -95,6 +94,7 @@
       if (iframes[i].style.filter === CFG.CSS.INVERT_FILTER) {
         iframes[i].style.removeProperty('filter');
       }
+      iframes[i].classList.remove(CFG.CSS.IFRAME_FALLBACK);
     }
   };
 
@@ -115,7 +115,11 @@
 
     var fsElement = document.fullscreenElement;
     if (fsElement) {
-      var filterValue = D2L.state.videoDarkModeEnabled
+      // Fullscreen escapes every filter above the element. dark-mode.css inverts a
+      // fullscreen player box, and its videos come along; a fullscreen <video> has none.
+      var boxInverted = fsElement.tagName !== 'VIDEO'
+        && getComputedStyle(fsElement).filter.indexOf('invert') !== -1;
+      var filterValue = D2L.state.videoDarkModeEnabled !== boxInverted
         ? CFG.CSS.INVERT_FILTER
         : 'none';
       D2L._setFullscreenVideoFilter(fsElement, filterValue);
@@ -158,16 +162,15 @@
     D2L.forEachRoot(root, D2L._clearFullscreenVideoInRoot);
   };
 
-  /** Applies counter-inversion to a single video iframe. */
+  /**
+   * Marks a video iframe. Its document corrects its own media (frame-link.js);
+   * the iframe is counter-inverted from outside only if that document runs none
+   * of our scripts. Doing it from here as well stacked inversions in nested frames.
+   */
   D2L.applyVideoModeToIframe = function (iframe) {
     if (!iframe.classList.contains(CFG.CSS.VIDEO_IFRAME)) {
       iframe.classList.add(CFG.CSS.VIDEO_IFRAME);
     }
-    if (!D2L.state.darkModeEnabled) return;
-    if (D2L.state.videoDarkModeEnabled) {
-      iframe.style.removeProperty('filter');
-    } else {
-      iframe.style.filter = CFG.CSS.INVERT_FILTER;
-    }
+    D2L.watchIframe(iframe);
   };
 })();

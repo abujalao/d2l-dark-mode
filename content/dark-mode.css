@@ -107,6 +107,14 @@ html.d2l-dark-mode-active:not(.d2l-dark-mode-top) {
   color-scheme: normal !important;
 }
 
+/* ---- Embedded player frame ----
+   A frame mostly filled by a video player (Kaltura, YouTube, ...) cancels the
+   page inversion for itself, so the player renders exactly as designed. */
+html.d2l-dark-mode-player {
+  filter: invert(1) hue-rotate(180deg) !important;
+  color-scheme: normal !important;
+}
+
 /* ---- Top layer (popovers, dialogs, fullscreen) ---- */
 html.d2l-dark-mode-active :popover-open,
 html.d2l-dark-mode-active dialog:modal,
@@ -127,23 +135,15 @@ html.d2l-dark-mode-active:not(.d2l-video-dark) :fullscreen:not(video):not(iframe
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
-/* Fullscreen video escapes the html filter — handle both dark mode states */
+/* Fullscreen video escapes the html filter — handle both dark mode states.
+   Only fallback iframes (no scripts inside) are filtered from outside. */
 html.d2l-dark-mode-active:not(.d2l-video-dark) video:fullscreen,
-html.d2l-dark-mode-active:not(.d2l-video-dark) iframe.d2l-video-iframe:fullscreen {
+html.d2l-dark-mode-active:not(.d2l-video-dark) iframe.d2l-iframe-fallback:fullscreen {
   filter: none !important;
 }
 
 html.d2l-dark-mode-active.d2l-video-dark video:fullscreen,
-html.d2l-dark-mode-active.d2l-video-dark iframe.d2l-video-iframe:fullscreen {
-  filter: invert(1) hue-rotate(180deg) !important;
-}
-
-/* Child frame fullscreen: parent filter no longer applies */
-html.d2l-dark-mode-active:not(.d2l-dark-mode-top):not(.d2l-video-dark) :fullscreen video {
-  filter: none !important;
-}
-
-html.d2l-dark-mode-active:not(.d2l-dark-mode-top).d2l-video-dark :fullscreen video {
+html.d2l-dark-mode-active.d2l-video-dark iframe.d2l-iframe-fallback:fullscreen {
   filter: invert(1) hue-rotate(180deg) !important;
 }
 
@@ -180,32 +180,10 @@ html.d2l-doc-dark canvas {
   filter: none !important;
 }
 
-/* ---- Scrollbar styling ---- */
-html.d2l-dark-mode-active ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-html.d2l-dark-mode-active ::-webkit-scrollbar-track {
-  background: #1a1a1a;
-}
-
-html.d2l-dark-mode-active ::-webkit-scrollbar-thumb {
-  background: #444444;
-  border-radius: 5px;
-  border: 2px solid #1a1a1a;
-}
-
-html.d2l-dark-mode-active ::-webkit-scrollbar-thumb:hover {
-  background: #666666;
-}
-
-html.d2l-dark-mode-active ::-webkit-scrollbar-corner {
-  background: #1a1a1a;
-}
-
-/* Firefox scrollbar */
+/* ---- Scrollbar styling ----
+   Chrome's own light scrollbar colours (thumb, track): the page filter turns
+   them into a dark scrollbar. Colours only: a different width would shift the
+   content beside every scrollbar each time dark mode is toggled. */
 html.d2l-dark-mode-active * {
-  scrollbar-color: #444444 #1a1a1a;
-  scrollbar-width: thin;
+  scrollbar-color: #8b8b8b #fcfcfc;
 }

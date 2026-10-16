@@ -17,38 +17,12 @@
     initialized: false,
   };
 
-  /** Determines if this frame should apply the inversion filter. */
-  D2L.shouldApplyFilter = function () {
-    if (window.self === window.top) return true;
-
-    try {
-      var parentDoc = window.parent.document;
-      var parentIsFrameset = parentDoc.querySelector('frameset') !== null;
-      if (parentIsFrameset) return true;
-
-      var parentHasFilter = parentDoc.documentElement.classList.contains(CFG.CSS.TOP) ||
-        parentDoc.documentElement.classList.contains(CFG.CSS.NESTED);
-      if (parentHasFilter) return false;
-
-      // ACTIVE class set by gate.js at document_start is always present first
-      if (parentDoc.documentElement.classList.contains(CFG.CSS.ACTIVE)) return false;
-
-      // Parent URL matches Brightspace patterns but hasn't initialized yet
-      var parentHref = window.parent.location.href;
-      var parentHostname = window.parent.location.hostname;
-      if (CFG.PATTERNS.D2L_PATH.test(parentHref)) return false;
-      var parentHtml = parentDoc.documentElement;
-      if (CFG.isBrightspaceElement(parentHtml)) return false;
-      if (CFG.matchesAnyHost(parentHostname, CFG.KNOWN_HOSTS)) return false;
-
-      return true;
-    } catch (e) {
-      return true;
-    }
-  };
-
-  /** Whether this frame is the effective root for inversion. */
-  D2L.isEffectiveRoot = D2L.shouldApplyFilter();
+  /**
+   * Whether this frame applies the inversion filter. gate.js decides the role
+   * (shared/frame-role.js); without one, only the top frame is a root.
+   */
+  var role = CFG ? document.documentElement.getAttribute(CFG.CSS.ROLE_ATTR) : null;
+  D2L.isEffectiveRoot = role ? role === CFG.CSS.ROLE_ROOT : window.self === window.top;
 
   /** Checks if the current page is a document viewer. */
   D2L.isDocumentViewer = function () {
@@ -63,10 +37,7 @@
       document.documentElement.classList.remove(CFG.CSS.DOC_DARK);
     }
 
-    // Update shadow CSS for child frames
-    if (!D2L.isEffectiveRoot) {
-      D2L.sharedShadowSheet.replaceSync(D2L.buildShadowCSS(!D2L.state.documentDarkModeEnabled, !D2L.state.videoDarkModeEnabled));
-    }
+    D2L.refreshShadowSheet();
   };
 
   /** Enables dark mode. */
@@ -79,7 +50,6 @@
 
     if (D2L.isEffectiveRoot) {
       document.documentElement.classList.add(CFG.CSS.TOP);
-      document.documentElement.classList.add(CFG.CSS.NESTED);
     }
 
     if (document.body) {
@@ -94,6 +64,7 @@
     D2L.updateVideoState();
     D2L.startShadowObserver();
     D2L.startFullscreenHandler();
+    D2L.refreshFrameLinks();
   };
 
   /** Disables dark mode. */
@@ -103,7 +74,7 @@
       D2L.removeFontFamily();
       D2L.removeFullWidth();
     }
-    document.documentElement.classList.remove(CFG.CSS.ACTIVE, CFG.CSS.TOP, CFG.CSS.NESTED, CFG.CSS.DOC_DARK, CFG.CSS.VIDEO_DARK);
+    document.documentElement.classList.remove(CFG.CSS.ACTIVE, CFG.CSS.TOP, CFG.CSS.DOC_DARK, CFG.CSS.VIDEO_DARK);
     if (document.body) {
       document.body.classList.remove(CFG.CSS.ACTIVE);
     }
@@ -112,6 +83,7 @@
 
     // Shadow sheet, iframe filters and fullscreen overrides in one traversal
     D2L.teardownRoots();
+    D2L.refreshFrameLinks();
   };
 
 })();

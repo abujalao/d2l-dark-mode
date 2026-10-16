@@ -1,15 +1,53 @@
 /** D2L Dark Mode — Background Service Worker */
 
-importScripts('../shared/config.js');
+importScripts('../shared/config.js', '../shared/tab-status.js', '../shared/schedule.js', '../shared/settings.js');
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {
     chrome.storage.sync.set({ ...D2LConfig.DEFAULTS });
+  } else if (details.reason === 'update') {
+    D2LSettings.migrate();
   }
 });
 
-// Maps tabId → hostname for confirmed Brightspace tabs
+// Maps tabId → { host, page } for confirmed Brightspace tabs. `page` holds the
+// tab's detection marks ({ detected, source }), the same facts the popup reads.
 const d2lTabs = new Map();
+
+function hostOf(url) {
+  try { return new URL(url).hostname; } catch (e) { return ''; }
+}
+
+// The Map is lost when the worker sleeps; storage.session keeps it for the
+// browser session, so background tabs still get icon updates after a wake-up
+const TABS_KEY = 'd2lTabs';
+
+// Saving before the restore would overwrite the stored list with only the new entries
+function saveTabs() {
+  tabsReady.then(() => {
+    chrome.storage.session.set({ [TABS_KEY]: Object.fromEntries(d2lTabs) });
+  });
+}
+
+const tabsReady = new Promise((resolve) => {
+  chrome.storage.session.get([TABS_KEY], (result) => {
+    const saved = (result && result[TABS_KEY]) || {};
+    for (const id of Object.keys(saved)) {
+      // Fresher entries recorded since the wake-up win
+      if (!d2lTabs.has(Number(id))) d2lTabs.set(Number(id), saved[id]);
+    }
+    resolve();
+  });
+});
+
+function track(tab, page) {
+  d2lTabs.set(tab.id, { host: hostOf(tab.url), page: page });
+  saveTabs();
+}
+
+function forget(tabId) {
+  if (d2lTabs.delete(tabId)) saveTabs();
+}
 
 // Cached dark mode state. Wrapped in a promise so early messages
 // wait for the storage read to complete before using the value.
@@ -24,14 +62,14 @@ const cacheReady = new Promise((resolve) => {
   );
 });
 
+// Icon decisions read d2lTabs, which an event that woke the worker sees before the restore
+const iconReady = Promise.all([cacheReady, tabsReady]);
+
 // Inject content scripts into frames confirmed as Brightspace by gate.js
 chrome.runtime.onMessage.addListener(function (msg, sender) {
   if (msg.type !== 'injectScripts' || !sender.tab) return;
-  try {
-    d2lTabs.set(sender.tab.id, new URL(sender.tab.url).hostname);
-  } catch (e) {
-    d2lTabs.set(sender.tab.id, '');
-  }
+  // gate.js only asks for scripts on pages that aren't excluded
+  track(sender.tab, { detected: true, source: 'auto' });
   cacheReady.then(function () {
     updateIcon(sender.tab.id);
   });
@@ -39,18 +77,30 @@ chrome.runtime.onMessage.addListener(function (msg, sender) {
   var target = sender.documentId
     ? { tabId: sender.tab.id, documentIds: [sender.documentId] }
     : { tabId: sender.tab.id, frameIds: [sender.frameId] };
+  var embedded = msg.role === D2LConfig.CSS.ROLE_EMBEDDED;
   chrome.scripting.executeScript({
     target: target,
-    files: D2LConfig.CONTENT_SCRIPTS,
+    files: embedded ? D2LConfig.EMBEDDED_SCRIPTS : D2LConfig.CONTENT_SCRIPTS,
     // Default (document_idle) delays activation until the page finishes loading
     injectImmediately: true,
   }).catch(function () { /* frame may have been destroyed before injection */ });
+  if (embedded) {
+    // The manifest copy bailed at document_start (not a Brightspace page);
+    // without it, frameworks that replace adoptedStyleSheets drop our sheet
+    chrome.scripting.executeScript({
+      target: target,
+      files: ['content/shadow-injector.js'],
+      world: 'MAIN',
+      injectImmediately: true,
+    }).catch(function () {});
+  }
 });
 
 /* ---- Toolbar icon ---- */
 
 function updateIcon(tabId) {
-  const active = cachedDarkMode && d2lTabs.has(tabId);
+  const tracked = d2lTabs.get(tabId);
+  const active = D2LTabStatus.isActive(tracked && tracked.page, cachedDarkMode);
   chrome.action.setIcon({
     tabId,
     path: {
@@ -63,43 +113,41 @@ function updateIcon(tabId) {
 }
 
 /**
- * Re-detect Brightspace by checking data-d2l-detected on the page.
- * Survives service worker restarts since the attribute lives on the page.
+ * Re-detect Brightspace from the marks gate.js left on the page.
+ * Survives service worker restarts since the marks live on the page.
  */
 function redetectTab(tabId, callback) {
   chrome.tabs.get(tabId, (tab) => {
-    if (chrome.runtime.lastError || !tab || !tab.url) return callback();
-    if (/^(chrome|chrome-extension|about|edge):/.test(tab.url)) return callback();
+    if (chrome.runtime.lastError || !tab || !D2LTabStatus.canReadPage(tab.url)) return callback();
     chrome.scripting.executeScript({
       target: { tabId: tabId },
-      func: () => document.documentElement.hasAttribute('data-d2l-detected'),
+      func: D2LTabStatus.readPageMarks,
     }, (results) => {
-      if (!chrome.runtime.lastError && results && results[0] && results[0].result === true) {
-        try { d2lTabs.set(tabId, new URL(tab.url).hostname); } catch (e) {}
-      }
+      const page = !chrome.runtime.lastError && results && results[0] && results[0].result;
+      if (page && page.detected) track(tab, page);
       callback();
     });
   });
 }
 
-// Clean up closed tabs
+// Clean up closed tabs (after the restore, or it would bring them back)
 chrome.tabs.onRemoved.addListener((tabId) => {
-  d2lTabs.delete(tabId);
+  tabsReady.then(() => forget(tabId));
 });
 
 // Keep tab marked as D2L for same-host SPA navigations; clear on host change.
 // Re-apply icon at 'complete' since Chrome resets per-tab icons on navigation.
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'loading' && d2lTabs.has(tabId)) {
-    var prevHost = d2lTabs.get(tabId);
-    var newHost = '';
-    try { newHost = new URL(tab.url).hostname; } catch (e) {}
-    if (newHost !== prevHost) {
-      d2lTabs.delete(tabId);
-    }
+  if (changeInfo.status === 'loading') {
+    var newHost = hostOf(tab.url);
+    tabsReady.then(function () {
+      if (d2lTabs.has(tabId) && d2lTabs.get(tabId).host !== newHost) {
+        forget(tabId);
+      }
+    });
   }
   if (changeInfo.status === 'complete') {
-    cacheReady.then(function () {
+    iconReady.then(function () {
       if (d2lTabs.has(tabId)) {
         updateIcon(tabId);
       } else {
@@ -111,7 +159,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 // Re-detect on tab switch (d2lTabs may be lost after SW sleep)
 chrome.tabs.onActivated.addListener((info) => {
-  cacheReady.then(function () {
+  iconReady.then(function () {
     if (d2lTabs.has(info.tabId)) {
       updateIcon(info.tabId);
     } else {
@@ -126,70 +174,62 @@ chrome.storage.onChanged.addListener((changes, area) => {
 
   if (changes[D2LConfig.STORAGE_KEYS.DARK_MODE]) {
     cachedDarkMode = changes[D2LConfig.STORAGE_KEYS.DARK_MODE].newValue !== false;
-    for (const tabId of d2lTabs.keys()) {
-      updateIcon(tabId);
-    }
+    tabsReady.then(() => {
+      for (const tabId of d2lTabs.keys()) updateIcon(tabId);
+    });
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) updateIcon(tabs[0].id);
     });
   }
 
   /* ---- Auto Dark Mode scheduling changes ---- */
-  if (changes[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE]) {
-    scheduleEnabled = changes[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE].newValue === true;
-    if (scheduleEnabled) {
-      setupScheduleAlarm();
-      applySchedule();
-    } else {
+  // Take every changed value first, then apply once: one write can carry
+  // the toggle and both times together
+  var autoChange = changes[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE];
+  var startChange = changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME];
+  var endChange = changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME];
+  if (!autoChange && !startChange && !endChange) return;
+  // A worker woken by this change hasn't loaded the schedule yet, and a time
+  // edit alone doesn't say whether auto mode is on
+  scheduleReady.then(() => {
+    if (autoChange) scheduleEnabled = autoChange.newValue === true;
+    if (startChange) scheduleStart = startChange.newValue || D2LConfig.DEFAULTS.darkStartTime;
+    if (endChange) scheduleEnd = endChange.newValue || D2LConfig.DEFAULTS.darkEndTime;
+    if (autoChange && !scheduleEnabled) {
       teardownScheduleAlarm();
+      return;
     }
-  }
-  if (changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME]) {
-    scheduleStart = changes[D2LConfig.STORAGE_KEYS.DARK_START_TIME].newValue || '18:00';
-    if (scheduleEnabled) applySchedule();
-  }
-  if (changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME]) {
-    scheduleEnd = changes[D2LConfig.STORAGE_KEYS.DARK_END_TIME].newValue || '06:00';
-    if (scheduleEnabled) applySchedule();
-  }
+    if (autoChange) setupScheduleAlarm();
+    // Editing the schedule is a deliberate "follow it now", even after a manual press
+    if (scheduleEnabled) applySchedule({ force: true });
+  });
 });
 
 /* ---- Auto Dark Mode Scheduling ---- */
 
 let scheduleEnabled = false;
-let scheduleStart = '18:00';
-let scheduleEnd = '06:00';
+let scheduleStart = D2LConfig.DEFAULTS.darkStartTime;
+let scheduleEnd = D2LConfig.DEFAULTS.darkEndTime;
 
 const scheduleReady = new Promise((resolve) => {
-  chrome.storage.sync.get([
-    D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE,
-    D2LConfig.STORAGE_KEYS.DARK_START_TIME,
-    D2LConfig.STORAGE_KEYS.DARK_END_TIME,
-  ], (result) => {
-    scheduleEnabled = result[D2LConfig.STORAGE_KEYS.AUTO_DARK_MODE] === true;
-    scheduleStart = result[D2LConfig.STORAGE_KEYS.DARK_START_TIME] || '18:00';
-    scheduleEnd = result[D2LConfig.STORAGE_KEYS.DARK_END_TIME] || '06:00';
+  D2LSettings.read((s) => {
+    scheduleEnabled = s.autoDarkModeEnabled === true;
+    scheduleStart = s.darkStartTime;
+    scheduleEnd = s.darkEndTime;
     resolve();
   });
 });
 
-function parseHHMM(str) {
-  var parts = (str || '00:00').split(':');
-  return Number(parts[0]) * 60 + (Number(parts[1]) || 0);
-}
-
-function isInScheduleWindow(startStr, endStr) {
-  var now = new Date();
-  var cur = now.getHours() * 60 + now.getMinutes();
-  var s = parseHHMM(startStr);
-  var e = parseHHMM(endStr);
-  return s <= e ? (cur >= s && cur < e) : (cur >= s || cur < e);
-}
-
-function applySchedule() {
+function applySchedule(opts) {
   if (!scheduleEnabled) return;
-  var shouldBeDark = isInScheduleWindow(scheduleStart, scheduleEnd);
-  chrome.storage.sync.get([D2LConfig.STORAGE_KEYS.DARK_MODE], (result) => {
+  var force = !!(opts && opts.force);
+  var schedule = { start: scheduleStart, end: scheduleEnd };
+  var now = new Date();
+  var shouldBeDark = D2LSchedule.isDarkAt(schedule, now);
+  chrome.storage.sync.get([D2LConfig.STORAGE_KEYS.DARK_MODE, D2LConfig.STORAGE_KEYS.SCHEDULE_OVERRIDE_AT], (result) => {
+    // A press of the power button since the last switch wins until the next one
+    var overrideAt = result[D2LConfig.STORAGE_KEYS.SCHEDULE_OVERRIDE_AT] || 0;
+    if (!force && overrideAt >= D2LSchedule.lastSwitchBefore(schedule, now)) return;
     var currentlyDark = result[D2LConfig.STORAGE_KEYS.DARK_MODE] !== false;
     if (shouldBeDark !== currentlyDark) {
       chrome.storage.sync.set({ [D2LConfig.STORAGE_KEYS.DARK_MODE]: shouldBeDark });
@@ -217,7 +257,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 });
 
 // Re-detect active tab on startup (d2lTabs lost after SW sleep)
-cacheReady.then(() => {
+iconReady.then(() => {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     if (!tabs[0]) return;
     var tab = tabs[0];

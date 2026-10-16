@@ -224,19 +224,6 @@ body {
   margin-bottom: 5px;
 }
 
-.card-divider {
-  height: 1px;
-  background-color: var(--border);
-  margin: 12px 0;
-}
-
-.card-note {
-  font-size: 11px;
-  color: var(--text-faint);
-  margin-top: 12px;
-  font-style: italic;
-}
-
 /* ---- Slider ---- */
 .slider-row {
   display: flex;

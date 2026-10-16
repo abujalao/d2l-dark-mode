@@ -1,0 +1,67 @@
+# Releases on every push to main whose manifest.json version has no tag yet:
+# bump the version ("chore: bump version to X.Y.Z"), merge to main, and this
+# tags vX.Y.Z and publishes the Chrome zip with notes from the commits since
+# the last release. Pushes that keep the version do nothing.
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version
+        id: version
+        run: |
+          version="$(jq -r .version manifest.json)"
+          if ! [[ "$version" =~ ^[0-9]+(\.[0-9]+){1,3}$ ]]; then
+            echo "::error file=manifest.json::version '$version' is not a valid extension version"
+            exit 1
+          fi
+          tag="v$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            echo "$tag is already released, nothing to do."
+          else
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build package
+        id: package
+        if: steps.version.outputs.release == 'true'
+        run: echo "zip=$(bash .github/scripts/package.sh "$RUNNER_TEMP/dist")" >> "$GITHUB_OUTPUT"
+
+      - name: Write release notes
+        if: steps.version.outputs.release == 'true'
+        run: |
+          bash .github/scripts/release-notes.sh > "$RUNNER_TEMP/notes.md"
+          cat "$RUNNER_TEMP/notes.md"
+
+      - name: Publish release
+        if: steps.version.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          ZIP: ${{ steps.package.outputs.zip }}
+        run: |
+          gh release create "$TAG" "$ZIP" \
+            --title "$TAG" \
+            --notes-file "$RUNNER_TEMP/notes.md" \
+            --target "$GITHUB_SHA"

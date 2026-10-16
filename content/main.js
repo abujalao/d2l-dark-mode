@@ -12,17 +12,22 @@
   // Stale injection: the frame navigated before config.js ran here. Let gate.js retry.
   if (!CFG) return;
 
+  // Stale injection into a different document: a placeholder about:blank asked,
+  // then a player page replaced it. That page runs embedded.js instead.
+  var role = document.documentElement.getAttribute(CFG.CSS.ROLE_ATTR);
+  if (role === CFG.CSS.ROLE_EMBEDDED || role === CFG.CSS.ROLE_LINKING) return;
+
   if (D2L.state.initialized) return;
   D2L.state.initialized = true;
 
-  chrome.storage.sync.get(CFG.allReadKeys(), function (result) {
-    D2L.state.darkModeEnabled = result[CFG.STORAGE_KEYS.DARK_MODE] !== false;
-    D2L.state.documentDarkModeEnabled = CFG.resolveDocumentDarkMode(result);
-    D2L.state.videoDarkModeEnabled = result[CFG.STORAGE_KEYS.VIDEO_DARK_MODE] === true;
-    D2L.state.fontSize = result[CFG.STORAGE_KEYS.FONT_SIZE] !== undefined ? result[CFG.STORAGE_KEYS.FONT_SIZE] : 100;
-    D2L.state.fontFamily = result[CFG.STORAGE_KEYS.FONT_FAMILY] || 'default';
-    D2L.state.fullWidthEnabled = result[CFG.STORAGE_KEYS.FULL_WIDTH] === true;
-    D2L.state.preserveDisplay = result[CFG.STORAGE_KEYS.PRESERVE_DISPLAY] === true;
+  self.D2LSettings.read(function (s) {
+    D2L.state.darkModeEnabled = s.darkModeEnabled !== false;
+    D2L.state.documentDarkModeEnabled = s.documentDarkModeEnabled === true;
+    D2L.state.videoDarkModeEnabled = s.videoDarkModeEnabled === true;
+    D2L.state.fontSize = s.fontSize;
+    D2L.state.fontFamily = s.fontFamily;
+    D2L.state.fullWidthEnabled = s.fullWidthEnabled === true;
+    D2L.state.preserveDisplay = s.preserveDisplay === true;
 
     D2L.applyDocDarkMode();
     if (D2L.state.darkModeEnabled) {

@@ -2,6 +2,8 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   const CFG = window.D2LConfig;
+  const TabStatus = window.D2LTabStatus;
+  const Settings = window.D2LSettings;
 
   const powerButton = document.getElementById('powerButton');
   const powerStatus = document.getElementById('powerStatus');
@@ -20,13 +22,14 @@ document.addEventListener('DOMContentLoaded', () => {
   let resetPending = false;
   let resetTimer = null;
 
-  // Logo updates once both D2L detection and storage read have resolved
-  const logoState = { isD2L: null, darkOn: null };
+  // Logo updates once both the page marks and the storage read have resolved
+  const logoState = { page: null, darkOn: null };
 
   function updatePopupLogo() {
-    if (logoState.isD2L === null || logoState.darkOn === null) return;
+    if (logoState.page === null || logoState.darkOn === null) return;
     const logo = document.getElementById('popupLogo');
-    const active = logoState.isD2L && logoState.darkOn;
+    // Same rule as the toolbar icon (shared/tab-status.js)
+    const active = TabStatus.isActive(logoState.page, logoState.darkOn);
     logo.src = chrome.runtime.getURL(
       active ? 'icons/popupLogo_active.png' : 'icons/popupLogo_notactive.png'
     );
@@ -81,49 +84,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
-    if (!tab || !tab.id || !tab.url) {
+    if (!tab || !tab.id || !TabStatus.canReadPage(tab.url)) {
       showDetectionStatus(false, null);
-      logoState.isD2L = false;
-      updatePopupLogo();
-      return;
-    }
-
-    if (tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://') || tab.url.startsWith('about:') || tab.url.startsWith('edge://')) {
-      showDetectionStatus(false, null);
-      logoState.isD2L = false;
+      logoState.page = { detected: false };
       updatePopupLogo();
       return;
     }
 
     chrome.scripting.executeScript({
       target: { tabId: tab.id },
-      func: () => ({
-        detected: document.documentElement.hasAttribute('data-d2l-detected'),
-        source: document.documentElement.getAttribute('data-d2l-source') || 'auto',
-      }),
+      func: TabStatus.readPageMarks,
     }, (results) => {
-      const data = !chrome.runtime.lastError && results && results[0] && results[0].result;
-      const detected = data && data.detected === true;
-      const source = data ? data.source : 'auto';
-      showDetectionStatus(detected, tab.url, source);
-      logoState.isD2L = detected;
+      const page = (!chrome.runtime.lastError && results && results[0] && results[0].result) || { detected: false };
+      showDetectionStatus(page.detected === true, tab.url, page.source || 'auto');
+      logoState.page = page;
       updatePopupLogo();
     });
   });
 
   /* ---- Settings ---- */
-  chrome.storage.sync.get(CFG.allReadKeys(), (result) => {
-    darkModeOn = result[CFG.STORAGE_KEYS.DARK_MODE] !== false;
-    updatePowerButton(darkModeOn);
-    logoState.darkOn = darkModeOn;
-    updatePopupLogo();
+  /** Shows the given settings; a partial set (from watch) updates only those controls. */
+  function showSettings(s) {
+    if ('darkModeEnabled' in s) {
+      darkModeOn = s.darkModeEnabled !== false;
+      updatePowerButton(darkModeOn);
+      logoState.darkOn = darkModeOn;
+      updatePopupLogo();
+    }
+    if ('documentDarkModeEnabled' in s) {
+      documentDarkModeToggle.checked = s.documentDarkModeEnabled === true;
+      updateToggleIcon(docIcon, documentDarkModeToggle.checked);
+    }
+    if ('videoDarkModeEnabled' in s) {
+      videoDarkModeToggle.checked = s.videoDarkModeEnabled === true;
+      updateToggleIcon(videoIcon, videoDarkModeToggle.checked);
+    }
+  }
 
-    documentDarkModeToggle.checked = CFG.resolveDocumentDarkMode(result);
-    videoDarkModeToggle.checked = result[CFG.STORAGE_KEYS.VIDEO_DARK_MODE] === true;
-
-    updateToggleIcon(docIcon, documentDarkModeToggle.checked);
-    updateToggleIcon(videoIcon, videoDarkModeToggle.checked);
-  });
+  Settings.read(showSettings);
+  // The schedule or the options page can change these while the popup is open
+  Settings.watch(showSettings);
 
   /* ---- Power Button ---- */
   function updatePowerButton(isOn) {
@@ -141,7 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
     updatePowerButton(darkModeOn);
     logoState.darkOn = darkModeOn;
     updatePopupLogo();
-    chrome.storage.sync.set({ [CFG.STORAGE_KEYS.DARK_MODE]: darkModeOn });
+    chrome.storage.sync.set({
+      [CFG.STORAGE_KEYS.DARK_MODE]: darkModeOn,
+      // A press by hand wins over the auto schedule until its next switch
+      [CFG.STORAGE_KEYS.SCHEDULE_OVERRIDE_AT]: Date.now(),
+    });
   });
 
   /* ---- Toggle Icons ---- */
@@ -184,6 +188,8 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.storage.sync.set({ ...CFG.DEFAULTS }, () => {
         darkModeOn = CFG.DEFAULTS.darkModeEnabled;
         updatePowerButton(darkModeOn);
+        logoState.darkOn = darkModeOn;
+        updatePopupLogo();
         documentDarkModeToggle.checked = CFG.DEFAULTS.documentDarkModeEnabled;
         videoDarkModeToggle.checked = CFG.DEFAULTS.videoDarkModeEnabled;
         updateToggleIcon(docIcon, false);

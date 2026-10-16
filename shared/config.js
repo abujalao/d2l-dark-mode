@@ -3,13 +3,22 @@
 (function () {
   'use strict';
 
+  // Scripts every frame we correct runs, Brightspace or embedded, in load order
+  const FRAME_SCRIPTS = [
+    'content/detection.js',
+    'content/video.js',
+    'shared/media-rules.js',
+    'content/shadow-dom.js',
+    'content/frame-link.js',
+    'shared/settings.js',
+  ];
+
   const config = {
 
     /* ---- Storage Keys ---- */
     STORAGE_KEYS: {
       DARK_MODE: 'darkModeEnabled',
       DOCUMENT_DARK_MODE: 'documentDarkModeEnabled',
-      PDF_DARK_MODE: 'pdfDarkModeEnabled',           // legacy key
       VIDEO_DARK_MODE: 'videoDarkModeEnabled',
       CUSTOM_DOMAINS: 'customDomains',
       EXCLUDED_DOMAINS: 'excludedDomains',
@@ -20,6 +29,8 @@
       AUTO_DARK_MODE: 'autoDarkModeEnabled',
       DARK_START_TIME: 'darkStartTime',
       DARK_END_TIME: 'darkEndTime',
+      // When dark mode was last switched by hand; wins over the schedule until its next switch
+      SCHEDULE_OVERRIDE_AT: 'scheduleOverrideAt',
     },
 
     /* ---- Defaults (used on install and reset) ---- */
@@ -36,16 +47,27 @@
       autoDarkModeEnabled: false,
       darkStartTime: '18:00',
       darkEndTime: '06:00',
+      scheduleOverrideAt: 0,
     },
 
     /* ---- CSS Class Names & IDs ---- */
     CSS: {
       ACTIVE: 'd2l-dark-mode-active',
       TOP: 'd2l-dark-mode-top',
-      NESTED: 'd2l-dark-mode-nested',
       DOC_DARK: 'd2l-doc-dark',
       VIDEO_DARK: 'd2l-video-dark',
       VIDEO_IFRAME: 'd2l-video-iframe',
+      // Embedded frame dominated by a video player: the whole frame is un-inverted
+      PLAYER: 'd2l-dark-mode-player',
+      // Video iframe whose document can't run our scripts: counter-inverted from outside
+      IFRAME_FALLBACK: 'd2l-iframe-fallback',
+      // <html data-d2l-role>: what gate.js decided this document is (shared/frame-role.js)
+      ROLE_ATTR: 'data-d2l-role',
+      ROLE_ROOT: 'root',
+      ROLE_NESTED: 'nested',
+      ROLE_EMBEDDED: 'embedded',
+      // Asked the parent frame, no answer yet
+      ROLE_LINKING: 'linking',
       INVERT_FILTER: 'invert(1) hue-rotate(180deg)',
       FONT_SIZE_STYLE_ID: 'd2l-font-size',
       FONT_FAMILY_LINK_ID: 'd2l-font-family-link',
@@ -87,6 +109,32 @@
       VIDEO_CLASS_ID: /video|player/,
     },
 
+    /* ---- Frame link (parent <-> child frame handshake) ---- */
+    FRAME_LINK: {
+      // postMessage envelope key; values: 'ctx?' (child asks), 'ctx' (parent answers), 'ping'
+      KEY: '__darkspace',
+      // Unanswered pings after this long mean the child runs none of our scripts
+      FALLBACK_DELAY_MS: 1500,
+      // A video covering this share of the frame's viewport makes it a player frame
+      PLAYER_MIN_COVERAGE: 0.4,
+      // How long after load a frame trusts its parent's "looks like a player" hint
+      // while no <video> has appeared yet (players build theirs late)
+      PLAYER_HINT_GRACE_MS: 3000,
+      // ...unless it already shows this much readable text: a page. Measured live:
+      // players under 150 chars (Kaltura <50, YouTube/Vimeo ~120 with control
+      // labels); pages above 550 (library reserves 595, Echo360 lecture list 2000+).
+      // Checked this often meanwhile.
+      PAGE_TEXT_MIN_CHARS: 400,
+      PAGE_TEXT_CHECK_MS: 100,
+      // storage.local list of origins detected as Brightspace, used by cross-origin children
+      ORIGINS_KEY: 'knownBrightspaceOrigins',
+      MAX_ORIGINS: 50,
+      // How long a frame with no known Brightspace ancestor watches for one to be recorded
+      ORIGIN_WAIT_MS: 15000,
+      // Gaps between repeated 'ctx?' questions until the parent answers (~8s total)
+      ASK_RETRY_MS: [100, 250, 500, 1000, 2000, 4000],
+    },
+
     /* ---- Brightspace Deferred Detection Selector ---- */
     BRIGHTSPACE_DEFERRED_SELECTOR: 'd2l-navigation, d2l-labs-navigation, d2l-my-courses, [data-cdn*="brightspace"], body.d2l-body, meta[name="d2l"]',
 
@@ -107,48 +155,34 @@
       return hostList.some(function (h) { return self.matchesHost(hostname, h); });
     },
 
+    /**
+     * Whether a document already shows a page's worth of readable text. The
+     * parent's "looks like a player" hint comes from iframe attributes, which LTI
+     * launchers share with real players (Echo360's lecture list).
+     */
+    readsLikePage: function (doc) {
+      var body = doc.body;
+      return !!body && (body.innerText || '').length >= this.FRAME_LINK.PAGE_TEXT_MIN_CHARS;
+    },
+
     isBrightspaceElement: function (el) {
       return el.hasAttribute('data-app-version')
         && (el.getAttribute('data-cdn') || '').indexOf('brightspace') !== -1;
     },
 
-    /** Resolve document dark mode, falling back to legacy pdfDarkModeEnabled key. */
-    resolveDocumentDarkMode: function (result) {
-      if (result.documentDarkModeEnabled !== undefined) {
-        return result.documentDarkModeEnabled === true;
-      }
-      return result.pdfDarkModeEnabled === true;
-    },
-
     /* ---- Content Scripts ---- */
-    CONTENT_SCRIPTS: [
-      'content/detection.js',
-      'content/video.js',
-      'content/shadow-dom.js',
+    CONTENT_SCRIPTS: FRAME_SCRIPTS.concat([
       'content/font-engine.js',
       'content/layout-engine.js',
       'content/dark-mode-core.js',
       'content/main.js',
-    ],
+    ]),
 
-    /** All storage keys to fetch (includes legacy key for migration). */
-    allReadKeys: function () {
-      return [
-        this.STORAGE_KEYS.DARK_MODE,
-        this.STORAGE_KEYS.DOCUMENT_DARK_MODE,
-        this.STORAGE_KEYS.PDF_DARK_MODE,
-        this.STORAGE_KEYS.VIDEO_DARK_MODE,
-        this.STORAGE_KEYS.CUSTOM_DOMAINS,
-        this.STORAGE_KEYS.EXCLUDED_DOMAINS,
-        this.STORAGE_KEYS.FONT_SIZE,
-        this.STORAGE_KEYS.FONT_FAMILY,
-        this.STORAGE_KEYS.FULL_WIDTH,
-        this.STORAGE_KEYS.PRESERVE_DISPLAY,
-        this.STORAGE_KEYS.AUTO_DARK_MODE,
-        this.STORAGE_KEYS.DARK_START_TIME,
-        this.STORAGE_KEYS.DARK_END_TIME,
-      ];
-    },
+    /* Non-Brightspace frames rendered inside an inverted Brightspace page */
+    EMBEDDED_SCRIPTS: FRAME_SCRIPTS.concat([
+      'shared/player-mode.js',
+      'content/embedded.js',
+    ]),
   };
 
   self.D2LConfig = config;
