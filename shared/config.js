@@ -115,6 +115,8 @@
       KEY: '__darkspace',
       // Unanswered pings after this long mean the child runs none of our scripts
       FALLBACK_DELAY_MS: 1500,
+      // Same-origin children's marks are re-checked this often until FALLBACK_DELAY_MS
+      MARKS_CHECK_MS: 50,
       // A video covering this share of the frame's viewport makes it a player frame
       PLAYER_MIN_COVERAGE: 0.4,
       // How long after load a frame trusts its parent's "looks like a player" hint

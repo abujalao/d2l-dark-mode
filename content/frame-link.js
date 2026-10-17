@@ -6,7 +6,7 @@
  * be counter-inverted from outside: two frames doing it for the same video
  * stack into a negative. This file tells children whether their content is
  * rendered inverted, and counter-inverts only video iframes whose document
- * never answers (no scripts there: blocked host access, chrome-extension:, ...).
+ * doesn't correct itself (no scripts there, or its <html> lost our marks).
  */
 
 (function () {
@@ -124,6 +124,40 @@
     try { return !!iframe.contentDocument; } catch (e) { return false; }
   }
 
+  /** The role our scripts marked on a same-origin child's <html>, or null. */
+  function roleOf(iframe) {
+    var html = iframe.contentDocument.documentElement;
+    return html ? html.getAttribute(CFG.CSS.ROLE_ATTR) : null;
+  }
+
+  function correctsItself(role) {
+    return role === CFG.CSS.ROLE_ROOT || role === CFG.CSS.ROLE_NESTED || role === CFG.CSS.ROLE_EMBEDDED;
+  }
+
+  /** The child shows no page of its own (empty, or written by this page), so its marks are final. */
+  function showsNoPage(iframe) {
+    var src = iframe.getAttribute('src');
+    if (iframe.hasAttribute('srcdoc') || (src && src !== 'about:blank')) return false;
+    var url = iframe.contentDocument.URL;
+    return url === 'about:blank' || url === location.href;
+  }
+
+  /** Judges a same-origin child by its marks, re-checked until they settle or the wait runs out. */
+  function probeSameOrigin(iframe, p) {
+    var deadline = Date.now() + FL.FALLBACK_DELAY_MS;
+    (function check() {
+      if (!iframe.isConnected) return;
+      if (!isSameOrigin(iframe)) return probe(iframe);
+      var role = roleOf(iframe);
+      var waitOver = Date.now() >= deadline;
+      if (correctsItself(role)) p.unscripted = false;
+      else if (role === CFG.CSS.ROLE_LINKING) p.unscripted = waitOver;
+      else if (showsNoPage(iframe) || waitOver) p.unscripted = true;
+      applyFallback(iframe);
+      if (!correctsItself(role) && !waitOver) p.timer = setTimeout(check, FL.MARKS_CHECK_MS);
+    })();
+  }
+
   // Content scripts never run in these, so waiting for an answer is pointless
   function isUnscriptable(iframe) {
     var src = iframe.getAttribute('src');
@@ -153,14 +187,10 @@
   function probe(iframe) {
     var p = probeOf(iframe);
     clearTimeout(p.timer);
+    // Same-origin documents are judged by their marks, whatever the src
+    if (isSameOrigin(iframe)) return probeSameOrigin(iframe, p);
     if (isUnscriptable(iframe)) {
       p.unscripted = true;
-      applyFallback(iframe);
-      return;
-    }
-    // Same-origin documents always get our scripts through gate.js
-    if (isSameOrigin(iframe)) {
-      p.unscripted = false;
       applyFallback(iframe);
       return;
     }
@@ -191,7 +221,11 @@
   /** Re-applies fallbacks after a state change and tells children the new context. */
   D2L.refreshFrameLinks = function () {
     forgetDetached();
-    watched.forEach(applyFallback);
+    // A same-origin child's marks may have changed with this frame's state
+    watched.forEach(function (iframe) {
+      if (isSameOrigin(iframe)) probe(iframe);
+      else applyFallback(iframe);
+    });
     D2L.broadcastContext();
   };
 
@@ -201,7 +235,8 @@
     if (!e.source || !isChildWindow(e.source)) return;
     post(e.source, 'ctx', contextPayload(iframeFor(e.source)));
     watched.forEach(function (iframe) {
-      if (iframe.contentWindow !== e.source) return;
+      // Same-origin children are judged by their marks, not by asking
+      if (iframe.contentWindow !== e.source || isSameOrigin(iframe)) return;
       var p = probeOf(iframe);
       clearTimeout(p.timer);
       p.acked = true;
