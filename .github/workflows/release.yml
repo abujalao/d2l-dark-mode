@@ -1,7 +1,7 @@
 # Releases on every push to main whose manifest.json version has no tag yet:
 # bump the version ("chore: bump version to X.Y.Z"), merge to main, and this
-# tags vX.Y.Z and publishes the Chrome zip with notes from the commits since
-# the last release. Pushes that keep the version do nothing.
+# tags vX.Y.Z and publishes the Chrome/Edge zip and the Firefox zip with notes
+# from the commits since the last release. Pushes that keep the version do nothing.
 
 name: Release
 
@@ -10,20 +10,25 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Only the publish job can write; nothing downloaded from npm runs with that token
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  release:
+  version:
     runs-on: ubuntu-latest
+    outputs:
+      release: ${{ steps.version.outputs.release }}
+      tag: ${{ steps.version.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Check version
         id: version
@@ -34,7 +39,6 @@ jobs:
             exit 1
           fi
           tag="v$version"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
             echo "release=false" >> "$GITHUB_OUTPUT"
@@ -43,25 +47,53 @@ jobs:
             echo "release=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Build package
+  # Mozilla's linter comes from npm, so it runs on its own runner: it can stop a
+  # release, but can't touch the packages that get published
+  lint-firefox:
+    needs: version
+    if: needs.version.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Lint the Firefox package
+        run: |
+          node scripts/build.mjs firefox "$RUNNER_TEMP/dist"
+          npx --yes web-ext@10.7.0 lint --source-dir "$RUNNER_TEMP/dist/firefox"
+
+  publish:
+    needs: [version, lint-firefox]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Build packages
         id: package
-        if: steps.version.outputs.release == 'true'
-        run: echo "zip=$(bash .github/scripts/package.sh "$RUNNER_TEMP/dist")" >> "$GITHUB_OUTPUT"
+        run: |
+          bash .github/scripts/package.sh "$RUNNER_TEMP/dist" > "$RUNNER_TEMP/zips.txt"
+          echo "chrome=$(sed -n 1p "$RUNNER_TEMP/zips.txt")" >> "$GITHUB_OUTPUT"
+          echo "firefox=$(sed -n 2p "$RUNNER_TEMP/zips.txt")" >> "$GITHUB_OUTPUT"
 
       - name: Write release notes
-        if: steps.version.outputs.release == 'true'
         run: |
           bash .github/scripts/release-notes.sh > "$RUNNER_TEMP/notes.md"
           cat "$RUNNER_TEMP/notes.md"
 
       - name: Publish release
-        if: steps.version.outputs.release == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.version.outputs.tag }}
-          ZIP: ${{ steps.package.outputs.zip }}
+          TAG: ${{ needs.version.outputs.tag }}
+          CHROME_ZIP: ${{ steps.package.outputs.chrome }}
+          FIREFOX_ZIP: ${{ steps.package.outputs.firefox }}
         run: |
-          gh release create "$TAG" "$ZIP" \
+          gh release create "$TAG" "$CHROME_ZIP" "$FIREFOX_ZIP" \
             --title "$TAG" \
             --notes-file "$RUNNER_TEMP/notes.md" \
             --target "$GITHUB_SHA"
