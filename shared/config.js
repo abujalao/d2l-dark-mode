@@ -16,7 +16,7 @@
   const config = {
 
     /* ---- Browser ---- */
-    // Every Firefox difference checks this; Firefox runs extensions from moz-extension: URLs
+    // Every Firefox-only code path checks this (CSS: .d2l-firefox); Firefox runs extensions from moz-extension: URLs
     IS_FIREFOX: chrome.runtime.getURL('').indexOf('moz-extension:') === 0,
 
     /* ---- Storage Keys ---- */

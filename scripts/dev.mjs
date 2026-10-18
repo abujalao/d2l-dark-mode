@@ -13,7 +13,8 @@ import { buildAll } from './build.mjs';
 const SRC = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = path.join(SRC, '..', 'dist');
 const PROFILE = path.join(SRC, '..', '.firefox-dev-profile');
-const WATCHED = ['background', 'content', 'shared', 'popup', 'options', 'icons', 'manifest.json', 'manifest.firefox.json'];
+const WATCHED_DIRS = ['background', 'content', 'shared', 'popup', 'options', 'icons'];
+const WATCHED_FILES = ['manifest.json', 'manifest.firefox.json'];
 
 function rebuild() {
   try {
@@ -25,13 +26,15 @@ function rebuild() {
 
 rebuild();
 let timer = null;
-for (const entry of WATCHED) {
-  const file = path.join(SRC, entry);
-  fs.watch(file, { recursive: fs.statSync(file).isDirectory() }, () => {
-    clearTimeout(timer);
-    timer = setTimeout(rebuild, 150);
-  });
+function scheduleRebuild() {
+  clearTimeout(timer);
+  timer = setTimeout(rebuild, 150);
 }
+for (const dir of WATCHED_DIRS) fs.watch(path.join(SRC, dir), { recursive: true }, scheduleRebuild);
+// The manifests through their folder: editors that save by replacing the file would end a watch on it
+fs.watch(SRC, (_, name) => {
+  if (WATCHED_FILES.includes(name)) scheduleRebuild();
+});
 
 const args = [
   '--yes', 'web-ext@10.7.0', 'run',

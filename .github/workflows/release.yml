@@ -58,6 +58,10 @@ jobs:
         with:
           persist-credentials: false
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Lint the Firefox package
         run: |
           node scripts/build.mjs firefox "$RUNNER_TEMP/dist"
@@ -65,6 +69,7 @@ jobs:
 
   publish:
     needs: [version, lint-firefox]
+    if: needs.version.outputs.release == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -73,6 +78,10 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
       - name: Build packages
         id: package
