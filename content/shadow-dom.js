@@ -20,6 +20,7 @@
       videoDark: state.videoDarkModeEnabled === true,
       // The root frame keeps documents original: the page filter would invert them
       docDark: !D2L.isEffectiveRoot && state.documentDarkModeEnabled === true,
+      topLayerFiltered: document.documentElement.classList.contains(self.D2LConfig.CSS.TOP_LAYER_FILTERED),
     }));
   };
 

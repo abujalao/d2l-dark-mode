@@ -112,6 +112,8 @@
 
   D2L._handleFullscreenChange = function () {
     if (!D2L.state.darkModeEnabled) return;
+    // Firefox keeps fullscreen under the page filter, where the usual video rules hold
+    if (document.documentElement.classList.contains(CFG.CSS.TOP_LAYER_FILTERED)) return;
 
     var fsElement = document.fullscreenElement;
     if (fsElement) {

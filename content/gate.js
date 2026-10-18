@@ -61,6 +61,7 @@
       if (!link.requested && FrameRole.resolve(facts).role === CFG.CSS.ROLE_EMBEDDED) {
         link.requested = true;
         var html = document.documentElement;
+        markTopLayer();
         html.setAttribute(CFG.CSS.ROLE_ATTR, CFG.CSS.ROLE_EMBEDDED);
         // dark-mode.css is already loaded here, so either class takes effect at once
         html.classList.add(link.player ? CFG.CSS.PLAYER : CFG.CSS.ACTIVE);
@@ -202,7 +203,15 @@
     html.classList.remove(CFG.CSS.ACTIVE, CFG.CSS.TOP);
   }
 
+  /** Firefox keeps the top layer under the page filter, so it needs no flipping back there. */
+  function markTopLayer() {
+    if (chrome.runtime.getURL('').indexOf('moz-extension:') === 0) {
+      document.documentElement.classList.add(CFG.CSS.TOP_LAYER_FILTERED);
+    }
+  }
+
   function activate(role) {
+    markTopLayer();
     // about: frames follow their parent; main.js reads dark mode itself
     if (facts.about) {
       html.setAttribute(CFG.CSS.ROLE_ATTR, role);
