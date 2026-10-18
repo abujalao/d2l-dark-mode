@@ -1,6 +1,9 @@
 /** D2L Dark Mode — Background Service Worker */
 
-importScripts('../shared/config.js', '../shared/tab-status.js', '../shared/schedule.js', '../shared/settings.js');
+// Firefox runs this as a background page, whose manifest loads the same files first
+if (typeof importScripts === 'function') {
+  importScripts('../shared/config.js', '../shared/tab-status.js', '../shared/schedule.js', '../shared/settings.js');
+}
 
 chrome.runtime.onInstalled.addListener((details) => {
   if (details.reason === 'install') {

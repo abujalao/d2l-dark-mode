@@ -43,18 +43,20 @@
   function shadowCSS(opts) {
     opts = opts || {};
     var media = mediaFor(opts).join(', ');
+    // Firefox keeps the top layer under the page filter: nothing to flip back there
+    var topLayer = opts.topLayerFiltered ? function () { return ''; } : rule;
     return rule(media, INVERT) +
-      rule(':popover-open', INVERT) +
-      rule(':host(:popover-open)', INVERT) +
-      rule(':popover-open :is(' + media + ')', INVERT) +
+      topLayer(':popover-open', INVERT) +
+      topLayer(':host(:popover-open)', INVERT) +
+      topLayer(':popover-open :is(' + media + ')', INVERT) +
       rule('[style*="background-image"]', INVERT) +
       // Media inside a background-image element would be inverted three times
       // (page + parent + own); the parent's filter already covers it
       rule('[style*="background-image"] :is(' + media + ')', 'none') +
       // Fullscreen escapes the page-level filter, so the video rule is flipped
-      rule('video:fullscreen, iframe.d2l-iframe-fallback:fullscreen', opts.videoDark ? INVERT : 'none') +
+      topLayer('video:fullscreen, iframe.d2l-iframe-fallback:fullscreen', opts.videoDark ? INVERT : 'none') +
       // ...except inside a fullscreen host, which dark-mode.css inverts: its videos come along
-      rule(':host(:fullscreen) video', opts.videoDark ? 'none' : INVERT);
+      topLayer(':host(:fullscreen) video', opts.videoDark ? 'none' : INVERT);
   }
 
   self.D2LMediaRules = {

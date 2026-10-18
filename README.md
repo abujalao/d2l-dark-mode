@@ -32,6 +32,8 @@ A browser extension that brings dark mode to D2L Brightspace LMS. Automatically 
 4. Enable **Developer mode**
 5. Click **Load unpacked** and select the `d2l-dark-mode/` directory
 
+Firefox (153 or newer) needs its own build: run `node scripts/build.mjs firefox`, open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and select `../dist/firefox/manifest.json`. Future releases on GitHub also include a ready-made `darkspace-firefox` zip.
+
 ## Usage
 
 Click the extension icon to open the popup. Controls include a power toggle, document/video dark mode switches, custom domain management, and reset to defaults.

@@ -1,10 +1,14 @@
 # Privacy Policy - DarkSpace (D2L Brightspace Dark Mode)
 
-**Last updated:** May 12, 2026
+**Last updated:** October 17, 2026
 
 ## Data Collection
 
-DarkSpace does **not** collect, transmit, or share any personal data or browsing activity. The extension makes no network requests and contains no analytics or tracking. All user preferences (dark mode state, document/video dark mode toggles, custom domains) are stored in your browser using `chrome.storage.sync`. If you are signed into Chrome, these preferences may sync across your devices through Google's standard sync feature.
+DarkSpace does **not** collect, transmit, or share any personal data or browsing activity, and sends nothing to the developer. It contains no analytics or tracking. All user preferences (dark mode state, document/video dark mode toggles, fonts, schedule, custom domains) are stored in your browser's extension storage. If you use your browser's sync (Chrome sync, or Firefox Sync with add-ons enabled), these preferences may sync across your devices.
+
+## Fonts
+
+The settings page uses the DM Sans font from Google Fonts. If you choose a font other than "Default (System)", Brightspace pages load that font from Google Fonts too. Loading a font sends your IP address and browser details to Google, under [Google's privacy policy](https://policies.google.com/privacy). With the default font setting, Brightspace pages load nothing from Google.
 
 ## Permissions
 
@@ -22,15 +26,15 @@ DarkSpace's use of information received from Chrome APIs adheres to the [Chrome 
 
 ## Data Deletion
 
-DarkSpace stores all data locally in your browser. To delete all extension data, simply uninstall the extension from Chrome. You can also reset your preferences to defaults at any time using the "Reset to Defaults" button in the extension popup.
+DarkSpace stores all data locally in your browser. To delete all extension data, simply uninstall the extension from your browser. You can also reset your preferences to defaults at any time using the "Reset to Defaults" button in the extension popup.
 
 ## Third Parties
 
-No data is sold, transferred, or disclosed to any third party for any purpose. The extension contains no third-party code, libraries, or external services.
+No data is sold, transferred, or disclosed to any third party for any purpose. The extension contains no third-party code or libraries; the only outside service it uses is Google Fonts (see Fonts above).
 
 ## Remote Code
 
-DarkSpace does not load or execute any remote code. All functionality is bundled within the extension.
+DarkSpace does not load or execute any remote code. All functionality is bundled within the extension; the only remote resources are the font files described above.
 
 ## Changes
 

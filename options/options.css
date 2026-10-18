@@ -263,6 +263,26 @@ input[type="range"]:active::-webkit-slider-thumb {
   transform: scale(1.15);
 }
 
+/* Firefox: the same thumb */
+input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: none;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22), 0 2px 5px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+input[type="range"]:hover::-moz-range-thumb {
+  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.3), 0 2px 5px rgba(0, 0, 0, 0.5);
+}
+
+input[type="range"]:active::-moz-range-thumb {
+  transform: scale(1.15);
+}
+
 .slider-value {
   font-size: 12px;
   font-weight: 600;

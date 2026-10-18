@@ -1,42 +1,29 @@
 #!/bin/bash
-# Assembles the Chrome store package from the repo, the same files build.sh
-# copies, zipped under a darkspace-chrome/ folder like every past release.
+# Builds the store packages with scripts/build.mjs and zips them:
+#  - darkspace-chrome-vX.zip for the Chrome Web Store and Edge Add-ons, under a
+#    darkspace-chrome/ folder like every past release
+#  - darkspace-firefox-vX.zip for addons.mozilla.org, files at the zip root (AMO needs that)
 # Usage: bash .github/scripts/package.sh <out-dir>
-# Prints the path of the zip it wrote.
+# Prints the two zip paths, Chrome first.
 
 set -euo pipefail
 
-OUT="${1:?usage: package.sh <out-dir>}"
+OUT="$(mkdir -p "${1:?usage: package.sh <out-dir>}" && cd "$1" && pwd)"
 SRC="$(cd "$(dirname "$0")/../.." && pwd)"
-VERSION="$(jq -r .version "$SRC/manifest.json")"
-STAGE="$OUT/darkspace-chrome"
-ZIP="darkspace-chrome-v$VERSION.zip"
+STAGE="$OUT/stage"
 
-rm -rf "$STAGE" "$OUT/$ZIP"
-mkdir -p "$STAGE"/{background,content,shared,popup,options,icons}
+rm -rf "$STAGE"
+# build.mjs also checks that every file a manifest names is in its package
+node "$SRC/scripts/build.mjs" chrome "$STAGE" >&2
+node "$SRC/scripts/build.mjs" firefox "$STAGE" >&2
+mv "$STAGE/chrome" "$STAGE/darkspace-chrome"
 
-cp "$SRC/manifest.json"                       "$STAGE/"
-cp "$SRC/background/service-worker.js"        "$STAGE/background/"
-cp "$SRC/content/"*.js "$SRC/content/"*.css   "$STAGE/content/"
-cp "$SRC/shared/"*.js                         "$STAGE/shared/"
-cp "$SRC/popup/popup."{html,js,css}           "$STAGE/popup/"
-cp "$SRC/options/options."{html,js,css}       "$STAGE/options/"
-cp "$SRC/icons/"*.png                         "$STAGE/icons/"
+# Each zip is named after its own manifest: a Firefox-only release (1.2.1.1) differs from Chrome's
+CHROME="$OUT/darkspace-chrome-v$(jq -r .version "$STAGE/darkspace-chrome/manifest.json").zip"
+FIREFOX="$OUT/darkspace-firefox-v$(jq -r .version "$STAGE/firefox/manifest.json").zip"
+rm -f "$CHROME" "$FIREFOX"
 
-# Every file the manifest names must be in the package, or the store
-# rejects it (or worse, it loads with a script missing).
-missing=0
-for f in $(jq -r '
-    [.background.service_worker?, .action.default_popup?, .options_page?,
-     (.content_scripts[]? | (.js[]?, .css[]?)),
-     (.icons? // {} | .[]), (.action.default_icon? // {} | .[])]
-    | map(select(. != null)) | unique | .[]' "$STAGE/manifest.json"); do
-  if [ ! -f "$STAGE/$f" ]; then
-    echo "error: manifest references $f, which is not in the package" >&2
-    missing=1
-  fi
-done
-[ "$missing" -eq 0 ]
-
-(cd "$OUT" && zip -qr "$ZIP" darkspace-chrome -x '*.DS_Store')
-echo "$OUT/$ZIP"
+(cd "$STAGE" && zip -qr "$CHROME" darkspace-chrome -x '*.DS_Store')
+(cd "$STAGE/firefox" && zip -qr "$FIREFOX" . -x '*.DS_Store')
+echo "$CHROME"
+echo "$FIREFOX"

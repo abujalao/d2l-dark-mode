@@ -15,6 +15,10 @@
 
   const config = {
 
+    /* ---- Browser ---- */
+    // Every Firefox-only code path checks this (CSS: .d2l-firefox); Firefox runs extensions from moz-extension: URLs
+    IS_FIREFOX: chrome.runtime.getURL('').indexOf('moz-extension:') === 0,
+
     /* ---- Storage Keys ---- */
     STORAGE_KEYS: {
       DARK_MODE: 'darkModeEnabled',
@@ -61,6 +65,8 @@
       PLAYER: 'd2l-dark-mode-player',
       // Video iframe whose document can't run our scripts: counter-inverted from outside
       IFRAME_FALLBACK: 'd2l-iframe-fallback',
+      // IS_FIREFOX for dark-mode.css: there the top layer stays under the page filter
+      FIREFOX: 'd2l-firefox',
       // <html data-d2l-role>: what gate.js decided this document is (shared/frame-role.js)
       ROLE_ATTR: 'data-d2l-role',
       ROLE_ROOT: 'root',

@@ -15,7 +15,7 @@
 
   /** Browser-owned pages can't be scripted, so they can't carry the marks either. */
   function canReadPage(url) {
-    return !!url && !/^(chrome|chrome-extension|about|edge|devtools):/.test(url);
+    return !!url && !/^(chrome|chrome-extension|about|edge|devtools|moz-extension|resource|view-source):/.test(url);
   }
 
   /**

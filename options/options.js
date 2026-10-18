@@ -11,6 +11,12 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('optionsLogo').src = chrome.runtime.getURL('icons/popupLogo_active.png');
   document.getElementById('aboutLogo').src = chrome.runtime.getURL('icons/popupLogo_active.png');
 
+  // Firefox installs come from addons.mozilla.org
+  if (CFG.IS_FIREFOX) {
+    document.getElementById('storeLink').href = 'https://addons.mozilla.org/firefox/addon/darkspace-d2l@extension/';
+    document.getElementById('storeName').textContent = 'Firefox Add-ons';
+  }
+
   /* ---- Toast System ---- */
   var toast = document.getElementById('toast');
   var toastTimer = null;
