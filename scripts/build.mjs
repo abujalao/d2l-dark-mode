@@ -27,12 +27,24 @@ function workerImports() {
   return [...call[1].matchAll(/'([^']+)'/g)].map((m) => path.posix.normalize(path.posix.join('background', m[1])));
 }
 
+/** Compares dotted versions ('1.2.1.1' > '1.2.1'). */
+function compareVersions(a, b) {
+  const pa = a.split('.').map(Number), pb = b.split('.').map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    if ((pa[i] || 0) !== (pb[i] || 0)) return (pa[i] || 0) - (pb[i] || 0);
+  }
+  return 0;
+}
+
 function manifestFor(browser) {
   const manifest = readJson('manifest.json');
   if (browser !== 'firefox') return manifest;
   // Firefox has no extension service workers: it runs the same files as a background page
   manifest.background = { scripts: [...workerImports(), 'background/service-worker.js'] };
-  return { ...manifest, ...readJson('manifest.firefox.json') };
+  const firefox = readJson('manifest.firefox.json');
+  // A Firefox-only release (1.2.1.1) keeps its number until manifest.json moves past it
+  if (firefox.version && compareVersions(firefox.version, manifest.version) <= 0) delete firefox.version;
+  return { ...manifest, ...firefox };
 }
 
 /** Every file a manifest names, which the package must contain. */
