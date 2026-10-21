@@ -22,17 +22,26 @@ A browser extension that brings dark mode to D2L Brightspace LMS. Automatically 
 
 [![Chrome Web Store](https://img.shields.io/badge/Chrome%20Web%20Store-Install-blue?logo=chromewebstore&logoColor=white)](https://chromewebstore.google.com/detail/nnljjelgffjlcgpikdklppgphodoliag)
 [![Microsoft Edge](https://img.shields.io/badge/Microsoft%20Edge-Install-0078D7?logo=microsoftedge&logoColor=white)](https://microsoftedge.microsoft.com/addons/detail/fpamjbhflncmjgpcmmmmhlaglaepneoh)
+[![Firefox Add-ons](https://img.shields.io/badge/Firefox%20Add--ons-Install-FF7139?logo=firefoxbrowser&logoColor=white)](https://addons.mozilla.org/firefox/addon/darkspace-d2l/)
+
+Works in Chrome, Edge, and other Chromium browsers, and in Firefox 153 or newer.
 
 ### Install Manually
 
-1. Clone or download this repository
-2. Open the extensions page:
-* `chrome://extensions` in Chrome
-* `edge://extensions` in Edge
-4. Enable **Developer mode**
-5. Click **Load unpacked** and select the `d2l-dark-mode/` directory
+**Chrome / Edge**
 
-Firefox (153 or newer) needs its own build: run `node scripts/build.mjs firefox`, open `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on** and select `../dist/firefox/manifest.json`. Future releases on GitHub also include a ready-made `darkspace-firefox` zip.
+1. Clone, download this repository, or download the [release](https://github.com/abujalao/d2l-dark-mode/releases) and unzip.
+2. Open the extensions page: `chrome://extensions` in Chrome, `edge://extensions` in Edge
+3. Enable **Developer mode**
+4. Click **Load unpacked** and select the repository folder
+
+**Firefox**
+
+1. Download Firefox [release](https://github.com/abujalao/d2l-dark-mode/releases) zip file
+2. Open `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on** and select the zip file
+
+Temporary add-ons are removed when Firefox closes; install from Firefox Add-ons to keep it.
 
 ## Usage
 
